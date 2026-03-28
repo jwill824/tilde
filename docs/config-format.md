@@ -265,4 +265,5 @@ tilde --reconfigure
 
 **Error cases**:
 - **No config found**: tilde exits with a message directing you to run `tilde` (without `--reconfigure`) to create your initial configuration
-- **Invalid config**: tilde attempts to extract valid fields and opens the wizard with those as defaults; invalid fields default to their wizard defaults
+- **Invalid config**: tilde displays each invalid field by name before opening the wizard; those fields use their wizard defaults. All other fields remain pre-populated from the stored config.
+- **Early exit** (Escape or Cancel): the original config file is **not modified**. tilde exits with code `5` to indicate user cancellation.

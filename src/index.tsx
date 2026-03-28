@@ -58,7 +58,7 @@ Usage: tilde [install] [options]
 Options:
   --config <path|url>   Load tilde.config.json (activates config-first mode)
   --yes, --ci           Non-interactive mode (requires --config)
-  --reconfigure         Re-run wizard from scratch
+  --reconfigure         Load existing config and re-run wizard with all fields pre-populated
   --resume              Resume from last checkpoint
   --no-resume           Ignore checkpoint, start fresh
   --dry-run             Print planned actions without executing

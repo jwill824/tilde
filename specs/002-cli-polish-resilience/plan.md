@@ -45,7 +45,7 @@ already established in spec 001.
 | I. Configuration-First | ✅ PASS | `--reconfigure` loads existing config via the same `loadConfig` reader as config-first mode; all stored values offered as defaults; user retains full control |
 | II. Bootstrap-Ready | ✅ PASS | No changes to bootstrap entry path; splash adds information, not friction |
 | III. Context-Aware Environments | ✅ PASS | Out of scope for this spec; not touched |
-| IV. Interactive & Ink-First UX | ✅ PASS | Constitution v2.2.0 explicitly mandates the dynamic splash (FR-001 to FR-006); Splash remains an Ink component; no silent mutations |
+| IV. Interactive & Ink-First UX | ✅ PASS | Constitution v2.2.0 explicitly mandates the dynamic splash (FR-001 to FR-006); Splash remains an Ink component; no silent mutations. **Browser Selection wizard step (constitution step 11)** is out of scope for spec 002 and is explicitly deferred to a future spec (spec 003 or equivalent); this spec does not regress any existing wizard step. |
 | V. Idempotent Operations | ✅ PASS | Atomic write (temp-rename) ensures partial-write safety; migration is non-destructive (additive only); re-running `--reconfigure` with no changes produces identical output |
 | VI. Secrets-Free Repository | ✅ PASS | Config writer already guards against raw secrets; reconfigure path reuses same writer; no new credential surface area |
 | VII. macOS First, Cross-Platform by Design | ✅ PASS | OS version detection and friendly-name mapping isolated in `src/utils/environment.ts` behind platform-abstracted interface; Windows detection path stubbed for future addition |

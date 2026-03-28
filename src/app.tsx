@@ -102,7 +102,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
   );
 
   // --reconfigure flag: open wizard pre-populated with existing config
-  if (reconfigure && configPath) {
+  if (reconfigure) {
     if (done) {
       return (
         <Box>
@@ -116,7 +116,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
       <Box flexDirection="column">
         {header}
         <ReconfigureMode
-          configPath={configPath}
+          configPath={configPath ?? ''}
           environment={environment}
           onComplete={() => setDone(true)}
         />

@@ -26,7 +26,7 @@ export const CURRENT_SCHEMA_VERSION = 1;
  * Currently empty: v1 is the baseline. Add entries here when new schema
  * versions are introduced (e.g., MIGRATIONS.set(1, v1ToV2)).
  */
-const MIGRATIONS: Map<number, MigrationStep> = new Map();
+export const MIGRATIONS: Map<number, MigrationStep> = new Map();
 
 /**
  * Run all applicable migration steps to bring `raw` up to `targetVersion`.

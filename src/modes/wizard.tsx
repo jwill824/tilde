@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Box, Text, Static } from 'ink';
+import { Box, Text, Static, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import type { TildeConfig } from '../config/schema.js';
 import { saveCheckpoint, loadCheckpoint, clearCheckpoint } from '../state/checkpoint.js';
@@ -31,9 +31,10 @@ interface WizardProps {
   initialStep?: number;
   initialConfig?: Partial<TildeConfig>;
   onComplete?: (config: TildeConfig) => void;
+  onExit?: () => void;
 }
 
-export function Wizard({ initialStep = 0, initialConfig = {}, onComplete }: WizardProps) {
+export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit }: WizardProps) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [config, setConfig] = useState<Partial<TildeConfig>>(initialConfig);
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
@@ -57,6 +58,13 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete }: Wiza
       setResumeStatus('ready');
     });
   }, []);
+
+  // Allow Escape to trigger graceful exit when caller provides onExit
+  useInput((_input, key) => {
+    if (key.escape && onExit) {
+      onExit();
+    }
+  }, { isActive: !!onExit });
 
   const advance = useCallback(
     async (stepData: Partial<TildeConfig>, summary: string) => {

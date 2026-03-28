@@ -17,6 +17,7 @@ export interface ReconfigureModeProps {
 type Phase =
   | { type: 'loading' }
   | { type: 'error'; message: string }
+  | { type: 'field-errors'; issues: string[]; initialConfig: Partial<TildeConfig> }
   | { type: 'wizard'; initialConfig: Partial<TildeConfig> }
   | { type: 'saving' }
   | { type: 'done' }
@@ -61,9 +62,11 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
             const content = await readFile(configPath, 'utf-8');
             const raw = JSON.parse(content) as Record<string, unknown>;
             const partial = TildeConfigSchema.safeParse(raw);
-            // Use whatever valid fields we can extract
             const initialConfig: Partial<TildeConfig> = partial.success ? partial.data : (raw as Partial<TildeConfig>);
-            setPhase({ type: 'wizard', initialConfig });
+            const issues = partial.success
+              ? []
+              : partial.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`);
+            setPhase({ type: 'field-errors', issues, initialConfig });
           } catch {
             setPhase({ type: 'wizard', initialConfig: {} });
           }
@@ -100,6 +103,34 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
     );
   }
 
+  if (phase.type === 'field-errors') {
+    return (
+      <Box flexDirection="column">
+        <Box flexDirection="column" borderStyle="round" borderColor="yellow" padding={1} marginBottom={1}>
+          <Text bold color="yellow">⚠ Config has invalid fields — wizard will use defaults for these:</Text>
+          {phase.issues.map((issue, i) => (
+            <Text key={i} dimColor>  • {issue}</Text>
+          ))}
+        </Box>
+        <Wizard
+          initialConfig={phase.initialConfig}
+          onComplete={async (newConfig: TildeConfig) => {
+            setPhase({ type: 'saving' });
+            try {
+              const configWithVersion = { ...newConfig, schemaVersion: CURRENT_SCHEMA_VERSION };
+              const content = JSON.stringify(configWithVersion, null, 2) + '\n';
+              await atomicWriteConfig(configPath, content);
+              setPhase({ type: 'done' });
+            } catch (err) {
+              setPhase({ type: 'error', message: `Failed to save config: ${(err as Error).message}` });
+            }
+          }}
+          onExit={() => setPhase({ type: 'cancelled' })}
+        />
+      </Box>
+    );
+  }
+
   if (phase.type === 'wizard') {
     return (
       <Wizard
@@ -118,6 +149,7 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
             });
           }
         }}
+        onExit={() => setPhase({ type: 'cancelled' })}
       />
     );
   }
@@ -143,6 +175,9 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
   }
 
   // phase.type === 'cancelled'
-  onComplete();
-  return null;
+  return (
+    <Box flexDirection="column">
+      <Text color="yellow">Configuration unchanged. Your original config file has been preserved.</Text>
+    </Box>
+  );
 }
