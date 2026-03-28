@@ -194,4 +194,4 @@ shell-cd-event
 - Max tools list: 200 Homebrew packages (Homebrew handles actual limits)
 - Capture report: bounded by `~/` filesystem size; fast-glob scan limited to depth 3
 - `tilde.config.json`: expected < 50KB for any realistic config
-- Checkpoint state: < 5KB; single file, atomic writes via `conf` package
+- Checkpoint state: < 5KB; single file, atomic writes via temp-file-rename (write to `${path}.tmp` then `fs.rename()`)

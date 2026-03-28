@@ -168,6 +168,9 @@ each context without any manual switching.
   domain URL (e.g., `curl -fsSL https://get.tilde.sh | bash`). The custom domain MUST
   redirect to the versioned script on GitHub raw URL. The GitHub raw URL MUST also be
   independently valid as a direct install path.
+- **FR-020**: The system MUST support a --reconfigure flag that re-runs the full wizard over
+  an existing tilde.config.json, allowing the user to change any previously answered choice;
+  the existing config is used as default values for each wizard step.
 - **FR-002**: System MUST check for a `tilde.config.json` at startup and present a config-
   first mode option if one is found or a path/URL is provided via flag.
 - **FR-003**: System MUST offer an environment capture step at the start of prompt-first mode

@@ -4,7 +4,7 @@ import { homedir } from 'node:os';
 import { createSymlink } from './symlinks.js';
 import type { TildeConfig } from '../config/schema.js';
 import { generateGlobalGitconfig, generateContextGitconfig } from './gitconfig.js';
-import { generateZshrc } from './shellprofile.js';
+import { generateZshrc, generateBashProfile, generateFishConfig } from './shellprofile.js';
 
 function expandTilde(p: string): string {
   if (p.startsWith('~/')) return join(homedir(), p.slice(2));
@@ -73,9 +73,15 @@ export async function writeAll(config: TildeConfig, opts?: { dryRun?: boolean })
     }
   }
 
-  // 2. .zshrc
+  // 2. Shell profile
   if (config.shell === 'zsh') {
     const zshrc = generateZshrc(config, []);
     await writeManagedFile(config.dotfilesRepo, 'shell/.zshrc', zshrc, '.zshrc', opts);
+  } else if (config.shell === 'bash') {
+    const bashProfile = generateBashProfile(config, []);
+    await writeManagedFile(config.dotfilesRepo, 'shell/.bash_profile', bashProfile, '.bash_profile', opts);
+  } else if (config.shell === 'fish') {
+    const fishConfig = generateFishConfig(config, []);
+    await writeManagedFile(config.dotfilesRepo, 'shell/config.fish', fishConfig, '.config/fish/config.fish', opts);
   }
 }

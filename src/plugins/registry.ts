@@ -30,9 +30,13 @@ import ghCliPlugin from './first-party/gh-cli/index.js';
 import onePasswordPlugin from './first-party/onepassword/index.js';
 import direnvPlugin from './first-party/direnv/index.js';
 import vfoxPlugin from './first-party/vfox/index.js';
+import httpsPlugin from './first-party/https/index.js';
+import sshPlugin from './first-party/ssh/index.js';
 
 pluginRegistry.register(homebrewPlugin);
 pluginRegistry.register(ghCliPlugin);
 pluginRegistry.register(onePasswordPlugin);
 pluginRegistry.register(direnvPlugin);
 pluginRegistry.register(vfoxPlugin);
+pluginRegistry.register(httpsPlugin);
+pluginRegistry.register(sshPlugin);

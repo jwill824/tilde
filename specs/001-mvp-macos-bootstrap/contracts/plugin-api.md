@@ -11,7 +11,7 @@ packages named `tilde-plugin-{name}` following the same export convention.
 
 | Layer | Source | How loaded |
 |-------|--------|-----------|
-| **First-party** | Bundled in tilde repo | Static imports in `src/plugins/builtin.ts` |
+| **First-party** | Bundled in tilde repo | Static imports in `src/plugins/registry.ts` |
 | **Community** | npm packages `tilde-plugin-*` | Dynamic `import()` at runtime; listed in `tilde.config.json` |
 | **Local** | Filesystem paths | Dynamic `import()` from absolute path; listed in `~/.tilde/config.json` |
 

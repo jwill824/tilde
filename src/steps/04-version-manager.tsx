@@ -6,7 +6,7 @@ interface Props {
   onComplete: (data: { versionManagers: VersionManagerChoice[] }) => void;
 }
 
-const OPTIONS = ['vfox', 'nvm', 'pyenv', 'sdkman'] as const;
+const OPTIONS = ['vfox'] as const;
 type VMName = typeof OPTIONS[number];
 
 export function VersionManagerStep({ onComplete }: Props) {
@@ -36,6 +36,7 @@ export function VersionManagerStep({ onComplete }: Props) {
     <Box flexDirection="column">
       <Text bold>Which version managers do you want?</Text>
       <Text dimColor>Space to toggle, Enter to confirm</Text>
+      <Text dimColor>(more coming soon)</Text>
       <Box flexDirection="column" marginTop={1}>
         {OPTIONS.map((opt, idx) => (
           <Box key={opt}>

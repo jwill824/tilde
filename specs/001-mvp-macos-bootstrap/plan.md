@@ -40,7 +40,7 @@ core logic.
 | I. Configuration-First | ✅ PASS | Both prompt-first and config-first modes fully supported; FR-002, FR-014 |
 | II. Bootstrap-Ready | ✅ PASS | FR-019 defines single `curl \| bash` entry; bootstrap.sh handles Node install |
 | III. Context-Aware Environments | ✅ PASS | User Story 4; gitconfig includeIf + direnv (optional); gh auth switch |
-| IV. Interactive & Ink-First UX | ✅ PASS | Ink 4 is the mandated UI framework; all wizard steps are Ink components |
+| IV. Interactive & Ink-First UX | ✅ PASS | Ink 6.8 is the mandated UI framework; all wizard steps are Ink components |
 | V. Idempotent Operations | ✅ PASS | FR-013 (idempotency) + FR-018 (checkpoint/resume) |
 | VI. Secrets-Free Repository | ✅ PASS | FR-016 (no resolved secrets written); FR-010 (backend reference format) |
 | VII. macOS First, Cross-Platform by Design | ✅ PASS | All platform concerns behind plugin interfaces; Windows deferred |
