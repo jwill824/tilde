@@ -1,5 +1,5 @@
 {
-  "name": "tilde",
+  "name": "@jwill824/tilde",
   "version": "0.1.0",
   "description": "Interactive CLI to bootstrap a complete developer environment",
   "type": "module",
@@ -31,6 +31,9 @@
     "bootstrap"
   ],
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "execa": "^9.6.1",
     "fast-glob": "^3.3.3",
