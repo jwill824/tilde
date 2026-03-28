@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, Static } from 'ink';
 import { Wizard } from './modes/wizard.js';
 import { ConfigFirstMode } from './modes/config-first.js';
-import { Splash } from './ui/splash.js';
+import { Splash, CompactHeader } from './ui/splash.js';
 import type { TildeConfig } from './config/schema.js';
 import { loadConfig } from './config/reader.js';
 import { installAll } from './installer/index.js';
@@ -65,9 +65,20 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
     return <NonInteractiveMode configPath={configPath} dryRun={dryRun} />;
   }
 
+  // Wave splash plays first
   if (!splashDone) {
     return <Splash version={version} onDone={() => setSplashDone(true)} />;
   }
+
+  // After splash: compact header locked at top via Static; wizard/config renders below.
+  // As content grows the header naturally scrolls up off-screen (Copilot CLI pattern).
+  const header = (
+    <Static items={[{ id: 'header', version }]}>
+      {(item: { id: string; version: string }) => (
+        <CompactHeader key={item.id} version={item.version} />
+      )}
+    </Static>
+  );
 
   if (mode === 'config-first' && configPath) {
     if (done) {
@@ -81,10 +92,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
     }
     return (
       <Box flexDirection="column">
-        <Box marginBottom={1}>
-          <Text color="cyan" bold>tilde</Text>
-          <Text dimColor> — config-first restore</Text>
-        </Box>
+        {header}
         <ConfigFirstMode configPath={configPath} onComplete={() => setDone(true)} />
       </Box>
     );
@@ -92,6 +100,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
 
   return (
     <Box flexDirection="column">
+      {header}
       {resume && <Text color="yellow">Resuming from checkpoint...</Text>}
       {reconfigure && <Text color="yellow">Reconfiguring from scratch...</Text>}
       <Wizard
