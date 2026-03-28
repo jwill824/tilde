@@ -4,7 +4,7 @@
   "description": "Interactive CLI to bootstrap a complete developer environment",
   "type": "module",
   "bin": {
-    "tilde": "./dist/index.js"
+    "tilde": "dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
