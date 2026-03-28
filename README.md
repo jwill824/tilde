@@ -1,5 +1,12 @@
 <div align="center">
   <img src="docs/banner.svg" alt="tilde — developer environment bootstrap" width="560"/>
+
+  [![CI](https://github.com/jwill824/tilde/actions/workflows/ci.yml/badge.svg)](https://github.com/jwill824/tilde/actions/workflows/ci.yml)
+  [![npm version](https://img.shields.io/npm/v/tilde?color=22d3ee&logo=npm)](https://www.npmjs.com/package/tilde)
+  [![npm downloads](https://img.shields.io/npm/dm/tilde?color=22d3ee)](https://www.npmjs.com/package/tilde)
+  [![Node.js](https://img.shields.io/node/v/tilde?color=22d3ee&logo=node.js)](https://nodejs.org)
+  [![semantic-release](https://img.shields.io/badge/semantic--release-conventional--commits-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
+  [![License: MIT](https://img.shields.io/badge/license-MIT-22d3ee)](https://opensource.org/licenses/MIT)
 </div>
 
 > Bootstrap your developer environment on macOS, Windows, and Linux with a single command.
