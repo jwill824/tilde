@@ -1,3 +1,17 @@
+# [1.1.0](https://github.com/jwill824/tilde/compare/v1.0.1...v1.1.0) (2026-03-28)
+
+
+### Bug Fixes
+
+* **002:** address speckit.analyze findings (I1-I4, C1-C3, A1) ([df255e4](https://github.com/jwill824/tilde/commit/df255e49b2a5bf9aa42e25626eeecaf559c9c273))
+* **lint:** resolve no-undef NodeJS and no-useless-escape in regex ([585ed87](https://github.com/jwill824/tilde/commit/585ed879778cd2dd35804fc092c4b90e1199e8d5))
+* **release:** add repository, homepage, and bugs fields to package.json ([232edfd](https://github.com/jwill824/tilde/commit/232edfd3e49adab5ef3df6ba67c70ebf6dabad23))
+
+
+### Features
+
+* **002:** dynamic splash, --reconfigure flag, config schema versioning ([1ab000f](https://github.com/jwill824/tilde/commit/1ab000fdd3fd3cbaaeb60610afb07b291fa85cc1))
+
 ## [1.0.1](https://github.com/jwill824/tilde/compare/v1.0.0...v1.0.1) (2026-03-28)
 
 
