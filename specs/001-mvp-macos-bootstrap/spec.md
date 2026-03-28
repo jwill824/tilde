@@ -225,6 +225,14 @@ each context without any manual switching.
   (feat → minor bump, fix → patch bump, BREAKING CHANGE → major bump). Version bumps,
   changelog generation, GitHub Release creation, and npm package publication MUST be
   automated on every push to `main` that contains releasable commits.
+- **FR-024**: The project MUST include a `docs/config-format.md` file documenting the
+  complete `tilde.config.json` schema: every field, its type, allowed values, and an
+  annotated example. This document MUST be kept in sync with the Zod schema definition.
+- **FR-025**: The CLI MUST expose `tilde plugin <list|add|remove>` subcommands to support
+  the plugin architecture: listing registered plugins with their category and version,
+  installing community plugins from npm (`tilde-plugin-<name>` convention), and removing
+  them. Plugin discovery MUST be non-destructive — listing plugins MUST NOT modify system
+  state.
 
 ### Key Entities
 
@@ -289,8 +297,10 @@ each context without any manual switching.
   deferred.
 - The first-party secrets backend plugin for MVP is 1Password CLI; Bitwarden and keychain
   backends are deferred to a future plugin spec.
-- The first-party GitHub account connector for MVP is the `gh` CLI; raw HTTPS and SSH
-  connectors are also supported but receive less UX polish in v1.
+- The first-party GitHub account connector for MVP is the `gh` CLI. Raw HTTPS credential
+  helper and SSH key connectors are **deferred to a future spec** — FR-017's MUST applies to
+  the overall system; the MVP satisfies it exclusively via `gh` CLI. No stub tasks exist for
+  HTTPS/SSH in this spec iteration.
 - The `tilde.config.json` schema is v1 for this spec; migration logic for future schema
   versions is deferred.
 - The CI/CD pipeline uses GitHub Actions with semantic-release. An `NPM_TOKEN` secret must

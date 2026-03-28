@@ -94,11 +94,12 @@ src/
 ├── plugins/
 │   ├── api.ts                   # Plugin interface definitions (TypeScript)
 │   ├── registry.ts              # Plugin loader and registry
-│   ├── homebrew/                # First-party: package manager plugin
-│   ├── onepassword/             # First-party: secrets backend plugin
-│   ├── gh-cli/                  # First-party: GitHub account connector plugin
-│   ├── direnv/                  # First-party: env loader plugin
-│   └── vfox/                    # First-party: version manager plugin
+│   └── first-party/
+│       ├── homebrew/            # First-party: package manager plugin
+│       ├── onepassword/         # First-party: secrets backend plugin
+│       ├── gh-cli/              # First-party: GitHub account connector plugin
+│       ├── direnv/              # First-party: env loader plugin
+│       └── vfox/                # First-party: version manager plugin
 ├── capture/
 │   ├── scanner.ts               # Scans ~/dotfiles, brew list, rc files
 │   ├── filter.ts                # gitignore pattern exclusion (uses `ignore` package)

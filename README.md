@@ -1,15 +1,6 @@
-```
-  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~
-
-      __   _ __    __   
-     / /  (_) /___/ /__ 
-    / /__/ / / / _  / -_)
-   /____/_/_/ \_,_/\__/ 
-
-    developer environment bootstrap
-
-  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~
-```
+<div align="center">
+  <img src="docs/banner.svg" alt="tilde — developer environment bootstrap" width="560"/>
+</div>
 
 > Bootstrap your developer environment on macOS, Windows, and Linux with a single command.
 
