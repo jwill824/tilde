@@ -20,7 +20,7 @@
 npx @jwill824/tilde
 ```
 
-> **Coming soon:** `curl -fsSL https://get.tilde.sh | bash` — a one-liner installer for fresh machines with no Node.js prerequisite.
+> **Coming soon:** `curl -fsSL https://get.tilde.sh | bash` — a one-liner installer for fresh machines with no Node.js prerequisite ([#4](https://github.com/jwill824/tilde/issues/4)).
 
 ---
 
@@ -83,9 +83,9 @@ tilde
 
 ### Coming soon
 
-- **`brew install tilde`** — Homebrew formula ([tracking issue](https://github.com/jwill824/tilde/issues/2))
-- **`curl -fsSL https://get.tilde.sh | bash`** — zero-prereq one-liner for fresh machines
-- **pnpm / yarn** global install support
+- **`brew install tilde`** — Homebrew formula ([#3](https://github.com/jwill824/tilde/issues/3))
+- **`curl -fsSL https://get.tilde.sh | bash`** — zero-prereq one-liner for fresh machines ([#4](https://github.com/jwill824/tilde/issues/4))
+- **pnpm / yarn** global install support ([#5](https://github.com/jwill824/tilde/issues/5))
 
 ### Restore from a saved config
 
