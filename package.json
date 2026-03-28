@@ -1,7 +1,7 @@
 {
   "name": "tilde",
   "version": "0.1.0",
-  "description": "Interactive CLI to bootstrap a complete macOS developer environment",
+  "description": "Interactive CLI to bootstrap a complete developer environment",
   "type": "module",
   "bin": {
     "tilde": "./dist/index.js"

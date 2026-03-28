@@ -3,7 +3,7 @@
 > JSON Schema: `https://tilde.sh/config-schema/v1.json`  
 > Schema version: `1`
 
-`tilde.config.json` is the declarative configuration file for tilde. It describes your entire macOS developer environment so that `tilde` can reproduce it on any machine.
+`tilde.config.json` is the declarative configuration file for tilde. It describes your entire developer environment so that `tilde` can reproduce it on any machine.
 
 ## Minimal Example
 

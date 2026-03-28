@@ -56,7 +56,7 @@ export function Splash({ version, onDone }: SplashProps) {
         <Text bold color="cyan">
           tilde
         </Text>
-        <Text dimColor>macOS developer environment bootstrap</Text>
+        <Text dimColor>developer environment bootstrap</Text>
         <Text color="cyan" dimColor>
           v{version}
         </Text>
@@ -73,7 +73,7 @@ export function CompactHeader({ version }: { version: string }) {
       <Text bold color="cyan">
         tilde
       </Text>
-      <Text dimColor>macOS developer environment bootstrap</Text>
+      <Text dimColor>developer environment bootstrap</Text>
       <Text color="cyan" dimColor>
         v{version}
       </Text>

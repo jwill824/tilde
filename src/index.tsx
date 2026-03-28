@@ -48,7 +48,7 @@ function parseCliArgs() {
 
   if (args.help) {
     process.stdout.write(`
-tilde — macOS developer environment bootstrap
+tilde — developer environment bootstrap
 
 Usage: tilde [install] [options]
        tilde context <list|current|switch> [label]

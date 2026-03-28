@@ -6,12 +6,12 @@
     / /__/ / / / _  / -_)
    /____/_/_/ \_,_/\__/ 
 
-    macOS developer environment bootstrap
+    developer environment bootstrap
 
   ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~
 ```
 
-> Bootstrap your entire macOS developer environment with a single command.
+> Bootstrap your developer environment on macOS, Windows, and Linux with a single command.
 
 **tilde** is an interactive CLI built with [Ink](https://github.com/vadimdemedes/ink) that guides you through setting up a complete developer environment from scratch — or restores one you've already defined. It handles everything from shell configuration and package installation to multi-account GitHub identity switching and context-aware environment variables.
 
