@@ -59,13 +59,19 @@ class GhCliPlugin implements AccountConnectorPlugin {
     }
   }
 
-  generateShellHook(contexts: DeveloperContext[]): string {
+  generateShellHook(contexts: Array<DeveloperContext | { path: string; username: string }>): string {
     const cases = contexts
-      .filter(ctx => ctx.authMethod === 'gh-cli' && ctx.github?.username)
+      .filter(ctx => {
+        if ('authMethod' in ctx) {
+          return ctx.authMethod === 'gh-cli' && (ctx.github?.username);
+        }
+        return Boolean(ctx.username);
+      })
       .map(ctx => {
         const expandedPath = ctx.path.replace(/^~/, '$HOME');
+        const username = 'github' in ctx ? ctx.github!.username : (ctx as { username: string }).username;
         return `    ${expandedPath}*)
-      gh auth switch --user ${ctx.github!.username} 2>/dev/null || true
+      gh auth switch --user ${username} 2>/dev/null || true
       ;;`;
       })
       .join('\n');

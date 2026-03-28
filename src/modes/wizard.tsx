@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Box, Text, Static } from 'ink';
+import SelectInput from 'ink-select-input';
 import type { TildeConfig } from '../config/schema.js';
-import { saveCheckpoint } from '../state/checkpoint.js';
+import { saveCheckpoint, loadCheckpoint, clearCheckpoint } from '../state/checkpoint.js';
 import { ConfigDetectionStep } from '../steps/00-config-detection.js';
 import { EnvCaptureStep } from '../steps/01-env-capture.js';
 import type { EnvironmentCaptureReport } from '../capture/scanner.js';
@@ -38,6 +39,25 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete }: Wiza
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
   const [captureReport, setCaptureReport] = useState<EnvironmentCaptureReport | null>(null);
 
+  // Checkpoint/resume state
+  const [resumeStatus, setResumeStatus] = useState<'loading' | 'prompt' | 'ready'>('loading');
+  const [resumeStep, setResumeStep] = useState(-1);
+  const [resumeConfig, setResumeConfig] = useState<Partial<TildeConfig>>({});
+
+  useEffect(() => {
+    loadCheckpoint().then((checkpoint) => {
+      if (checkpoint && checkpoint.lastCompletedStep > -1) {
+        setResumeStep(checkpoint.lastCompletedStep);
+        setResumeConfig(checkpoint.partialConfig as Partial<TildeConfig>);
+        setResumeStatus('prompt');
+      } else {
+        setResumeStatus('ready');
+      }
+    }).catch(() => {
+      setResumeStatus('ready');
+    });
+  }, []);
+
   const advance = useCallback(
     async (stepData: Partial<TildeConfig>, summary: string) => {
       const merged = { ...config, ...stepData };
@@ -62,6 +82,36 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete }: Wiza
 
   return (
     <Box flexDirection="column">
+      {resumeStatus === 'loading' && (
+        <Text dimColor>Loading...</Text>
+      )}
+
+      {resumeStatus === 'prompt' && (
+        <Box flexDirection="column">
+          <Text color="yellow">A previous session was found (last completed step: {resumeStep}).</Text>
+          <Text dimColor>Use ↑↓ to navigate, Enter to select</Text>
+          <Box marginTop={1}>
+            <SelectInput
+              items={[
+                { label: `Resume from step ${resumeStep + 1}`, value: 'resume' },
+                { label: 'Start over', value: 'start-over' },
+              ]}
+              onSelect={(item) => {
+                if (item.value === 'resume') {
+                  setConfig(resumeConfig);
+                  setCurrentStep(resumeStep + 1);
+                } else {
+                  setCurrentStep(0);
+                }
+                setResumeStatus('ready');
+              }}
+            />
+          </Box>
+        </Box>
+      )}
+
+      {resumeStatus === 'ready' && (
+        <>
       <Static items={completedSteps}>
         {(step) => (
           <Box key={step.id}>
@@ -198,11 +248,14 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete }: Wiza
           <ConfigExportStep
             config={config as TildeConfig}
             onComplete={() => {
+              clearCheckpoint().catch(() => {});
               onComplete?.(config as TildeConfig);
             }}
           />
         )}
       </Box>
+        </>
+      )}
     </Box>
   );
 }

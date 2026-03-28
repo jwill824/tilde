@@ -1,4 +1,4 @@
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, readFile, mkdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { homedir } from 'node:os';
 import { createSymlink } from './symlinks.js';
@@ -15,10 +15,36 @@ export async function writeManagedFile(
   dotfilesRepo: string,
   relativePath: string,
   content: string,
-  homeDestRelative?: string
+  homeDestRelative?: string,
+  opts?: { dryRun?: boolean }
 ): Promise<void> {
   const repoPath = expandTilde(dotfilesRepo);
   const srcPath = join(repoPath, relativePath);
+
+  if (opts?.dryRun) {
+    console.log(`[dry-run] would write: ${srcPath}`);
+    if (homeDestRelative) {
+      const destPath = join(homedir(), homeDestRelative);
+      console.log(`[dry-run] would symlink: ${srcPath} → ${destPath}`);
+    }
+    return;
+  }
+
+  // Idempotency: skip write if content already matches
+  try {
+    const existing = await readFile(srcPath, 'utf-8');
+    if (existing === content) {
+      console.log(`already configured: ${srcPath}`);
+      if (homeDestRelative) {
+        const destPath = join(homedir(), homeDestRelative);
+        await createSymlink(srcPath, destPath);
+      }
+      return;
+    }
+  } catch {
+    // File doesn't exist yet — proceed with write
+  }
+
   await mkdir(dirname(srcPath), { recursive: true });
   await writeFile(srcPath, content, 'utf-8');
 
@@ -28,11 +54,11 @@ export async function writeManagedFile(
   }
 }
 
-export async function writeAll(config: TildeConfig): Promise<void> {
+export async function writeAll(config: TildeConfig, opts?: { dryRun?: boolean }): Promise<void> {
   // 1. Global .gitconfig
   if (config.configurations.git) {
     const globalGitconfig = generateGlobalGitconfig(config);
-    await writeManagedFile(config.dotfilesRepo, 'git/.gitconfig', globalGitconfig, '.gitconfig');
+    await writeManagedFile(config.dotfilesRepo, 'git/.gitconfig', globalGitconfig, '.gitconfig', opts);
 
     // Per-context gitconfigs
     for (const ctx of config.contexts) {
@@ -40,7 +66,9 @@ export async function writeAll(config: TildeConfig): Promise<void> {
       await writeManagedFile(
         config.dotfilesRepo,
         `git/.gitconfig-${ctx.label}`,
-        contextGitconfig
+        contextGitconfig,
+        undefined,
+        opts
       );
     }
   }
@@ -48,6 +76,6 @@ export async function writeAll(config: TildeConfig): Promise<void> {
   // 2. .zshrc
   if (config.shell === 'zsh') {
     const zshrc = generateZshrc(config, []);
-    await writeManagedFile(config.dotfilesRepo, 'shell/.zshrc', zshrc, '.zshrc');
+    await writeManagedFile(config.dotfilesRepo, 'shell/.zshrc', zshrc, '.zshrc', opts);
   }
 }

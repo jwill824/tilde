@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import { Wizard } from './modes/wizard.js';
 import { ConfigFirstMode } from './modes/config-first.js';
 import type { TildeConfig } from './config/schema.js';
+import { loadConfig } from './config/reader.js';
+import { installAll } from './installer/index.js';
+import { writeAll } from './dotfiles/writer.js';
+import { pluginRegistry } from './plugins/registry.js';
 
 export type AppMode = 'wizard' | 'config-first' | 'non-interactive';
 
@@ -12,6 +16,42 @@ export interface AppProps {
   dryRun?: boolean;
   resume?: boolean;
   reconfigure?: boolean;
+}
+
+interface NonInteractiveProps {
+  configPath?: string;
+  dryRun?: boolean;
+}
+
+function NonInteractiveMode({ configPath, dryRun }: NonInteractiveProps) {
+  const [ciStatus, setCiStatus] = useState<'running' | 'done' | 'error'>('running');
+  const [ciMessage, setCiMessage] = useState('');
+
+  useEffect(() => {
+    if (!configPath) return;
+    loadConfig(configPath)
+      .then(async (config) => {
+        await installAll(config, pluginRegistry, { dryRun });
+        await writeAll(config, { dryRun });
+        setCiStatus('done');
+        setCiMessage('Configuration complete');
+      })
+      .catch((err: Error) => {
+        setCiStatus('error');
+        setCiMessage(err.message);
+        process.exit(3);
+      });
+  }, []);
+
+  return (
+    <Box flexDirection="column">
+      <Text color="cyan">tilde — non-interactive mode</Text>
+      {dryRun && <Text color="yellow">[dry-run] No changes will be made.</Text>}
+      {ciStatus === 'running' && <Text dimColor>Running...</Text>}
+      {ciStatus === 'done' && <Text color="green">✓ {ciMessage}</Text>}
+      {ciStatus === 'error' && <Text color="red">✗ {ciMessage}</Text>}
+    </Box>
+  );
 }
 
 export function App({ mode, configPath, dryRun, resume, reconfigure }: AppProps) {
@@ -39,12 +79,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure }: AppProps)
   }
 
   if (mode === 'non-interactive') {
-    return (
-      <Box flexDirection="column">
-        <Text color="cyan">tilde — non-interactive mode</Text>
-        {dryRun && <Text color="yellow">[dry-run] No changes will be made.</Text>}
-      </Box>
-    );
+    return <NonInteractiveMode configPath={configPath} dryRun={dryRun} />;
   }
 
   return (

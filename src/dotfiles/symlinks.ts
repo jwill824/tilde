@@ -26,6 +26,7 @@ export async function createSymlink(src: string, dest: string): Promise<SymlinkR
       if (destStat.isSymbolicLink()) {
         const currentTarget = await readlink(dest);
         if (currentTarget === src) {
+          console.log(`already configured: ${dest}`);
           return { src, dest, action: 'skipped' };
         }
         // Wrong target — replace
