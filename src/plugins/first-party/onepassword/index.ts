@@ -1,6 +1,5 @@
 import type { SecretsBackendPlugin } from '../../api.js';
 import { run } from '../../../utils/exec.js';
-import { PluginError } from '../../api.js';
 
 class OnePasswordPlugin implements SecretsBackendPlugin {
   readonly id = '1password';

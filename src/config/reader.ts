@@ -30,7 +30,7 @@ export async function loadConfig(pathOrUrl: string): Promise<TildeConfig> {
   try {
     raw = JSON.parse(content);
   } catch (e) {
-    throw new Error(`Failed to parse config as JSON: ${(e as Error).message}`);
+    throw new Error(`Failed to parse config as JSON: ${(e as Error).message}`, { cause: e });
   }
 
   // Run migration before validation

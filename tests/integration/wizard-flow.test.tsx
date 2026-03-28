@@ -93,22 +93,18 @@ describe('Wizard flow integration', () => {
 
     expect(lastFrame()).toContain('vfox');
     
-    // Space to toggle vfox off (it starts selected)
+    // Space to toggle vfox off (it starts selected), then back on
     stdin.write(' ');
-    await new Promise(resolve => setTimeout(resolve, 50));
-    
-    // Down arrow then space to select nvm
-    stdin.write('\x1b[B');
     await new Promise(resolve => setTimeout(resolve, 50));
     stdin.write(' ');
     await new Promise(resolve => setTimeout(resolve, 50));
     
-    // Enter to confirm
+    // Enter to confirm with vfox selected
     stdin.write('\r');
     await new Promise(resolve => setTimeout(resolve, 50));
     
     expect(onComplete).toHaveBeenCalledWith({
-      versionManagers: [{ name: 'nvm' }],
+      versionManagers: [{ name: 'vfox' }],
     });
   });
 });
