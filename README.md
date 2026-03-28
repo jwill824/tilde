@@ -41,7 +41,7 @@ curl -fsSL https://get.tilde.sh | bash
 curl -fsSL https://get.tilde.sh | bash
 ```
 
-`bootstrap.sh` will install Homebrew and Node 20 if needed, then launch the tilde wizard.
+`bootstrap.sh` will install Homebrew and Node.js if needed, then launch the tilde wizard.
 
 ### Restore from a saved config
 
@@ -67,7 +67,7 @@ Options:
   --yes, --ci        Non-interactive mode (requires --config)
   --dry-run          Print planned actions without executing
   --resume           Resume from last checkpoint
-  --reconfigure      Re-run wizard from scratch
+  --reconfigure      Re-run wizard over an existing config
   --version, -v      Show version
   --help, -h         Show help
 ```
@@ -190,7 +190,7 @@ Secrets are never stored in plain text — use `op://vault/item/field` reference
 
 ---
 
-## Plugin Architecture
+## Plugins
 
 Every integration point is a swappable plugin implementing one of five interfaces:
 
@@ -202,33 +202,10 @@ Every integration point is a swappable plugin implementing one of five interface
 | `SecretsBackendPlugin` | 1Password | Generate secret references |
 | `EnvLoaderPlugin` | direnv | Per-directory env vars |
 
-### Community plugins
+Install a community plugin:
 
 ```bash
 tilde plugin add my-tool   # installs npm package tilde-plugin-my-tool
-```
-
-### Writing a plugin
-
-```typescript
-import type { PackageManagerPlugin } from 'tilde/plugins'
-import { PluginError } from 'tilde/plugins'
-
-class MyPackageManager implements PackageManagerPlugin {
-  readonly id = 'my-pm'
-  readonly version = '1.0.0'
-  readonly category = 'package-manager' as const
-
-  async isAvailable() {
-    return true
-  }
-
-  async installPackages(pkgs: string[]) {
-    // ... your implementation
-  }
-}
-
-export default new MyPackageManager()
 ```
 
 ---
@@ -257,30 +234,26 @@ export default new MyPackageManager()
 
 ---
 
-## Development
-
-```bash
-git clone https://github.com/your-username/tilde.git
-cd tilde
-npm install
-npm run build
-npm test              # unit tests
-npm run test:contract  # plugin contract tests
-npm run test:integration  # integration tests
-```
-
-See [`specs/001-mvp-macos-bootstrap/quickstart.md`](specs/001-mvp-macos-bootstrap/quickstart.md) for a full dev guide including how to write plugins and run the wizard locally.
-
----
-
 ## Requirements
 
-- macOS (Apple Silicon — arm64)
-- zsh (default on macOS 10.15+)
+- macOS (Apple Silicon — arm64) · Windows · Linux
 - Node.js 20+ (installed automatically by `bootstrap.sh` if absent)
 
 ---
 
+## Contributing
+
+Want to fix a bug, add a plugin, or improve the wizard? See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### Development workflow (speckit)
+
+tilde uses a spec-driven development workflow. Every feature follows the pipeline:
+
+```
+specify → clarify → plan → tasks → analyze → implement
+```
+
+No code may be written for a new feature until `tasks.md` exists and `/speckit.analyze` passes. For the full command reference, constitution principles, and contribution workflow, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
-MIT
