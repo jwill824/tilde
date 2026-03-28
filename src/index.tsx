@@ -2,6 +2,8 @@
 import React from 'react';
 import { render } from 'ink';
 import { parseArgs } from 'node:util';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { assertMacOS } from './utils/os.js';
 import { App } from './app.js';
 import { loadConfig } from './config/reader.js';
@@ -91,7 +93,8 @@ Environment variables:
 }
 
 async function handleContextSubcommand(sub: string, label: string | undefined, configPath: string | undefined) {
-  const cfgPath = configPath || 'tilde.config.json';
+  const cwdConfig = resolve(process.cwd(), 'tilde.config.json');
+  const cfgPath = configPath || (existsSync(cwdConfig) ? cwdConfig : 'tilde.config.json');
   let config;
   try {
     config = await loadConfig(cfgPath);
@@ -175,7 +178,8 @@ async function handlePluginSubcommand(sub: string, name: string | undefined) {
 }
 
 async function handleConfigSubcommand(sub: string, pathArg: string | undefined, configPath: string | undefined) {
-  const cfgPath = pathArg || configPath || 'tilde.config.json';
+  const cwdConfig = resolve(process.cwd(), 'tilde.config.json');
+  const cfgPath = pathArg || configPath || (existsSync(cwdConfig) ? cwdConfig : 'tilde.config.json');
 
   if (sub === 'validate') {
     try {
@@ -243,15 +247,24 @@ async function main() {
     process.exit(1);
   }
 
+  // Auto-detect tilde.config.json in cwd if no explicit --config given
+  let resolvedConfigPath = configPath;
+  if (!resolvedConfigPath) {
+    const cwdConfig = resolve(process.cwd(), 'tilde.config.json');
+    if (existsSync(cwdConfig)) {
+      resolvedConfigPath = cwdConfig;
+    }
+  }
+
   // Determine mode
   let mode: 'wizard' | 'config-first' | 'non-interactive';
   if (ci) {
-    if (!configPath) {
+    if (!resolvedConfigPath) {
       process.stderr.write('Error: --ci/--yes requires --config <path>\n');
       process.exit(3);
     }
     mode = 'non-interactive';
-  } else if (configPath) {
+  } else if (resolvedConfigPath) {
     mode = 'config-first';
   } else {
     mode = 'wizard';
@@ -260,7 +273,7 @@ async function main() {
   render(
     React.createElement(App, {
       mode,
-      configPath,
+      configPath: resolvedConfigPath,
       dryRun,
       resume: resume && !noResume,
       reconfigure,
