@@ -40,6 +40,22 @@ npx @jwill824/tilde
 
 ## Quick Start
 
+### Prerequisites
+
+tilde requires **Node.js 20+**. If you don't have it yet, pick the approach that fits your situation:
+
+```bash
+# Have Homebrew? (https://brew.sh)
+brew install node
+
+# No Homebrew yet? Download Node.js directly:
+# → https://nodejs.org/en/download
+```
+
+> Verify: `node --version` should print `v20.x.x` or higher.
+>
+> **Note:** tilde itself will set up Homebrew for you during the wizard — so if you're on a truly fresh Mac, the direct Node.js download is the fastest path to get started.
+
 ### Option 1 — Run without installing (recommended)
 
 ```bash
@@ -55,23 +71,11 @@ npm install -g @jwill824/tilde
 tilde
 ```
 
-### Option 3 — Install globally via other package managers
+### Coming soon
 
-```bash
-# pnpm
-pnpm add -g @jwill824/tilde
-
-# yarn
-yarn global add @jwill824/tilde
-```
-
-### Option 4 — Fresh machine (no Node.js yet)
-
-> **Coming soon:** Once `https://get.tilde.sh` is live, a single curl command will bootstrap Homebrew, Node.js, and tilde in one shot:
-> ```bash
-> curl -fsSL https://get.tilde.sh | bash
-> ```
-> In the meantime, install [Node.js 20+](https://nodejs.org) first (via [Homebrew](https://brew.sh): `brew install node`), then use Option 1 or 2 above.
+- **`brew install tilde`** — Homebrew formula ([tracking issue](https://github.com/jwill824/tilde/issues))
+- **`curl -fsSL https://get.tilde.sh | bash`** — zero-prereq one-liner for fresh machines
+- **pnpm / yarn** global install support
 
 ### Restore from a saved config
 
