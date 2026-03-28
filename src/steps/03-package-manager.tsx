@@ -9,7 +9,6 @@ export function PackageManagerStep({ onComplete }: Props) {
   useEffect(() => {
     const t = setTimeout(() => onComplete({ packageManager: 'homebrew' }), 500);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

@@ -41,7 +41,6 @@ export function Splash({ version, onDone }: SplashProps) {
     };
     // onDone is a stable mount-time callback; adding it would require
     // parent to memoize and adds unnecessary complexity
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const rows = buildWave(phase);

@@ -44,7 +44,6 @@ function NonInteractiveMode({ configPath, dryRun }: NonInteractiveProps) {
         process.exit(3);
       });
     // configPath and dryRun are mount-time props that never change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

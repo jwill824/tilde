@@ -39,7 +39,6 @@ export function ConfigDetectionStep({ onComplete }: Props) {
       onComplete({ mode: 'wizard' });
     }
     scan();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (scanning) {

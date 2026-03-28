@@ -25,7 +25,6 @@ interface LanguageEntry {
 function AutoAdvanceEmpty({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
     onComplete();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return <Box><Text dimColor>No version managers selected, skipping languages.</Text></Box>;
 }

@@ -12,7 +12,6 @@ interface Props {
 function AutoSkip({ contexts, onComplete }: { contexts: DeveloperContext[]; onComplete: (data: { contexts: DeveloperContext[] }) => void }) {
   useEffect(() => {
     onComplete({ contexts });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return <Box><Text dimColor>No gh-cli contexts — skipping account setup.</Text></Box>;
 }

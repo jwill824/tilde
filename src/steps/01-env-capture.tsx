@@ -53,7 +53,6 @@ export function EnvCaptureStep({ onComplete }: Props) {
         captureReport: { dotfiles: [], brewPackages: [], rcFiles: {}, skippedFiles: [] },
       });
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase.type]);
 
   if (phase.type === 'prompt') {
