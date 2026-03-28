@@ -1,4 +1,15 @@
-# tilde ~
+```
+  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~
+
+      __   _ __    __   
+     / /  (_) /___/ /__ 
+    / /__/ / / / _  / -_)
+   /____/_/_/ \_,_/\__/ 
+
+    macOS developer environment bootstrap
+
+  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~
+```
 
 > Bootstrap your entire macOS developer environment with a single command.
 

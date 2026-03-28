@@ -267,8 +267,10 @@ each context without any manual switching.
 - **SC-006**: A developer using config-first mode spends zero time re-answering previously
   configured choices — only missing or explicitly changed fields trigger prompts.
 - **SC-007**: Every push to any branch triggers the CI workflow within 2 minutes and reports
-  pass/fail status on the commit. The release workflow on `main` automatically publishes a new
-  npm version within 5 minutes of a merged releasable commit, with no manual steps required.
+  pass/fail status on the commit. The CI job summary MUST present unit, contract, and
+  integration test results under clearly labeled sections (🧪 Unit Tests / 📋 Contract Tests /
+  🔗 Integration Tests). The release workflow on `main` automatically publishes a new npm
+  version within 5 minutes of a merged releasable commit, with no manual steps required.
 
 ## Assumptions
 
@@ -294,6 +296,9 @@ each context without any manual switching.
 - The CI/CD pipeline uses GitHub Actions with semantic-release. An `NPM_TOKEN` secret must
   be set in the GitHub repository settings before the release workflow can publish to npm.
   The `GITHUB_TOKEN` is automatically provided by GitHub Actions and requires no setup.
+- Both GitHub Actions workflows opt into Node.js 24 runners via
+  `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`. Build and test steps continue to target
+  `node-version: '22'` as the runtime for tilde itself.
 - All commits to this repository follow the Conventional Commits specification
   (`feat:`, `fix:`, `chore:`, `BREAKING CHANGE:`) so that semantic-release can correctly
   determine the next version number.
