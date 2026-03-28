@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/jwill824/tilde/compare/v1.0.0...v1.0.1) (2026-03-28)
+
+
+### Bug Fixes
+
+* remove leading ./ from bin path (npm pkg fix) ([b1a3906](https://github.com/jwill824/tilde/commit/b1a390698c759edc85d88d2d17ed64925fad4912))
+
 # 1.0.0 (2026-03-28)
 
 

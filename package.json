@@ -1,6 +1,6 @@
 {
   "name": "@jwill824/tilde",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Interactive CLI to bootstrap a complete developer environment",
   "type": "module",
   "bin": {
