@@ -41,7 +41,7 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
         const config = await loadConfig(configPath);
         setPhase({ type: 'wizard', initialConfig: config });
       } catch (err) {
-        const error = err as NodeJS.ErrnoException;
+        const error = err as Error & { code?: string };
 
         if (error.code === 'ENOENT') {
           setPhase({

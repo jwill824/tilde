@@ -74,7 +74,7 @@ export async function detectShellVersion(shellPath: string): Promise<string | un
   try {
     const result = await execa(shellPath, ['--version'], { timeout: 3000 });
     const firstLine = result.stdout.split('\n')[0] ?? '';
-    const match = firstLine.match(/(\d+\.\d+[\.\d]*)/);
+    const match = firstLine.match(/(\d+\.\d+[.\d]*)/);
     return match?.[1];
   } catch {
     return undefined;
