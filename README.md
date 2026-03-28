@@ -17,8 +17,10 @@
 **tilde** is an interactive CLI built with [Ink](https://github.com/vadimdemedes/ink) that guides you through setting up a complete developer environment from scratch — or restores one you've already defined. It handles everything from shell configuration and package installation to multi-account GitHub identity switching and context-aware environment variables.
 
 ```bash
-curl -fsSL https://get.tilde.sh | bash
+npx @jwill824/tilde
 ```
+
+> **Coming soon:** `curl -fsSL https://get.tilde.sh | bash` — a one-liner installer for fresh machines with no Node.js prerequisite.
 
 ---
 
@@ -38,13 +40,38 @@ curl -fsSL https://get.tilde.sh | bash
 
 ## Quick Start
 
-### Fresh machine (recommended)
+### Option 1 — Run without installing (recommended)
 
 ```bash
-curl -fsSL https://get.tilde.sh | bash
+npx @jwill824/tilde
 ```
 
-`bootstrap.sh` will install Homebrew and Node.js if needed, then launch the tilde wizard.
+No global install needed — always pulls the latest version.
+
+### Option 2 — Install globally via npm
+
+```bash
+npm install -g @jwill824/tilde
+tilde
+```
+
+### Option 3 — Install globally via other package managers
+
+```bash
+# pnpm
+pnpm add -g @jwill824/tilde
+
+# yarn
+yarn global add @jwill824/tilde
+```
+
+### Option 4 — Fresh machine (no Node.js yet)
+
+> **Coming soon:** Once `https://get.tilde.sh` is live, a single curl command will bootstrap Homebrew, Node.js, and tilde in one shot:
+> ```bash
+> curl -fsSL https://get.tilde.sh | bash
+> ```
+> In the meantime, install [Node.js 20+](https://nodejs.org) first (via [Homebrew](https://brew.sh): `brew install node`), then use Option 1 or 2 above.
 
 ### Restore from a saved config
 
