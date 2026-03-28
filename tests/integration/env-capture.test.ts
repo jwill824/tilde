@@ -43,7 +43,7 @@ describe('env-capture integration', () => {
 
   afterEach(async () => {
     await rm(tmpHome, { recursive: true, force: true });
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it('full capture flow: dotfiles detected, .env excluded, brew packages parsed, rc content readable', async () => {

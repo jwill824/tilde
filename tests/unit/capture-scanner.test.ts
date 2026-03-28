@@ -21,7 +21,7 @@ describe('capture/scanner', () => {
 
   afterEach(async () => {
     await rm(tmpHome, { recursive: true, force: true });
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it('scanDotfiles returns dotfiles including .zshrc, .gitconfig, and .env', async () => {
