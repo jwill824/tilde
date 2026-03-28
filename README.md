@@ -2,9 +2,12 @@
   <img src="docs/banner.svg" alt="tilde — developer environment bootstrap" width="560"/>
 
   [![CI](https://github.com/jwill824/tilde/actions/workflows/ci.yml/badge.svg)](https://github.com/jwill824/tilde/actions/workflows/ci.yml)
+  [![Release](https://github.com/jwill824/tilde/actions/workflows/release.yml/badge.svg)](https://github.com/jwill824/tilde/actions/workflows/release.yml)
   [![npm version](https://img.shields.io/npm/v/%40jwill824%2Ftilde?color=22d3ee&logo=npm)](https://www.npmjs.com/package/@jwill824/tilde)
   [![npm downloads](https://img.shields.io/npm/dm/%40jwill824%2Ftilde?color=22d3ee)](https://www.npmjs.com/package/@jwill824/tilde)
+  [![GitHub release](https://img.shields.io/github/v/release/jwill824/tilde?color=22d3ee&logo=github)](https://github.com/jwill824/tilde/releases)
   [![Node.js](https://img.shields.io/node/v/%40jwill824%2Ftilde?color=22d3ee&logo=node.js)](https://nodejs.org)
+  [![npm provenance](https://img.shields.io/badge/provenance-verified-22d3ee?logo=npm)](https://www.npmjs.com/package/@jwill824/tilde)
   [![semantic-release](https://img.shields.io/badge/semantic--release-conventional--commits-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
   [![License: MIT](https://img.shields.io/badge/license-MIT-22d3ee)](https://opensource.org/licenses/MIT)
 </div>
