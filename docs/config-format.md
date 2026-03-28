@@ -217,3 +217,52 @@ Symlinks are created from `~/.gitconfig` → `{dotfilesRepo}/git/.gitconfig`, et
 | `TILDE_CI` | `--ci` | Non-interactive mode (`1` or `true`) |
 | `TILDE_NO_COLOR` | — | Disable color output |
 | `TILDE_STATE_DIR` | — | Override `~/.tilde/` state directory |
+
+---
+
+## Schema Versioning
+
+Every `tilde.config.json` written by tilde includes a `schemaVersion` integer field:
+
+```json
+{
+  "schemaVersion": 1,
+  ...
+}
+```
+
+### What the version means
+
+| Value | Meaning |
+|-------|---------|
+| `1` | Baseline schema — current version |
+
+### Migration notifications
+
+When tilde loads a config with an older `schemaVersion`, it automatically runs all applicable migration steps, rewrites the config atomically, and prints a notification. No manual action is required.
+
+### Future-version warning
+
+If tilde reads a config with a `schemaVersion` **higher** than the installed version supports, it prints a warning and opens the config in read-only mode (no rewrite). To resolve: upgrade tilde to the latest version.
+
+---
+
+## CLI Reference
+
+### `--reconfigure`
+
+Re-open the full configuration wizard with all existing values pre-populated as defaults:
+
+```sh
+tilde --reconfigure
+```
+
+**Behaviour**:
+- Loads the existing `tilde.config.json` from the path specified by `--config` (or the default location)
+- Opens the full 14-step wizard with every field pre-filled from the stored config
+- On completion, atomically overwrites the config file with the updated values
+- On early exit (Ctrl-C or Cancel), the original config file is **not modified**
+
+**Error cases**:
+- **No config found**: tilde exits with a message directing you to run `tilde` (without `--reconfigure`) to create your initial configuration
+- **Invalid config**: tilde attempts to extract valid fields and opens the wizard with those as defaults; invalid fields default to their wizard defaults

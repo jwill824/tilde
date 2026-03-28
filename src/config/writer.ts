@@ -1,7 +1,8 @@
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, rename, unlink, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import type { TildeConfig } from './schema.js';
+import { CURRENT_SCHEMA_VERSION } from './migrations/runner.js';
 
 const SECRET_PATTERN = /^(ghp_|sk-|AKIA|xox[bp]-)/;
 
@@ -23,6 +24,17 @@ function containsSecret(config: TildeConfig): boolean {
   return false;
 }
 
+export async function atomicWriteConfig(targetPath: string, content: string): Promise<void> {
+  const tmpPath = `${targetPath}.tmp`;
+  await writeFile(tmpPath, content, 'utf-8');
+  try {
+    await rename(tmpPath, targetPath);
+  } catch (err) {
+    try { await unlink(tmpPath); } catch { /* ignore cleanup failure */ }
+    throw err;
+  }
+}
+
 export async function writeConfig(
   config: TildeConfig,
   dotfilesRepo: string
@@ -38,7 +50,8 @@ export async function writeConfig(
   await mkdir(repoPath, { recursive: true });
 
   const outputPath = join(repoPath, 'tilde.config.json');
-  const content = JSON.stringify(config, null, 2) + '\n';
-  await writeFile(outputPath, content, 'utf-8');
+  const configWithVersion = { ...config, schemaVersion: CURRENT_SCHEMA_VERSION };
+  const content = JSON.stringify(configWithVersion, null, 2) + '\n';
+  await atomicWriteConfig(outputPath, content);
   return outputPath;
 }

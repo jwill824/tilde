@@ -3,7 +3,8 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fromZodError } from 'zod-validation-error';
 import { TildeConfigSchema, type TildeConfig } from './schema.js';
-import { migrateConfig } from './migrations/v1.js';
+import { runMigrations, CURRENT_SCHEMA_VERSION, type MigrationResult } from './migrations/runner.js';
+import { atomicWriteConfig } from './writer.js';
 
 function expandTilde(p: string): string {
   if (p.startsWith('~/')) {
@@ -12,7 +13,10 @@ function expandTilde(p: string): string {
   return p;
 }
 
-export async function loadConfig(pathOrUrl: string): Promise<TildeConfig> {
+export async function loadConfig(
+  pathOrUrl: string,
+  onMigrated?: (result: MigrationResult) => void,
+): Promise<TildeConfig> {
   let content: string;
 
   if (pathOrUrl.startsWith('https://') || pathOrUrl.startsWith('http://')) {
@@ -35,10 +39,33 @@ export async function loadConfig(pathOrUrl: string): Promise<TildeConfig> {
 
   // Run migration before validation
   const rawRecord = (typeof raw === 'object' && raw !== null) ? raw as Record<string, unknown> : {};
-  const fromVersion = typeof rawRecord['schemaVersion'] === 'number' ? rawRecord['schemaVersion'] : 1;
-  const migrated = migrateConfig(raw, fromVersion);
+  let migrationResult: MigrationResult;
+  try {
+    migrationResult = runMigrations(rawRecord, CURRENT_SCHEMA_VERSION);
+  } catch (err) {
+    throw new Error(
+      `Config migration failed: ${(err as Error).message}. The original config file has not been modified.`,
+      { cause: err }
+    );
+  }
 
-  const result = TildeConfigSchema.safeParse(migrated);
+  if (migrationResult.isFutureVersion) {
+    console.warn(
+      `[tilde] Warning: config schemaVersion (${rawRecord['schemaVersion']}) is newer than ` +
+      `this version of tilde (CURRENT_SCHEMA_VERSION=${CURRENT_SCHEMA_VERSION}). ` +
+      `Proceeding in read-only mode — config will not be rewritten.`
+    );
+  }
+
+  if (migrationResult.didMigrate && !pathOrUrl.startsWith('http')) {
+    const { join: pathJoin } = await import('node:path');
+    const expandedPath = pathOrUrl.startsWith('~/') ? pathJoin(homedir(), pathOrUrl.slice(2)) : pathOrUrl;
+    const migratedContent = JSON.stringify(migrationResult.config, null, 2) + '\n';
+    await atomicWriteConfig(expandedPath, migratedContent);
+    onMigrated?.(migrationResult);
+  }
+
+  const result = TildeConfigSchema.safeParse(migrationResult.config);
   if (!result.success) {
     const validationError = fromZodError(result.error);
     throw new Error(`Config validation failed:\n${validationError.message}`);

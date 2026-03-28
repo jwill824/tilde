@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Box, Text, Static } from 'ink';
 import { Wizard } from './modes/wizard.js';
 import { ConfigFirstMode } from './modes/config-first.js';
+import { ReconfigureMode } from './modes/reconfigure.js';
 import { Splash, CompactHeader } from './ui/splash.js';
 import type { TildeConfig } from './config/schema.js';
 import { loadConfig } from './config/reader.js';
+import { captureEnvironment, type EnvironmentSnapshot } from './utils/environment.js';
 import { installAll } from './installer/index.js';
 import { writeAll } from './dotfiles/writer.js';
 import { pluginRegistry } from './plugins/registry.js';
@@ -60,6 +62,24 @@ function NonInteractiveMode({ configPath, dryRun }: NonInteractiveProps) {
 export function App({ mode, configPath, dryRun, resume, reconfigure, version = '0.1.0' }: AppProps) {
   const [splashDone, setSplashDone] = useState(false);
   const [done, setDone] = useState(false);
+  const [environment, setEnvironment] = useState<EnvironmentSnapshot>({
+    os: 'macOS',
+    arch: 'unknown',
+    shellName: 'unknown',
+    shellVersion: undefined,
+    tildeVersion: version,
+  });
+
+  // Capture real environment at startup for interactive modes; update splash in-flight
+  useEffect(() => {
+    if (mode === 'non-interactive') return;
+    captureEnvironment(version)
+      .then(setEnvironment)
+      .catch(() => {
+        // Fallback is already set above — never crash on detection failure
+      });
+    // mode and version are mount-time values that never change
+  }, []);
 
   // Non-interactive / CI mode skips the splash entirely
   if (mode === 'non-interactive') {
@@ -68,18 +88,41 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
 
   // Wave splash plays first
   if (!splashDone) {
-    return <Splash version={version} onDone={() => setSplashDone(true)} />;
+    return <Splash environment={environment} onDone={() => setSplashDone(true)} />;
   }
 
   // After splash: compact header locked at top via Static; wizard/config renders below.
   // As content grows the header naturally scrolls up off-screen (Copilot CLI pattern).
   const header = (
-    <Static items={[{ id: 'header', version }]}>
-      {(item: { id: string; version: string }) => (
-        <CompactHeader key={item.id} version={item.version} />
+    <Static items={[{ id: 'header', tildeVersion: version }]}>
+      {(item: { id: string; tildeVersion: string }) => (
+        <CompactHeader key={item.id} tildeVersion={item.tildeVersion} />
       )}
     </Static>
   );
+
+  // --reconfigure flag: open wizard pre-populated with existing config
+  if (reconfigure && configPath) {
+    if (done) {
+      return (
+        <Box>
+          <Text color="green">✓ Configuration updated. Run </Text>
+          <Text bold>tilde --config {configPath}</Text>
+          <Text color="green"> to apply.</Text>
+        </Box>
+      );
+    }
+    return (
+      <Box flexDirection="column">
+        {header}
+        <ReconfigureMode
+          configPath={configPath}
+          environment={environment}
+          onComplete={() => setDone(true)}
+        />
+      </Box>
+    );
+  }
 
   if (mode === 'config-first' && configPath) {
     if (done) {
@@ -103,7 +146,6 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
     <Box flexDirection="column">
       {header}
       {resume && <Text color="yellow">Resuming from checkpoint...</Text>}
-      {reconfigure && <Text color="yellow">Reconfiguring from scratch...</Text>}
       <Wizard
         onComplete={(_config: TildeConfig) => {
           // wizard complete — process.exit is handled by ConfigExportStep

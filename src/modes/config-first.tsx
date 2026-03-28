@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { fromZodError } from 'zod-validation-error';
 import { TildeConfigSchema, type TildeConfig } from '../config/schema.js';
-import { migrateConfig } from '../config/migrations/v1.js';
+import { runMigrations, CURRENT_SCHEMA_VERSION } from '../config/migrations/runner.js';
 import { installAll } from '../installer/index.js';
 import { writeAll } from '../dotfiles/writer.js';
 import { pluginRegistry } from '../plugins/registry.js';
@@ -70,9 +70,8 @@ export function ConfigFirstMode({ configPath, onComplete }: Props) {
         const expanded = expandTilde(configPath);
         const content = await readFile(expanded, 'utf-8');
         const raw = JSON.parse(content) as Record<string, unknown>;
-        const fromVersion = typeof raw['schemaVersion'] === 'number' ? raw['schemaVersion'] : 1;
-        const migrated = migrateConfig(raw, fromVersion) as Record<string, unknown>;
-        setPhase(validateAndTransition(migrated));
+        const migrationResult = runMigrations(raw, CURRENT_SCHEMA_VERSION);
+        setPhase(validateAndTransition(migrationResult.config as Record<string, unknown>));
       } catch (err) {
         setPhase({ type: 'error', message: (err as Error).message });
       }
