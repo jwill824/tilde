@@ -215,6 +215,16 @@ each context without any manual switching.
   format (e.g., `op://` URIs).
 - **FR-017**: System MUST connect the configured GitHub account(s) using the user's chosen
   auth method (gh CLI auth, HTTPS credential helper, or SSH key) per context.
+- **FR-021**: System MUST display a splash screen with ASCII art logo and version number on
+  every interactive startup (wizard and config-first modes). Non-interactive / CI mode (`--ci`,
+  `--yes`) MUST skip the splash entirely to keep output machine-parseable.
+- **FR-022**: The project MUST include a CI/CD pipeline (GitHub Actions) that runs linting,
+  TypeScript compilation, and all test suites (unit, contract, integration) on every push and
+  pull request. Failures MUST block merging.
+- **FR-023**: The project MUST use semantic versioning driven by conventional commits
+  (feat → minor bump, fix → patch bump, BREAKING CHANGE → major bump). Version bumps,
+  changelog generation, GitHub Release creation, and npm package publication MUST be
+  automated on every push to `main` that contains releasable commits.
 
 ### Key Entities
 
@@ -256,6 +266,9 @@ each context without any manual switching.
   git identity and environment variables being active within one second.
 - **SC-006**: A developer using config-first mode spends zero time re-answering previously
   configured choices — only missing or explicitly changed fields trigger prompts.
+- **SC-007**: Every push to any branch triggers the CI workflow within 2 minutes and reports
+  pass/fail status on the commit. The release workflow on `main` automatically publishes a new
+  npm version within 5 minutes of a merged releasable commit, with no manual steps required.
 
 ## Assumptions
 
@@ -278,3 +291,9 @@ each context without any manual switching.
   connectors are also supported but receive less UX polish in v1.
 - The `tilde.config.json` schema is v1 for this spec; migration logic for future schema
   versions is deferred.
+- The CI/CD pipeline uses GitHub Actions with semantic-release. An `NPM_TOKEN` secret must
+  be set in the GitHub repository settings before the release workflow can publish to npm.
+  The `GITHUB_TOKEN` is automatically provided by GitHub Actions and requires no setup.
+- All commits to this repository follow the Conventional Commits specification
+  (`feat:`, `fix:`, `chore:`, `BREAKING CHANGE:`) so that semantic-release can correctly
+  determine the next version number.

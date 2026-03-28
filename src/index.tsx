@@ -277,6 +277,7 @@ async function main() {
       dryRun,
       resume: resume && !noResume,
       reconfigure,
+      version: VERSION,
     })
   );
 }

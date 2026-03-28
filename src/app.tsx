@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import { Wizard } from './modes/wizard.js';
 import { ConfigFirstMode } from './modes/config-first.js';
+import { Splash } from './ui/splash.js';
 import type { TildeConfig } from './config/schema.js';
 import { loadConfig } from './config/reader.js';
 import { installAll } from './installer/index.js';
@@ -16,6 +17,7 @@ export interface AppProps {
   dryRun?: boolean;
   resume?: boolean;
   reconfigure?: boolean;
+  version?: string;
 }
 
 interface NonInteractiveProps {
@@ -54,8 +56,18 @@ function NonInteractiveMode({ configPath, dryRun }: NonInteractiveProps) {
   );
 }
 
-export function App({ mode, configPath, dryRun, resume, reconfigure }: AppProps) {
+export function App({ mode, configPath, dryRun, resume, reconfigure, version = '0.1.0' }: AppProps) {
+  const [splashDone, setSplashDone] = useState(false);
   const [done, setDone] = useState(false);
+
+  // Non-interactive / CI mode skips the splash entirely
+  if (mode === 'non-interactive') {
+    return <NonInteractiveMode configPath={configPath} dryRun={dryRun} />;
+  }
+
+  if (!splashDone) {
+    return <Splash version={version} onDone={() => setSplashDone(true)} />;
+  }
 
   if (mode === 'config-first' && configPath) {
     if (done) {
@@ -70,7 +82,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure }: AppProps)
     return (
       <Box flexDirection="column">
         <Box marginBottom={1}>
-          <Text color="cyan" bold>tilde 🌿</Text>
+          <Text color="cyan" bold>tilde</Text>
           <Text dimColor> — config-first restore</Text>
         </Box>
         <ConfigFirstMode configPath={configPath} onComplete={() => setDone(true)} />
@@ -78,16 +90,8 @@ export function App({ mode, configPath, dryRun, resume, reconfigure }: AppProps)
     );
   }
 
-  if (mode === 'non-interactive') {
-    return <NonInteractiveMode configPath={configPath} dryRun={dryRun} />;
-  }
-
   return (
     <Box flexDirection="column">
-      <Box marginBottom={1}>
-        <Text color="cyan" bold>tilde 🌿</Text>
-        <Text dimColor> — macOS developer environment bootstrap</Text>
-      </Box>
       {resume && <Text color="yellow">Resuming from checkpoint...</Text>}
       {reconfigure && <Text color="yellow">Reconfiguring from scratch...</Text>}
       <Wizard
