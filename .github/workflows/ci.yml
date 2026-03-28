@@ -3,6 +3,11 @@ name: CI
 on:
   push:
     branches: ['**']
+    paths-ignore:
+      - 'docs/**'
+      - 'specs/**'
+      - '**/*.md'
+      - '.specify/**'
   pull_request:
     branches: [main]
 
