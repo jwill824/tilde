@@ -42,19 +42,29 @@ npx @jwill824/tilde
 
 ### Prerequisites
 
-tilde requires **Node.js 20+**. If you don't have it yet, pick the approach that fits your situation:
+tilde requires **Node.js 20+** to run — but only temporarily on a fresh machine. The wizard will install your chosen version manager (vfox, nvm, etc.) and the proper Node.js runtime through it. Once setup completes, tilde will offer to remove the bootstrap Node.js installation to keep your system clean.
+
+**Step 1 — Install a bootstrap Node.js (one-time only):**
 
 ```bash
 # Have Homebrew? (https://brew.sh)
 brew install node
 
-# No Homebrew yet? Download Node.js directly:
+# No Homebrew yet? Download Node.js directly (installs to /usr/local):
 # → https://nodejs.org/en/download
 ```
 
 > Verify: `node --version` should print `v20.x.x` or higher.
->
-> **Note:** tilde itself will set up Homebrew for you during the wizard — so if you're on a truly fresh Mac, the direct Node.js download is the fastest path to get started.
+
+**Step 2 — Run tilde:**
+
+```bash
+npx @jwill824/tilde
+```
+
+The wizard sets up your environment — including Homebrew, your version manager, and Node.js — then offers to clean up the temporary Node.js installation it used to bootstrap.
+
+> **Note:** The automatic cleanup step is [coming soon](https://github.com/jwill824/tilde/issues/2). Until then, uninstall manually: `brew uninstall node` or remove the nodejs.org pkg via System Preferences → Uninstall.
 
 ### Option 1 — Run without installing (recommended)
 
@@ -73,7 +83,7 @@ tilde
 
 ### Coming soon
 
-- **`brew install tilde`** — Homebrew formula ([tracking issue](https://github.com/jwill824/tilde/issues))
+- **`brew install tilde`** — Homebrew formula ([tracking issue](https://github.com/jwill824/tilde/issues/2))
 - **`curl -fsSL https://get.tilde.sh | bash`** — zero-prereq one-liner for fresh machines
 - **pnpm / yarn** global install support
 
