@@ -148,13 +148,13 @@ GitHub account, and environment variables — no manual commands needed.
 **Independent Test**: Configure two contexts with different git identities. `cd` into each
 context directory; run `git config user.email`; verify correct identity per context.
 
-- [ ] T069 [US4] Create shell cd hook generator in `src/dotfiles/cd-hook.ts` — `generateCdHook(contexts, accountPlugin)` producing zsh `function cd()` that pattern-matches `$PWD` against each context path, calls `gh auth switch --user` for gh-cli contexts; integrated into `shellprofile.ts`
-- [ ] T070 [P] [US4] Update gh-cli plugin `generateShellHook()` in `src/plugins/first-party/gh-cli/index.ts` — accept full `DeveloperContext[]`; produce complete cd function body with all context cases + fallback to default context
-- [ ] T071 [US4] Update direnv plugin `generateEnvrc()` in `src/plugins/first-party/direnv/index.ts` — include `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL` exports per context (from `context.git`); reference secrets via backend
-- [ ] T072 [P] [US4] Update git config generator in `src/dotfiles/gitconfig.ts` — ensure global `~/.gitconfig` has `[includeIf "gitdir:~/path/"]` for each context pointing to `${dotfilesRepo}/git/.gitconfig-${label}`; validate no overlapping paths
-- [ ] T073 [P] [US4] Write unit tests for cd hook generation in `tests/unit/cd-hook.test.ts` — two contexts → cd function contains both path cases; default context case present; no context match → default context active
-- [ ] T074 [P] [US4] Write unit tests for gitconfig includeIf generation in `tests/unit/gitconfig.test.ts` — two contexts → two `includeIf` blocks in global config; correct email in each context config; overlapping paths throw validation error
-- [ ] T075 [US4] Write integration test for context switching in `tests/integration/context-switch.test.ts` — create temp dirs matching context paths; run dotfiles writer with two-context config; `execSync('git config user.email')` in each dir; assert correct identity per context
+- [X] T069 [US4] Create shell cd hook generator in `src/dotfiles/cd-hook.ts` — `generateCdHook(contexts, accountPlugin)` producing zsh `function cd()` that pattern-matches `$PWD` against each context path, calls `gh auth switch --user` for gh-cli contexts; integrated into `shellprofile.ts`
+- [X] T070 [P] [US4] Update gh-cli plugin `generateShellHook()` in `src/plugins/first-party/gh-cli/index.ts` — accept full `DeveloperContext[]`; produce complete cd function body with all context cases + fallback to default context
+- [X] T071 [US4] Update direnv plugin `generateEnvrc()` in `src/plugins/first-party/direnv/index.ts` — include `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL` exports per context (from `context.git`); reference secrets via backend
+- [X] T072 [P] [US4] Update git config generator in `src/dotfiles/gitconfig.ts` — ensure global `~/.gitconfig` has `[includeIf "gitdir:~/path/"]` for each context pointing to `${dotfilesRepo}/git/.gitconfig-${label}`; validate no overlapping paths
+- [X] T073 [P] [US4] Write unit tests for cd hook generation in `tests/unit/cd-hook.test.ts` — two contexts → cd function contains both path cases; default context case present; no context match → default context active
+- [X] T074 [P] [US4] Write unit tests for gitconfig includeIf generation in `tests/unit/gitconfig.test.ts` — two contexts → two `includeIf` blocks in global config; correct email in each context config; overlapping paths throw validation error
+- [X] T075 [US4] Write integration test for context switching in `tests/integration/context-switch.test.ts` — create temp dirs matching context paths; run dotfiles writer with two-context config; `execSync('git config user.email')` in each dir; assert correct identity per context
 
 ---
 

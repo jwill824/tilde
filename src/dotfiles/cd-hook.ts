@@ -1,12 +1,9 @@
 import type { DeveloperContext } from '../config/schema.js';
 
-/**
- * Generate a zsh cd() function that switches gh-cli account based on PWD.
- * Phase 6 (US4) full implementation.
- */
-export function generateCdHook(
-  contexts: Array<DeveloperContext & { username?: string }>
-): string {
+const CD_HOOK_MARKER_BEGIN = '# --- tilde:cd-hook:begin ---';
+const CD_HOOK_MARKER_END = '# --- tilde:cd-hook:end ---';
+
+export function generateCdHook(contexts: DeveloperContext[]): string {
   const cases = contexts
     .filter(ctx => ctx.authMethod === 'gh-cli' && ctx.github?.username)
     .map(ctx => {
@@ -17,11 +14,17 @@ export function generateCdHook(
 
   if (!cases) return '';
 
-  return `# tilde: context-aware cd hook
-function cd() {
+  const fn = `function cd() {
   builtin cd "$@" || return
   case "$PWD" in
 ${cases}
+    *) ;;
   esac
 }`;
+
+  return `${CD_HOOK_MARKER_BEGIN}\n${fn}\n${CD_HOOK_MARKER_END}`;
+}
+
+export function hasCdHook(zshrcContent: string): boolean {
+  return zshrcContent.includes(CD_HOOK_MARKER_BEGIN);
 }

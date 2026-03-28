@@ -3,6 +3,9 @@ import { Box, Text, Static } from 'ink';
 import type { TildeConfig } from '../config/schema.js';
 import { saveCheckpoint } from '../state/checkpoint.js';
 import { ConfigDetectionStep } from '../steps/00-config-detection.js';
+import { EnvCaptureStep } from '../steps/01-env-capture.js';
+import type { EnvironmentCaptureReport } from '../capture/scanner.js';
+import { parseGitconfig } from '../capture/parser.js';
 import { ShellStep } from '../steps/02-shell.js';
 import { PackageManagerStep } from '../steps/03-package-manager.js';
 import { VersionManagerStep } from '../steps/04-version-manager.js';
@@ -33,6 +36,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete }: Wiza
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [config, setConfig] = useState<Partial<TildeConfig>>(initialConfig);
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
+  const [captureReport, setCaptureReport] = useState<EnvironmentCaptureReport | null>(null);
 
   const advance = useCallback(
     async (stepData: Partial<TildeConfig>, summary: string) => {
@@ -77,12 +81,23 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete }: Wiza
           />
         )}
         {currentStep === 1 && (
-          <Box>
-            <Text dimColor>Skipping environment capture (Phase 2 feature)...</Text>
-          </Box>
+          <EnvCaptureStep
+            onComplete={(data) => {
+              setCaptureReport(data.captureReport);
+              const rcFiles = data.captureReport.rcFiles;
+              const detectedShell =
+                rcFiles['.zshrc'] !== undefined ? 'zsh' :
+                rcFiles['.bash_profile'] !== undefined ? 'bash' : undefined;
+              advance(
+                detectedShell ? { shell: detectedShell } : {},
+                `Environment scan: ${data.captureReport.dotfiles.length} dotfiles, ${data.captureReport.brewPackages.length} brew packages`
+              );
+            }}
+          />
         )}
         {currentStep === 2 && (
           <ShellStep
+            defaultShell={config.shell ?? 'zsh'}
             onComplete={(data) => advance(
               { shell: data.shell },
               `Shell: ${data.shell}`
@@ -125,6 +140,8 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete }: Wiza
         {currentStep === 7 && (
           <ContextsStep
             workspaceRoot={config.workspaceRoot ?? '~/Developer'}
+            defaultGitName={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').name : undefined}
+            defaultGitEmail={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').email : undefined}
             onComplete={(data) => advance(
               { contexts: data.contexts },
               `Contexts: ${data.contexts.map(c => c.label).join(', ')}`
@@ -142,6 +159,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete }: Wiza
         )}
         {currentStep === 9 && (
           <ToolsStep
+            defaultTools={captureReport ? captureReport.brewPackages.join(', ') : undefined}
             onComplete={(data) => advance(
               {
                 tools: data.tools,

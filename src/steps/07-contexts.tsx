@@ -7,6 +7,8 @@ import type { DeveloperContext } from '../config/schema.js';
 interface Props {
   workspaceRoot: string;
   onComplete: (data: { contexts: DeveloperContext[] }) => void;
+  defaultGitName?: string;
+  defaultGitEmail?: string;
 }
 
 type Phase =
@@ -16,14 +18,14 @@ type Phase =
   | { type: 'gitEmail'; label: string; path: string; gitName: string }
   | { type: 'loop' };
 
-export function ContextsStep({ workspaceRoot, onComplete }: Props) {
+export function ContextsStep({ workspaceRoot, onComplete, defaultGitName = '', defaultGitEmail = '' }: Props) {
   const [contexts, setContexts] = useState<DeveloperContext[]>([]);
   const [phase, setPhase] = useState<Phase>({ type: 'label' });
   const [error, setError] = useState('');
   const [labelInput, setLabelInput] = useState('');
   const [pathInput, setPathInput] = useState('');
-  const [gitNameInput, setGitNameInput] = useState('');
-  const [gitEmailInput, setGitEmailInput] = useState('');
+  const [gitNameInput, setGitNameInput] = useState(defaultGitName);
+  const [gitEmailInput, setGitEmailInput] = useState(defaultGitEmail);
 
   if (phase.type === 'label') {
     return (

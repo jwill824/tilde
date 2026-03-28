@@ -34,7 +34,9 @@ export async function loadConfig(pathOrUrl: string): Promise<TildeConfig> {
   }
 
   // Run migration before validation
-  const migrated = migrateConfig(raw);
+  const rawRecord = (typeof raw === 'object' && raw !== null) ? raw as Record<string, unknown> : {};
+  const fromVersion = typeof rawRecord['schemaVersion'] === 'number' ? rawRecord['schemaVersion'] : 1;
+  const migrated = migrateConfig(raw, fromVersion);
 
   const result = TildeConfigSchema.safeParse(migrated);
   if (!result.success) {

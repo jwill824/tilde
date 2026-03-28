@@ -1,3 +1,5 @@
+import type { DeveloperContext } from '../config/schema.js';
+
 export class PluginError extends Error {
   constructor(
     public readonly pluginId: string,
@@ -56,7 +58,7 @@ export interface AccountConnectorPlugin extends TildePlugin {
   connect(username: string): Promise<{ username: string; email?: string }>;
   switchAccount(username: string): Promise<void>;
   currentAccount(): Promise<string | null>;
-  generateShellHook(contexts: Array<{ path: string; username: string }>): string;
+  generateShellHook(contexts: DeveloperContext[]): string;
 }
 
 export interface EnvLoaderPlugin extends TildePlugin {
@@ -64,6 +66,7 @@ export interface EnvLoaderPlugin extends TildePlugin {
   isAvailable(): Promise<boolean>;
   install(): Promise<void>;
   generateEnvrc(opts: {
+    context?: DeveloperContext;
     envVars: Array<{ key: string; value: string }>;
     secretsBackend: SecretsBackendPlugin;
   }): string;

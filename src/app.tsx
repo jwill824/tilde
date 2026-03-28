@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Text } from 'ink';
 import { Wizard } from './modes/wizard.js';
+import { ConfigFirstMode } from './modes/config-first.js';
 import type { TildeConfig } from './config/schema.js';
 
 export type AppMode = 'wizard' | 'config-first' | 'non-interactive';
@@ -14,11 +15,25 @@ export interface AppProps {
 }
 
 export function App({ mode, configPath, dryRun, resume, reconfigure }: AppProps) {
+  const [done, setDone] = useState(false);
+
   if (mode === 'config-first' && configPath) {
+    if (done) {
+      return (
+        <Box>
+          <Text color="green">✓ Done. Run </Text>
+          <Text bold>tilde</Text>
+          <Text color="green"> again at any time to re-apply.</Text>
+        </Box>
+      );
+    }
     return (
       <Box flexDirection="column">
-        <Text color="cyan">tilde — config-first mode</Text>
-        <Text dimColor>Loading config from: {configPath}</Text>
+        <Box marginBottom={1}>
+          <Text color="cyan" bold>tilde 🌿</Text>
+          <Text dimColor> — config-first restore</Text>
+        </Box>
+        <ConfigFirstMode configPath={configPath} onComplete={() => setDone(true)} />
       </Box>
     );
   }

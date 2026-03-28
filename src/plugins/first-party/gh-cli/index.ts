@@ -1,6 +1,7 @@
 import type { AccountConnectorPlugin } from '../../api.js';
 import { run } from '../../../utils/exec.js';
 import { PluginError } from '../../api.js';
+import type { DeveloperContext } from '../../../config/schema.js';
 
 class GhCliPlugin implements AccountConnectorPlugin {
   readonly id = 'gh-cli';
@@ -58,12 +59,13 @@ class GhCliPlugin implements AccountConnectorPlugin {
     }
   }
 
-  generateShellHook(contexts: Array<{ path: string; username: string }>): string {
+  generateShellHook(contexts: DeveloperContext[]): string {
     const cases = contexts
+      .filter(ctx => ctx.authMethod === 'gh-cli' && ctx.github?.username)
       .map(ctx => {
         const expandedPath = ctx.path.replace(/^~/, '$HOME');
         return `    ${expandedPath}*)
-      gh auth switch --user ${ctx.username} 2>/dev/null || true
+      gh auth switch --user ${ctx.github!.username} 2>/dev/null || true
       ;;`;
       })
       .join('\n');
@@ -73,6 +75,7 @@ function cd() {
   builtin cd "$@" || return
   case "$PWD" in
 ${cases}
+    *) ;;
   esac
 }`;
   }

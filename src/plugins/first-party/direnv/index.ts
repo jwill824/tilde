@@ -2,6 +2,7 @@ import type { EnvLoaderPlugin, SecretsBackendPlugin } from '../../api.js';
 import { run } from '../../../utils/exec.js';
 import { PluginError } from '../../api.js';
 import homebrewPlugin from '../homebrew/index.js';
+import type { DeveloperContext } from '../../../config/schema.js';
 
 class DirenvPlugin implements EnvLoaderPlugin {
   readonly id = 'direnv';
@@ -33,6 +34,7 @@ class DirenvPlugin implements EnvLoaderPlugin {
   }
 
   generateEnvrc(opts: {
+    context?: DeveloperContext;
     envVars: Array<{ key: string; value: string }>;
     secretsBackend: SecretsBackendPlugin;
   }): string {
@@ -47,6 +49,16 @@ class DirenvPlugin implements EnvLoaderPlugin {
     if (initCode) {
       lines.push('# Secrets backend initialization');
       lines.push(initCode);
+      lines.push('');
+    }
+
+    // Git identity exports from context
+    if (opts.context?.git) {
+      lines.push('# Git identity');
+      lines.push(`export GIT_AUTHOR_NAME="${opts.context.git.name}"`);
+      lines.push(`export GIT_AUTHOR_EMAIL="${opts.context.git.email}"`);
+      lines.push(`export GIT_COMMITTER_NAME="${opts.context.git.name}"`);
+      lines.push(`export GIT_COMMITTER_EMAIL="${opts.context.git.email}"`);
       lines.push('');
     }
 
