@@ -2,6 +2,14 @@
   "name": "@jwill824/tilde",
   "version": "1.0.1",
   "description": "Interactive CLI to bootstrap a complete developer environment",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jwill824/tilde"
+  },
+  "homepage": "https://github.com/jwill824/tilde#readme",
+  "bugs": {
+    "url": "https://github.com/jwill824/tilde/issues"
+  },
   "type": "module",
   "bin": {
     "tilde": "dist/index.js"
