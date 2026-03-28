@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
+import type { EnvironmentSnapshot } from '../utils/environment.js';
 
 const NUM_TILDES = 15;
 const NUM_ROWS = 5;
@@ -22,11 +23,11 @@ function buildWave(phase: number): string[] {
 }
 
 interface SplashProps {
-  version: string;
+  environment: EnvironmentSnapshot;
   onDone: () => void;
 }
 
-export function Splash({ version, onDone }: SplashProps) {
+export function Splash({ environment, onDone }: SplashProps) {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
@@ -44,6 +45,9 @@ export function Splash({ version, onDone }: SplashProps) {
   }, []);
 
   const rows = buildWave(phase);
+  const shellDisplay = environment.shellVersion
+    ? `${environment.shellName} ${environment.shellVersion}`
+    : environment.shellName;
 
   return (
     <Box flexDirection="column" marginLeft={2} marginBottom={1}>
@@ -58,15 +62,33 @@ export function Splash({ version, onDone }: SplashProps) {
         </Text>
         <Text dimColor>developer environment bootstrap</Text>
         <Text color="cyan" dimColor>
-          v{version}
+          v{environment.tildeVersion}
         </Text>
+      </Box>
+      <Box marginTop={1} flexDirection="column" gap={0}>
+        <Box gap={2}>
+          <Text dimColor>OS</Text>
+          <Text color="cyan">{environment.os}</Text>
+        </Box>
+        <Box gap={2}>
+          <Text dimColor>Arch</Text>
+          <Text color="cyan">{environment.arch}</Text>
+        </Box>
+        <Box gap={2}>
+          <Text dimColor>Shell</Text>
+          <Text color="cyan">{shellDisplay}</Text>
+        </Box>
+        <Box gap={2}>
+          <Text dimColor>tilde</Text>
+          <Text color="cyan">v{environment.tildeVersion}</Text>
+        </Box>
       </Box>
     </Box>
   );
 }
 
 /** Compact single-line header locked at top after the splash wave clears. */
-export function CompactHeader({ version }: { version: string }) {
+export function CompactHeader({ tildeVersion }: { tildeVersion: string }) {
   return (
     <Box marginBottom={1} gap={1}>
       <Text color="cyan">~</Text>
@@ -75,7 +97,7 @@ export function CompactHeader({ version }: { version: string }) {
       </Text>
       <Text dimColor>developer environment bootstrap</Text>
       <Text color="cyan" dimColor>
-        v{version}
+        v{tildeVersion}
       </Text>
     </Box>
   );

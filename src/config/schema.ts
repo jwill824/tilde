@@ -51,6 +51,7 @@ const ConfigurationDomainsSchema = z.object({
 const TildeConfigSchema = z.object({
   $schema: z.string().default('https://tilde.sh/config-schema/v1.json'),
   version: z.literal('1').default('1'),
+  schemaVersion: z.number().int().min(1).default(1),
   os: z.literal('macos').default('macos'),
   shell: z.enum(['zsh', 'bash', 'fish']),
   packageManager: z.literal('homebrew').default('homebrew'),
