@@ -1,0 +1,31 @@
+{
+  "$schema": "https://tilde.sh/config-schema/v1.json",
+  "version": "1",
+  "os": "macos",
+  "shell": "zsh",
+  "packageManager": "homebrew",
+  "versionManagers": [],
+  "languages": [],
+  "workspaceRoot": "~/Developer",
+  "dotfilesRepo": "~/Developer/personal/dotfiles",
+  "contexts": [
+    {
+      "label": "personal",
+      "path": "~/Developer/personal",
+      "git": {
+        "name": "Test User",
+        "email": "test@example.com"
+      },
+      "authMethod": "gh-cli"
+    }
+  ],
+  "tools": ["ripgrep", "fd"],
+  "configurations": {
+    "git": true,
+    "vscode": false,
+    "aliases": false,
+    "osDefaults": false,
+    "direnv": true
+  },
+  "secretsBackend": "1password"
+}

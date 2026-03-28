@@ -1,0 +1,32 @@
+# Build output
+dist/
+*.js.map
+
+# Dependencies
+node_modules/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+
+# Tilde state (never commit user state)
+~/.tilde/
+
+# Logs
+*.log
+npm-debug.log*
