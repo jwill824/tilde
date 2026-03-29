@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # install.sh — tilde macOS/Linux developer environment installer
-# Served at: https://get.tilde.sh/install.sh
-# Usage:     curl -fsSL https://get.tilde.sh/install.sh | bash
+# Served at: https://thingstead.io/tilde/install.sh
+# Usage:     curl -fsSL https://thingstead.io/tilde/install.sh | bash
 #            bash tilde-install.sh [-- args passed to tilde]
 #
 # This script is idempotent — safe to run multiple times.
@@ -10,7 +10,7 @@ set -euo pipefail
 
 # Require bash — fail fast if piped into sh (which ignores the shebang)
 [ -n "${BASH_VERSION:-}" ] || {
-  echo "✗ This script requires bash. Re-run: curl -fsSL https://get.tilde.sh/install.sh | bash" >&2
+  echo "✗ This script requires bash. Re-run: curl -fsSL https://thingstead.io/tilde/install.sh | bash" >&2
   exit 1
 }
 

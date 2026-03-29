@@ -2,7 +2,7 @@
 description: "Task list for feature 003-get-tilde-sh-site"
 ---
 
-# Tasks: get.tilde.sh Documentation & Download Site
+# Tasks: thingstead.io/tilde Documentation & Download Site
 
 **Input**: Design documents from `/specs/003-get-tilde-sh-site/`
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, contracts/ ✅, quickstart.md ✅
@@ -48,7 +48,7 @@ description: "Task list for feature 003-get-tilde-sh-site"
 
 ## Phase 3: User Story 1 — Zero-Prereq Curl Install (Priority: P1) 🎯 MVP
 
-**Goal**: A developer on a fresh macOS machine can run `curl -fsSL https://get.tilde.sh/install.sh | bash` and have tilde fully installed and launched — no prior tooling required.
+**Goal**: A developer on a fresh macOS machine can run `curl -fsSL https://thingstead.io/tilde/install.sh | bash` and have tilde fully installed and launched — no prior tooling required.
 
 **Independent Test**: Run `bash -n site/landing/install.sh` (syntax check passes). Full acceptance: on a clean macOS VM, run the script and confirm tilde launches successfully; verify idempotency by running again on a machine with Node.js already present.
 
@@ -70,16 +70,16 @@ description: "Task list for feature 003-get-tilde-sh-site"
 
 ## Phase 4: User Story 2 — Landing Page with Install Options (Priority: P2)
 
-**Goal**: A developer visiting `https://get.tilde.sh` in a browser immediately sees the curl one-liner, understands what tilde does, can find all install methods, and links to the docs — all above the fold on desktop, without requiring JavaScript.
+**Goal**: A developer visiting `https://thingstead.io/tilde` in a browser immediately sees the curl one-liner, understands what tilde does, can find all install methods, and links to the docs — all above the fold on desktop, without requiring JavaScript.
 
 **Independent Test**: Open `site/landing/index.html` directly in a browser (no server needed). Verify: curl one-liner is visible above the fold on a 1280×800 viewport, all three install methods are visible, the docs link resolves, and core content is readable on a 375px (mobile) viewport without horizontal scrolling.
 
 ### Implementation for User Story 2
 
 - [X] T016 [US2] Create `site/landing/index.html` scaffold: `<!DOCTYPE html>`, `<html lang="en">`, `<head>` with Tailwind CSS CDN (`<script src="https://cdn.tailwindcss.com"></script>`), `<meta charset="UTF-8">`, `<meta name="viewport" content="width=device-width, initial-scale=1.0">`, `<title>tilde — macOS developer environment, one command away</title>`, `<meta name="description" content="...">`, and empty `<body class="bg-gray-950 text-gray-100 font-mono">`
-- [X] T017 [US2] Add hero section to `site/landing/index.html`: centered `<main>` with tilde wordmark/heading, one-sentence description (`"tilde configures your entire macOS developer environment from a single config file"`), and the curl one-liner in a `<pre><code>` block styled with a dark background and copy affordance; curl command: `curl -fsSL https://get.tilde.sh/install.sh | bash`
+- [X] T017 [US2] Add hero section to `site/landing/index.html`: centered `<main>` with tilde wordmark/heading, one-sentence description (`"tilde configures your entire macOS developer environment from a single config file"`), and the curl one-liner in a `<pre><code>` block styled with a dark background and copy affordance; curl command: `curl -fsSL https://thingstead.io/tilde/install.sh | bash`
 - [X] T018 [US2] Add install methods section to `site/landing/index.html`: three method entries (curl — macOS/Linux recommended, `npx @jwill824/tilde` — all platforms, `npm install -g @jwill824/tilde` — all platforms), each as a distinct code block with a method label and platform badge; per `contracts/site-routes.md` and FR-009
-- [X] T019 [US2] Add footer/navigation links section to `site/landing/index.html`: prominent `"Read the docs →"` link to `https://docs.tilde.sh/getting-started/`, and GitHub repo link to `https://github.com/jwill824/tilde`; both are `<a>` tags (no JS required)
+- [X] T019 [US2] Add footer/navigation links section to `site/landing/index.html`: prominent `"Read the docs →"` link to `https://thingstead.io/tilde/docs/getting-started/`, and GitHub repo link to `https://github.com/jwill824/tilde`; both are `<a>` tags (no JS required)
 - [X] T020 [US2] Apply Tailwind CSS responsive classes to `site/landing/index.html` for mobile layout: `max-w-2xl mx-auto px-4` on the main container, `overflow-x-auto` on code blocks, minimum `text-sm` on mobile for legibility; verify no horizontal scroll on 375px viewport (FR-010, SC-007)
 
 **Checkpoint**: `open site/landing/index.html` in browser — curl command visible above fold at 1280×800, mobile layout correct at 375px, all install methods present, docs link present, no JS required for core content
@@ -88,14 +88,14 @@ description: "Task list for feature 003-get-tilde-sh-site"
 
 ## Phase 5: User Story 3 — Getting Started Documentation (Priority: P3)
 
-**Goal**: A developer who just installed tilde can visit `docs.tilde.sh` and complete their first wizard run — or evaluate tilde before installing — using only the Getting Started page. Common failure scenarios have troubleshooting guidance.
+**Goal**: A developer who just installed tilde can visit `thingstead.io/tilde/docs` and complete their first wizard run — or evaluate tilde before installing — using only the Getting Started page. Common failure scenarios have troubleshooting guidance.
 
 **Independent Test**: Run `cd site/docs && npm run dev`, navigate to `http://localhost:4321/getting-started/`. A first-time user can follow the page alone to install tilde, launch the wizard, and understand the expected output. Troubleshooting section addresses top 3 failure scenarios.
 
 ### Implementation for User Story 3
 
 - [X] T021 [P] [US3] Create `site/docs/src/content/docs/index.mdx`: docs home page with frontmatter (`title: Welcome to tilde`, `description: tilde configures your macOS developer environment from a single config file`, `template: splash`), hero block with tagline and two CTAs (`Getting Started` → `/getting-started/` and `Installation` → `/installation/`), and a brief feature overview (config-first, idempotent, extensible)
-- [X] T022 [P] [US3] Create `site/docs/src/content/docs/installation.md`: frontmatter (`title: Installation`, `description: All supported ways to install tilde`); sections: `curl (Recommended)` with full curl one-liner + link to `get.tilde.sh`, `npm` global install command, `npx` (no install required), `What happens during install` (links back to install script walkthrough); platform notes (macOS primary, Linux experimental, Windows not supported); per FR-013 and `contracts/site-routes.md`
+- [X] T022 [P] [US3] Create `site/docs/src/content/docs/installation.md`: frontmatter (`title: Installation`, `description: All supported ways to install tilde`); sections: `curl (Recommended)` with full curl one-liner + link to `thingstead.io/tilde`, `npm` global install command, `npx` (no install required), `What happens during install` (links back to install script walkthrough); platform notes (macOS primary, Linux experimental, Windows not supported); per FR-013 and `contracts/site-routes.md`
 - [X] T023 [US3] Create `site/docs/src/content/docs/getting-started.md`: frontmatter (`title: Getting Started`, `description: Run tilde for the first time`); sections: `Prerequisites` (Node.js 20+, macOS), `Launch tilde` (command: `tilde`), `The setup wizard` (step-by-step of what the wizard asks — shell selection, package manager, version manager, languages, workspace, git identity, accounts, tools, secrets, browsers), `Expected output` (example terminal screenshot/code block), `Troubleshooting` (top 3 common failures: Node.js not found, permission errors on npm global install, wizard exits unexpectedly); per FR-011 and SC-001
 
 **Checkpoint**: `cd site/docs && npm run build` succeeds; all three pages (`/`, `/installation/`, `/getting-started/`) appear in sidebar nav; getting-started page has troubleshooting section
@@ -104,7 +104,7 @@ description: "Task list for feature 003-get-tilde-sh-site"
 
 ## Phase 6: User Story 4 — Configuration Reference (Priority: P4)
 
-**Goal**: A developer can locate the documentation for any `tilde.config.json` key (e.g., `versionManager`) within 60 seconds using `docs.tilde.sh`'s built-in Starlight search, and find its type, valid values, default, and an example.
+**Goal**: A developer can locate the documentation for any `tilde.config.json` key (e.g., `versionManager`) within 60 seconds using `thingstead.io/tilde/docs`'s built-in Starlight search, and find its type, valid values, default, and an example.
 
 **Independent Test**: Run `cd site/docs && npm run dev`, use the search bar to look up `versionManager`. Result should open `config-reference.md` and the key should be findable within one page-search (Cmd+F). All 12 top-level keys from `data-model.md` must be documented.
 
@@ -139,7 +139,7 @@ description: "Task list for feature 003-get-tilde-sh-site"
 - [X] T028 Deploy-landing job in `.github/workflows/deploy-site.yml`: `runs-on: ubuntu-latest`; steps: `actions/checkout@v4`, then `cloudflare/pages-action@v1` with `apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}`, `accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}`, `projectName: tilde-get`, `directory: site/landing`, `gitHubToken: ${{ secrets.GITHUB_TOKEN }}`; no build step (landing is served as-is); per `research.md` section 8 and FR-017
 - [X] T029 Build-and-deploy-docs job in `.github/workflows/deploy-site.yml`: `runs-on: ubuntu-latest`; steps: `actions/checkout@v4`, `actions/setup-node@v4` (node-version: `20`, cache: `npm`, cache-dependency-path: `site/docs/package-lock.json`), `npm ci` in `site/docs/`, `npm run build` in `site/docs/`, then `cloudflare/pages-action@v1` with `projectName: tilde-docs`, `directory: site/docs/dist`, `gitHubToken: ${{ secrets.GITHUB_TOKEN }}`; per `research.md` section 8 and FR-017
 - [X] T030 [P] Add `_headers` file at `site/landing/_headers` with Cloudflare Pages cache rules per `contracts/site-routes.md` caching contract: `/*` gets `Cache-Control: public, max-age=300`, `/install.sh` gets `Cache-Control: public, max-age=300, must-revalidate` and `Content-Type: text/plain; charset=utf-8` (ensures curl pipes correctly and browsers don't execute it)
-- [X] T031 [P] Document required GitHub Actions secrets in `CONTRIBUTING.md` (or create `docs/deployment.md` if CONTRIBUTING.md does not exist): `CLOUDFLARE_API_TOKEN` (Cloudflare API token with Pages edit permission), `CLOUDFLARE_ACCOUNT_ID` (found in CF dashboard URL); include steps to create each Cloudflare Pages project (`tilde-get` pointing to `get.tilde.sh`, `tilde-docs` pointing to `docs.tilde.sh`) and configure custom domain CNAMEs per `research.md` section 3
+- [X] T031 [P] Document required GitHub Actions secrets in `CONTRIBUTING.md` (or create `docs/deployment.md` if CONTRIBUTING.md does not exist): `CLOUDFLARE_API_TOKEN` (Cloudflare API token with Pages edit permission), `CLOUDFLARE_ACCOUNT_ID` (found in CF dashboard URL); include steps to create each Cloudflare Pages project (`tilde-get` pointing to `thingstead.io/tilde`, `tilde-docs` pointing to `thingstead.io/tilde/docs`) and configure custom domain CNAMEs per `research.md` section 3
 - [X] T032 [P] Run final validation per `quickstart.md` acceptance test: `bash -n site/landing/install.sh` (syntax OK), `cd site/docs && npm run build` (docs build OK); fix any build errors before marking done
 
 **Checkpoint**: CI workflow file is valid YAML (`cat .github/workflows/deploy-site.yml` lints without errors); docs build passes; install script syntax is valid; `_headers` file is present
@@ -248,7 +248,7 @@ Task: T032 — Final build validation          [P]
 
 ### Suggested MVP Scope
 
-Phases 1 + 3 + 4 + 7 (T001–T003, T007–T020, T025–T026) = **21 tasks** for a fully functional get.tilde.sh with install script and landing page — before docs or CI/CD.
+Phases 1 + 3 + 4 + 7 (T001–T003, T007–T020, T025–T026) = **21 tasks** for a fully functional thingstead.io/tilde with install script and landing page — before docs or CI/CD.
 
 ---
 

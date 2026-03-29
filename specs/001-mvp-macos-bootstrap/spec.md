@@ -13,7 +13,7 @@ config-first entry mode, and context-aware environment switching for a personal 
 - Q: If tilde fails partway through setup, what should happen? → A: Save progress after each step; on re-run, resume from the last completed step.
 - Q: What is the relationship between tilde and the user's dotfiles repository? → A: The dotfiles repo is a separate, user-owned git repository; tilde writes into it but does not own its git history. No submodule relationship between the tilde project and the dotfiles repo.
 - Q: How should tilde identify secrets during environment capture? → A: Exclude files that would normally be gitignored (using .gitignore-style pattern matching); no value-level or entropy scanning required.
-- Q: How is the bootstrap one-liner script distributed? → A: Primary: custom domain (e.g., `get.tilde.sh`) redirecting to GitHub raw URL. GitHub raw URL also valid directly. Additional distribution methods (npx, etc.) can be added later.
+- Q: How is the bootstrap one-liner script distributed? → A: Primary: custom domain (e.g., `thingstead.io/tilde`) redirecting to GitHub raw URL. GitHub raw URL also valid directly. Additional distribution methods (npx, etc.) can be added later.
 - Q: Is direnv a required dependency or user-selectable? → A: Default-on but user-selectable. Pre-selected in the wizard; user can deselect. Context env-var switching degrades gracefully if direnv is not chosen.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -165,7 +165,7 @@ each context without any manual switching.
 - **FR-001**: System MUST detect the current OS at startup without user input and present only
   the tool options supported on that OS.
 - **FR-019**: The bootstrap entry point MUST be a single shell command invokable via a custom
-  domain URL (e.g., `curl -fsSL https://get.tilde.sh | bash`). The custom domain MUST
+  domain URL (e.g., `curl -fsSL https://thingstead.io/tilde | bash`). The custom domain MUST
   redirect to the versioned script on GitHub raw URL. The GitHub raw URL MUST also be
   independently valid as a direct install path.
 - **FR-020**: The system MUST support a --reconfigure flag that re-runs the full wizard over

@@ -357,7 +357,7 @@ identical runtime behaviour; the install method does not affect wizard functiona
 | pnpm global | `pnpm add -g @jwill824/tilde` | ⚠ implementation pending |
 | yarn global | `yarn global add @jwill824/tilde` | ⚠ implementation pending |
 | Homebrew formula | `brew install tilde` | ⚠ future — Homebrew tap not yet published |
-| curl one-liner | `curl -fsSL https://get.tilde.sh \| bash` | ⚠ future — installer script not yet published |
+| curl one-liner | `curl -fsSL https://thingstead.io/tilde \| bash` | ⚠ future — installer script not yet published |
 
 ## Development Workflow
 

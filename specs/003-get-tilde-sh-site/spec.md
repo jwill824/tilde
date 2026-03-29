@@ -1,9 +1,9 @@
-# Feature Specification: get.tilde.sh Documentation & Download Site
+# Feature Specification: thingstead.io/tilde Documentation & Download Site
 
 **Feature Branch**: `003-get-tilde-sh-site`
 **Created**: 2026-03-29
 **Status**: Draft
-**Input**: User description: "Setup get.tilde.sh as the zero-prereq download site for
+**Input**: User description: "Setup thingstead.io/tilde as the zero-prereq download site for
 tilde, serving an install script, landing page, and full documentation accessible via
 a public URL — modeled after sites like docs.astral.sh/uv and vfox.dev"
 
@@ -14,15 +14,15 @@ a public URL — modeled after sites like docs.astral.sh/uv and vfox.dev"
 - Q: How is the root URL resolved when it must serve both a shell script (for curl) and
   an HTML landing page (for browsers)? → A: Root (`/`) serves the HTML landing page;
   the install script lives at `/install.sh` — curl command is
-  `curl -fsSL https://get.tilde.sh/install.sh | bash`.
+  `curl -fsSL https://thingstead.io/tilde/install.sh | bash`.
 - Q: What is the Node.js bootstrap strategy on a fresh macOS machine with no package
   manager? → A: The install script prompts the user to select a package manager
   (Homebrew recommended/default on macOS); it installs the chosen package manager first
   if absent, then installs Node.js through it. Secondary package managers (npm, pip,
   etc.) follow. This mirrors tilde's Configuration-First principle.
-- Q: Where do the documentation pages live — under `get.tilde.sh/docs/...` or a
-  dedicated subdomain? → A: Dedicated subdomain `docs.tilde.sh` for all documentation;
-  `get.tilde.sh` hosts only the landing page and install script.
+- Q: Where do the documentation pages live — under `thingstead.io/tilde/docs/...` or a
+  dedicated subdomain? → A: Dedicated subdomain `thingstead.io/tilde/docs` for all documentation;
+  `thingstead.io/tilde` hosts only the landing page and install script.
 - Q: What is the security posture of the install script for curl-piped execution? →
   A: HTTPS transport required; npm automatically verifies the SHA-512 integrity hash
   (`dist.integrity`) of the tilde package during install and aborts if verification fails.
@@ -39,13 +39,13 @@ is fully installed and ready to launch — without any prior setup on their part
 users being able to install tilde first.
 
 **Independent Test**: Can be tested end-to-end on a fresh macOS VM by running
-`curl -fsSL https://get.tilde.sh/install.sh | bash` and verifying tilde launches
+`curl -fsSL https://thingstead.io/tilde/install.sh | bash` and verifying tilde launches
 successfully.
 
 **Acceptance Scenarios**:
 
 1. **Given** a macOS machine with no Node.js installed, **When** the user runs
-   `curl -fsSL https://get.tilde.sh/install.sh | bash`, **Then** the script prompts
+   `curl -fsSL https://thingstead.io/tilde/install.sh | bash`, **Then** the script prompts
    the user to select a package manager (defaulting to Homebrew on macOS), installs
    it if absent, installs Node.js through it, installs tilde, and launches the tilde
    wizard.
@@ -63,20 +63,20 @@ successfully.
 
 ### User Story 2 - Landing Page with Install Options (Priority: P2)
 
-A developer hears about tilde and visits `https://get.tilde.sh` in their browser. They
+A developer hears about tilde and visits `https://thingstead.io/tilde` in their browser. They
 land on a polished, minimal homepage that immediately communicates what tilde does,
 shows all available install methods, and links to the full documentation.
 
 **Why this priority**: The homepage is the first impression. It must earn trust quickly
 and route users to the right next step (install or read docs).
 
-**Independent Test**: Can be tested by loading `https://get.tilde.sh` in a browser and
+**Independent Test**: Can be tested by loading `https://thingstead.io/tilde` in a browser and
 verifying the install command, description, all install methods, and docs link are
 visible without scrolling on a standard desktop viewport.
 
 **Acceptance Scenarios**:
 
-1. **Given** a user visits `https://get.tilde.sh`, **When** the page loads, **Then**
+1. **Given** a user visits `https://thingstead.io/tilde`, **When** the page loads, **Then**
    they see the curl one-liner in a prominently copyable code block above the fold.
 2. **Given** a user visits the landing page, **When** they read it, **Then** they can
    understand what tilde does and identify all supported install methods (curl, npm,
@@ -84,7 +84,7 @@ visible without scrolling on a standard desktop viewport.
 3. **Given** a user visits on a mobile device, **When** the page loads, **Then** the
    install command and key content are legible without horizontal scrolling.
 4. **Given** a user wants to learn more, **When** they look for documentation, **Then**
-   a clearly labeled link takes them to the Getting Started guide on `docs.tilde.sh`
+   a clearly labeled link takes them to the Getting Started guide on `thingstead.io/tilde/docs`
    in under one click.
 
 ---
@@ -166,9 +166,9 @@ install script installs that version without changing the site source.
 - What happens when `curl` is not available on the target machine?
 - How does the script behave when run with `sudo` vs without elevated privileges?
 - What if the user's default shell is not `bash` (e.g., `zsh`, `fish`)?
-- What if the `get.tilde.sh` DNS has not yet propagated and the request fails?
+- What if the `thingstead.io/tilde` DNS has not yet propagated and the request fails?
 - What happens when the script is piped into `sh` instead of `bash`?
-- What if a user lands on a `docs.tilde.sh` page that describes a feature not yet in
+- What if a user lands on a `thingstead.io/tilde/docs` page that describes a feature not yet in
   their installed version of tilde?
 - What if the SHA-512 integrity verification fails (e.g., corrupted download or
   tampered package)? npm aborts the install automatically; the script MUST propagate
@@ -181,9 +181,9 @@ install script installs that version without changing the site source.
 
 **Install Script**
 
-- **FR-001**: The site MUST serve the install script at `https://get.tilde.sh/install.sh`
+- **FR-001**: The site MUST serve the install script at `https://thingstead.io/tilde/install.sh`
   (not the root path) so it is safe to pipe directly into `bash` via
-  `curl -fsSL https://get.tilde.sh/install.sh | bash`.
+  `curl -fsSL https://thingstead.io/tilde/install.sh | bash`.
 - **FR-002**: The install script MUST prompt the user to select a primary package manager
   (Homebrew is the recommended default on macOS). If the selected package manager is not
   installed, the script MUST install it first, then use it to install Node.js. This
@@ -208,7 +208,7 @@ install script installs that version without changing the site source.
 
 **Landing Page**
 
-- **FR-008**: The site MUST serve a human-readable landing page at `https://get.tilde.sh`
+- **FR-008**: The site MUST serve a human-readable landing page at `https://thingstead.io/tilde`
   (root path `/`) when visited from a browser. The install script is served separately
   at `/install.sh`.
 - **FR-009**: The landing page MUST display: the curl one-liner in a copyable code block,
@@ -217,39 +217,39 @@ install script installs that version without changing the site source.
 - **FR-010**: The landing page MUST load in under 3 seconds on a standard broadband
   connection without requiring JavaScript to display core content.
 
-**Documentation Site** *(hosted at `docs.tilde.sh`)*
+**Documentation Site** *(hosted at `thingstead.io/tilde/docs`)*
 
-- **FR-011**: `docs.tilde.sh` MUST include a Getting Started guide covering: installation,
+- **FR-011**: `thingstead.io/tilde/docs` MUST include a Getting Started guide covering: installation,
   first run, what the wizard does, and expected output.
-- **FR-012**: `docs.tilde.sh` MUST include a Configuration Reference documenting every
+- **FR-012**: `thingstead.io/tilde/docs` MUST include a Configuration Reference documenting every
   `tilde.config.json` key with its purpose, valid values, defaults, and an example.
-- **FR-013**: `docs.tilde.sh` MUST include documentation for all supported install methods
+- **FR-013**: `thingstead.io/tilde/docs` MUST include documentation for all supported install methods
   (curl, npx, npm global, and future: Homebrew).
-- **FR-014**: `docs.tilde.sh` MUST provide full-text search across all documentation pages.
-- **FR-015**: `docs.tilde.sh` MUST support dark mode.
-- **FR-016**: `docs.tilde.sh` MUST be navigable from any page via a persistent sidebar
+- **FR-014**: `thingstead.io/tilde/docs` MUST provide full-text search across all documentation pages.
+- **FR-015**: `thingstead.io/tilde/docs` MUST support dark mode.
+- **FR-016**: `thingstead.io/tilde/docs` MUST be navigable from any page via a persistent sidebar
   or navigation menu.
 
 **Deployment & Maintenance**
 
-- **FR-017**: Both `get.tilde.sh` (landing + install script) and `docs.tilde.sh`
+- **FR-017**: Both `thingstead.io/tilde` (landing + install script) and `thingstead.io/tilde/docs`
   (documentation) source MUST live within the tilde repository and deploy automatically
-  on merge to the default branch via CI — `get.tilde.sh` from `site/` and
-  `docs.tilde.sh` from `site/docs/` (or equivalent subdirectory).
+  on merge to the default branch via CI — `thingstead.io/tilde` from `site/` and
+  `thingstead.io/tilde/docs` from `site/docs/` (or equivalent subdirectory).
 - **FR-018**: Documentation pages MUST be authorable in plain Markdown so that
   contributors can update them without specialized tooling knowledge.
 
 ### Key Entities
 
-- **Install Script**: Shell script served at `https://get.tilde.sh/install.sh`; handles
+- **Install Script**: Shell script served at `https://thingstead.io/tilde/install.sh`; handles
   package manager selection, Node.js installation, tilde install, and version resolution.
-- **Landing Page**: Browser-facing homepage at `https://get.tilde.sh`; entry point for
-  new users showing install options and linking to `docs.tilde.sh`.
-- **Documentation Site**: Full reference site at `https://docs.tilde.sh`; covers Getting
+- **Landing Page**: Browser-facing homepage at `https://thingstead.io/tilde`; entry point for
+  new users showing install options and linking to `thingstead.io/tilde/docs`.
+- **Documentation Site**: Full reference site at `https://thingstead.io/tilde/docs`; covers Getting
   Started, Configuration Reference, install methods, and future plugin docs.
-- **Documentation Page**: A structured content page on `docs.tilde.sh` covering a
+- **Documentation Page**: A structured content page on `thingstead.io/tilde/docs` covering a
   specific topic.
-- **Site Navigation**: Sidebar/menu structure on `docs.tilde.sh` linking all doc pages.
+- **Site Navigation**: Sidebar/menu structure on `thingstead.io/tilde/docs` linking all doc pages.
 
 ## Success Criteria *(mandatory)*
 
@@ -260,7 +260,7 @@ install script installs that version without changing the site source.
 - **SC-002**: 100% of User Story 1 acceptance scenarios pass on a clean macOS VM without
   manual intervention.
 - **SC-003**: A first-time user can locate the documentation for any config key within
-  60 seconds using `docs.tilde.sh`'s search.
+  60 seconds using `thingstead.io/tilde/docs`'s search.
 - **SC-004**: The landing page and all documentation pages load in under 3 seconds on a
   standard broadband connection.
 - **SC-005**: The install script produces zero silent failures — every error path results
@@ -273,12 +273,12 @@ install script installs that version without changing the site source.
 ## Assumptions
 
 - Target users are developers on macOS who are comfortable with terminal commands.
-- The `get.tilde.sh` domain is owned and DNS can be pointed to the chosen hosting
+- The `thingstead.io/tilde` domain is owned and DNS can be pointed to the chosen hosting
   service.
 - The tilde npm package (`@jwill824/tilde`) remains the canonical distribution artifact;
   the install script wraps it rather than replacing it.
-- A static site deployment is sufficient for both `get.tilde.sh` (landing page +
-  install script) and `docs.tilde.sh` (documentation). Both can be served from the
+- A static site deployment is sufficient for both `thingstead.io/tilde` (landing page +
+  install script) and `thingstead.io/tilde/docs` (documentation). Both can be served from the
   same hosting provider (GitHub Pages, Cloudflare Pages, or similar) using separate
   subdomain CNAME records.
 - The existing `bootstrap.sh` in the repository root is the basis for the install script

@@ -8,26 +8,9 @@ on:
       - 'site/**'
 
 jobs:
-  # ── Job 1: Deploy landing page to get.tilde.sh ──────────────────────────────
-  deploy-landing:
-    name: Deploy Landing (get.tilde.sh)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: tilde-get
-          directory: site/landing
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-
-  # ── Job 2: Build docs and deploy to docs.tilde.sh ───────────────────────────
-  build-and-deploy-docs:
-    name: Build & Deploy Docs (docs.tilde.sh)
+  # Build docs + assemble full site, then deploy to thingstead.io (Cloudflare Pages)
+  build-and-deploy:
+    name: Build & Deploy (thingstead.io)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -48,11 +31,17 @@ jobs:
         run: npm run build
         working-directory: site/docs
 
+      - name: Assemble site output
+        run: |
+          mkdir -p dist/tilde/docs
+          cp -r site/tilde/. dist/tilde/
+          cp -r site/docs/dist/. dist/tilde/docs/
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: tilde-docs
-          directory: site/docs/dist
+          projectName: thingstead
+          directory: dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}

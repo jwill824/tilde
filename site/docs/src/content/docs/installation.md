@@ -12,14 +12,14 @@ The fastest way to get started on macOS or Linux. This script installs Homebrew 
 Node.js if needed, then installs tilde globally and launches the setup wizard.
 
 ```bash
-curl -fsSL https://get.tilde.sh/install.sh | bash
+curl -fsSL https://thingstead.io/tilde/install.sh | bash
 ```
 
 > **curl not available?** If your system doesn't have `curl`, install tilde directly
 > with `npx @jwill824/tilde` (requires Node.js 20+) or via `npm install -g @jwill824/tilde`.
 
-The install script is served at [get.tilde.sh](https://get.tilde.sh) and is open
-source — you can [inspect it before running](https://get.tilde.sh/install.sh).
+The install script is served at [thingstead.io/tilde](https://thingstead.io/tilde) and is open
+source — you can [inspect it before running](https://thingstead.io/tilde/install.sh).
 
 ### What happens during install
 
