@@ -484,18 +484,17 @@ Set these as **environment variables** (not Terraform variables) in each TFC wor
 
 **`tilde-cloudflare`**
 
-| Variable | Sensitive | Description |
-|----------|-----------|-------------|
-| `CLOUDFLARE_API_TOKEN` | ✅ | Custom API token with **Cloudflare Pages: Edit** permission |
-| `CLOUDFLARE_ACCOUNT_ID` | No | Your Cloudflare account ID |
-| `TF_VAR_account_id` | No | Same as `CLOUDFLARE_ACCOUNT_ID` (passed to `var.account_id`) |
-| `TF_VAR_zone_id` | No | Cloudflare DNS zone ID for `thingstead.io` (found in CF Dashboard → Overview) |
+| Type | Key | Sensitive | Description |
+|------|-----|-----------|-------------|
+| Environment variable | `CLOUDFLARE_API_TOKEN` | ✅ | Custom API token with **Cloudflare Pages: Edit** permission — used by the provider for auth |
+| Terraform variable | `account_id` | No | Your Cloudflare account ID — passed to `var.account_id` in resources |
+| Terraform variable | `zone_id` | No | DNS zone ID for `thingstead.io` — found in CF Dashboard → thingstead.io → Overview (right sidebar) |
 
 **`tilde-github`**
 
-| Variable | Sensitive | Description |
-|----------|-----------|-------------|
-| `GITHUB_TOKEN` | ✅ | Fine-grained PAT for `jwill824/tilde` with `Administration: Write` + `Contents: Read` |
+| Type | Key | Sensitive | Description |
+|------|-----|-----------|-------------|
+| Environment variable | `GITHUB_TOKEN` | ✅ | Fine-grained PAT for `jwill824/tilde` with `Administration: Write` + `Contents: Read` |
 
 ### First-time setup
 
