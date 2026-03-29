@@ -20,7 +20,7 @@
 npx @jwill824/tilde
 ```
 
-> **Coming soon:** `curl -fsSL https://get.tilde.sh | bash` — a one-liner installer for fresh machines with no Node.js prerequisite ([#4](https://github.com/jwill824/tilde/issues/4)).
+> **Coming soon:** `curl -fsSL https://thingstead.io/tilde/install.sh | bash` — a one-liner installer for fresh machines with no Node.js prerequisite ([#4](https://github.com/jwill824/tilde/issues/4)).
 
 ---
 
@@ -84,7 +84,7 @@ tilde
 ### Coming soon
 
 - **`brew install tilde`** — Homebrew formula ([#3](https://github.com/jwill824/tilde/issues/3))
-- **`curl -fsSL https://get.tilde.sh | bash`** — zero-prereq one-liner for fresh machines ([#4](https://github.com/jwill824/tilde/issues/4))
+- **`curl -fsSL https://thingstead.io/tilde/install.sh | bash`** — zero-prereq one-liner for fresh machines ([#4](https://github.com/jwill824/tilde/issues/4))
 - **pnpm / yarn** global install support ([#5](https://github.com/jwill824/tilde/issues/5))
 
 ### Restore from a saved config
@@ -282,6 +282,17 @@ tilde plugin add my-tool   # installs npm package tilde-plugin-my-tool
 
 - macOS (Apple Silicon — arm64) · Windows · Linux
 - Node.js 20+ (installed automatically by `bootstrap.sh` if absent)
+
+---
+
+## Website & Docs
+
+| URL | Description |
+|-----|-------------|
+| [thingstead.io/tilde](https://thingstead.io/tilde) | Landing page — curl install hero, install method cards |
+| [thingstead.io/tilde/docs](https://thingstead.io/tilde/docs) | Full documentation — installation, getting started, config reference |
+
+The site source lives in `site/tilde/` (landing page + install script) and `site/docs/` (Astro + Starlight docs). See [CONTRIBUTING.md](CONTRIBUTING.md#site-development) for local preview and deployment details.
 
 ---
 

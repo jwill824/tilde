@@ -1,0 +1,6 @@
+/*
+  Cache-Control: public, max-age=300
+
+/install.sh
+  Cache-Control: public, max-age=300, must-revalidate
+  Content-Type: text/plain; charset=utf-8

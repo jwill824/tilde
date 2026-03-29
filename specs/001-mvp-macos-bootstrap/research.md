@@ -72,7 +72,7 @@ the npm registry fetch and caching; no manual temp-dir management required.
 - Run `npx tilde@latest` (or `node tilde.js` if pre-downloaded)
 - Clean up any temp files
 
-**Distribution**: Hosted at `get.tilde.sh` (custom domain via Cloudflare redirect) pointing
+**Distribution**: Hosted at `thingstead.io/tilde` (custom domain via Cloudflare redirect) pointing
 to `https://raw.githubusercontent.com/[user]/tilde/latest/bootstrap.sh`.
 
 ---

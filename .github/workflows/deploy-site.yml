@@ -1,0 +1,49 @@
+name: Deploy Site
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'site/**'
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy (thingstead.io)
+    runs-on: ubuntu-latest
+    environment: prod
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: site/docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: site/docs
+
+      - name: Build docs site
+        run: npm run build
+        working-directory: site/docs
+
+      - name: Assemble site output
+        run: |
+          mkdir -p dist/tilde/docs
+          cp -r site/tilde/. dist/tilde/
+          cp -r site/docs/dist/. dist/tilde/docs/
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=thingstead
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
