@@ -21,7 +21,7 @@ Pages serving each as a separate project under its respective CNAME.
 **Language/Version**: Bash 5+ (install script); Astro 4+ with Starlight (docs site);
 HTML/CSS (landing page — no JS framework required)
 **Primary Dependencies**: Astro 4, `@astrojs/starlight`, Node.js 20+ (docs build only);
-`shasum`/`openssl` (install script checksum); `npm view` (version resolution)
+`npm view` (version resolution); SHA-512 integrity verified natively by `npm install`
 **Storage**: N/A — static files only; no database, no server state
 **Testing**: Bash `bats` or manual shell testing for install script; Astro build CI
 check for docs; E2E smoke test on clean macOS VM for install acceptance
@@ -100,8 +100,8 @@ site/
 pure static HTML (no build step needed, fast to iterate). The docs site is a separate
 Astro project under `site/docs/` with its own `package.json` — this isolates the docs
 build from the main tilde TypeScript build and avoids dependency conflicts. Both are
-deployed by a single GitHub Actions workflow to Cloudflare Pages (two separate CF
-projects, one per domain).
+deployed by a single GitHub Actions workflow to a single Cloudflare Pages project
+(`thingstead`) using path-based routing via an assembled `dist/` directory.
 
 ## Phase 0: Research
 
