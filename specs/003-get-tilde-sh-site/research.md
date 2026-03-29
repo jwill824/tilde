@@ -96,7 +96,7 @@ fi
 
 ---
 
-## 5. Install Script: SHA-256 Integrity Verification
+## 5. Install Script: SHA-512 Integrity Verification
 
 **Decision**: Verify `npm pack` tarball integrity using npm registry's published
 `dist.integrity` field (sha512) via `openssl dgst`

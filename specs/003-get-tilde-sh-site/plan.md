@@ -9,7 +9,7 @@ Build two co-deployed static sites from a single `site/` directory in the tilde 
 
 - **`thingstead.io/tilde`** — minimal landing page (HTML) + `install.sh` (bash install script).
   The install script prompts for package manager, installs prerequisites, verifies the
-  tilde package via SHA-256, and launches the wizard.
+  tilde package via npm SHA-512 integrity (`dist.integrity`), and launches the wizard.
 - **`thingstead.io/tilde/docs`** — full documentation site (Astro + Starlight) with Getting
   Started guide, Configuration Reference, and install method docs.
 
@@ -115,7 +115,7 @@ See [research.md](./research.md) for full findings.
 | Landing page | Plain HTML + Tailwind CDN | No build step; fast iteration; JS not required for core content (FR-010) |
 | Hosting | Cloudflare Pages (single project `thingstead`) | Free tier, global CDN, path-based routing for all tools under `thingstead.io`, HTTPS automatic |
 | Version resolution | `npm view @jwill824/tilde version` at install time | Dynamic; no hardcoded version; always latest stable |
-| SHA-256 checksum | `npm view @jwill824/tilde dist.integrity` + `openssl dgst` | npm registry publishes sha512 of tarball natively; script extracts and verifies |
+| SHA-512 integrity | npm `dist.integrity` verified automatically by `npm install` | npm registry publishes sha512 of tarball natively; npm verifies on every install |
 | Install script base | Adapt `bootstrap.sh` | Already handles Xcode CLT, Homebrew, Node.js 20; add interactive PM prompt + checksum |
 | Monorepo structure | `site/tilde/` + `site/docs/` | Separation of concerns; docs has own deps; both in same repo for co-location with source; assembled into single `dist/` at deploy time |
 
