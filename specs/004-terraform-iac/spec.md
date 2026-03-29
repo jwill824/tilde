@@ -109,7 +109,7 @@ Any authorized team member can run Terraform from any machine and share state wi
 - The Cloudflare account already owns the `thingstead.io` domain and it is active in Cloudflare DNS.
 - The `thingstead` Pages project may already exist; Terraform will import or adopt it rather than error on conflict.
 - GitHub Actions CI status checks that must pass before merging are already defined in the repo (e.g., `ci.yml`); Terraform only references them by name.
-- Terraform Cloud or a compatible remote backend (e.g., Cloudflare R2 with S3-compatible backend, or Terraform Cloud free tier) is available for remote state.
+- Terraform Cloud is used as the remote state backend (account already exists); state locking and remote execution are available out of the box.
 - The Cloudflare provider and GitHub provider for Terraform are used (both are official, actively maintained providers).
 - Destroying the Cloudflare Pages project does not delete deployed content permanently — it only removes the project configuration.
 
