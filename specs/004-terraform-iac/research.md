@@ -112,7 +112,7 @@ These are run once locally (even with TFC remote execution — `terraform import
 
 | Variable | Type | Source |
 |----------|------|--------|
-| `cloudflare_api_token` | Terraform, sensitive | CF Dashboard → API Tokens |
+| `cloudflare_api_token` | Terraform, sensitive | CF Dashboard → API Tokens (requires **Cloudflare Pages: Edit** + **Zone: DNS: Edit**) |
 | `cloudflare_account_id` | Terraform | CF Dashboard → Account ID |
 
 **Workspace-specific variables**:
@@ -120,6 +120,8 @@ These are run once locally (even with TFC remote execution — `terraform import
 | Workspace | Variable | Type | Source |
 |-----------|----------|------|--------|
 | `tilde-cloudflare` | `zone_id` | Terraform | CF Dashboard → thingstead.io → Zone ID |
-| `tilde-github` | `GITHUB_TOKEN` | env, sensitive | Fine-grained PAT (repo: tilde, Admin:Write + Contents:Read) |
+| `tilde-github` | `GITHUB_TOKEN` | env, sensitive | Fine-grained PAT (repo: tilde, Admin:Write + Contents:Read + Environments:R/W + Secrets:R/W) — must be added as an **Environment variable** in TFC, not a Terraform variable |
 
 The `cloudflare_api_token` variable is consumed by the Cloudflare provider (`api_token` attribute) in `tilde-cloudflare` and written as a GitHub environment secret by `tilde-github`.
+
+> ⚠️ **Import gotcha**: `terraform import` runs locally and cannot read sensitive TFC workspace variables. Set all required values as `TF_VAR_*` env vars in your shell before running imports. For `GITHUB_TOKEN`, do NOT use the `TF_VAR_` prefix — the GitHub provider reads it as a plain environment variable (`GITHUB_TOKEN`).

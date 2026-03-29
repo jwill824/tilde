@@ -485,7 +485,7 @@ Create this Variable Set in TFC (Organization → Settings → Variable Sets) an
 
 | Type | Key | Sensitive | Description |
 |------|-----|-----------|-------------|
-| Terraform variable | `cloudflare_api_token` | ✅ | Cloudflare API token — used by the CF provider for auth in `tilde-cloudflare` and stored as a GitHub secret by `tilde-github` |
+| Terraform variable | `cloudflare_api_token` | ✅ | Cloudflare API token with **Cloudflare Pages: Edit** + **Zone: DNS: Edit** permissions — used by the CF provider in `tilde-cloudflare` and stored as a GitHub secret by `tilde-github` |
 | Terraform variable | `cloudflare_account_id` | No | Cloudflare account ID — used in CF resources and stored as a GitHub secret |
 
 #### Workspace-specific: `tilde-cloudflare`
@@ -498,27 +498,50 @@ Create this Variable Set in TFC (Organization → Settings → Variable Sets) an
 
 | Type | Key | Sensitive | Description |
 |------|-----|-----------|-------------|
-| Environment variable | `GITHUB_TOKEN` | ✅ | Fine-grained PAT for `jwill824/tilde` with `Administration: Write` + `Contents: Read` |
+| Environment variable | `GITHUB_TOKEN` | ✅ | Fine-grained PAT for `jwill824/tilde` with **Administration: Write**, **Contents: Read**, **Environments: Read and write**, **Secrets: Read and write** |
+
+> ⚠️ `GITHUB_TOKEN` must be added as an **Environment variable** in the TFC workspace (not a Terraform variable). If added as a Terraform variable it will cause a "Value for undeclared variable" error during plan.
 
 ### First-time setup
 
-The `thingstead` Cloudflare Pages project and `jwill824/tilde` GitHub repository already exist. Import them into Terraform state before the first apply:
+The `thingstead` Cloudflare Pages project and `jwill824/tilde` GitHub repository already exist. Import them into Terraform state before the first apply.
+
+`terraform import` always runs locally. Because TFC workspace variables marked sensitive are unavailable locally, supply them as `TF_VAR_*` environment variables in your shell before running imports:
 
 ```bash
-# Cloudflare workspace — run locally with TFC remote state
+export TF_VAR_cloudflare_api_token=<token>
+export TF_VAR_cloudflare_account_id=<account_id>
+export TF_VAR_zone_id=<zone_id>
+```
+
+Then run imports:
+
+```bash
+# Cloudflare workspace
 cd terraform/cloudflare
 terraform login
 terraform init
+
 terraform import cloudflare_pages_project.thingstead <CLOUDFLARE_ACCOUNT_ID>/thingstead
+terraform import cloudflare_pages_domain.thingstead_io <CLOUDFLARE_ACCOUNT_ID>/thingstead/thingstead.io
+terraform import cloudflare_dns_record.thingstead_io <ZONE_ID>/<DNS_RECORD_ID>
+# DNS record ID: GET https://api.cloudflare.com/client/v4/zones/<zone_id>/dns_records?name=thingstead.io&type=CNAME
 
 # GitHub workspace
 cd ../github
+unset TF_VAR_GITHUB_TOKEN  # must NOT be set as TF_VAR_*
+export GITHUB_TOKEN=<fine-grained-PAT>
 terraform init
+
 terraform import github_repository.tilde tilde
 terraform import github_repository_environment.production tilde:production
+# github_branch_protection: skip import if branch protection doesn't exist yet —
+#   Terraform will create it on first apply.
+# github_actions_environment_secret: cannot be imported (write-only) —
+#   both secrets are created fresh on first apply.
 ```
 
-After importing, push the `terraform/` files and TFC will run `plan` on the next merge.
+After importing, run `terraform plan` in each workspace to confirm no unexpected changes, then open a PR. TFC will run `plan` on the PR and `apply` on merge.
 
 ### Making infrastructure changes
 

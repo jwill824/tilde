@@ -132,10 +132,10 @@ github_actions_environment_secret "cloudflare_account_id"
   - plaintext_value = var.cloudflare_account_id
 
 github_branch_protection "main"
-  - repository_id          = github_repository.tilde.node_id
-  - pattern                = "main"
-  - enforce_admins         = true
-  - require_linear_history = true
+  - repository_id           = github_repository.tilde.node_id
+  - pattern                 = "main"
+  - enforce_admins          = true
+  - required_linear_history = true
   - required_status_checks:
       strict   = true
       contexts = ["CI"]
@@ -147,13 +147,25 @@ github_branch_protection "main"
 
 The `thingstead` Cloudflare Pages project, `jwill824/tilde` GitHub repository, and `production` GitHub environment already exist. Before first `terraform apply`, run:
 
+> `terraform import` always runs locally. Supply sensitive TFC vars as shell env vars first:
+> ```bash
+> export TF_VAR_cloudflare_api_token=<token>
+> export TF_VAR_cloudflare_account_id=<account_id>
+> export TF_VAR_zone_id=<zone_id>
+> ```
+
 ```bash
 # In terraform/cloudflare/
 terraform import cloudflare_pages_project.thingstead <account_id>/thingstead
+terraform import cloudflare_pages_domain.thingstead_io <account_id>/thingstead/thingstead.io
+terraform import cloudflare_dns_record.thingstead_io <zone_id>/<dns_record_id>
+# DNS record ID from: GET /zones/<zone_id>/dns_records?name=thingstead.io&type=CNAME
 
-# In terraform/github/
+# In terraform/github/  (GITHUB_TOKEN must be plain env var, NOT TF_VAR_GITHUB_TOKEN)
+export GITHUB_TOKEN=<fine-grained-PAT>
 terraform import github_repository.tilde tilde
 terraform import github_repository_environment.production tilde:production
+# github_branch_protection — skip if rule doesn't exist yet; Terraform creates it on first apply
 ```
 
 > `github_actions_environment_secret` resources cannot be imported (write-only values). They will be created on first apply, overwriting any manually set secret values.
