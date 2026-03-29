@@ -12,6 +12,7 @@
 - Q: Terraform Cloud execution mode — local with remote state, or remote execution triggered by VCS? → A: Remote execution — TFC is connected to the GitHub repo via VCS integration and automatically runs `terraform apply` when changes merge to `main`. Credentials are stored as encrypted TFC workspace variables.
 - Q: Which CI status check name(s) must pass before merging to `main`? → A: `CI`
 - Q: What GitHub token type should be used to manage repo settings and branch protections? → A: Fine-grained PAT scoped to `jwill824/tilde` with `Administration: Write` and `Contents: Read` permissions
+- Q: What directory structure should the Terraform configuration follow? → A: `terraform/cloudflare/` and `terraform/github/` as separate root modules (each with its own TFC workspace), mirroring the `EmailNotionSync.Terraform/azure` + `github` pattern
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -89,7 +90,7 @@ Any authorized team member can run Terraform from any machine and share state wi
 **State & Structure**
 
 - **FR-007**: Terraform state MUST be stored remotely to support multi-contributor workflows and prevent state loss.
-- **FR-008**: Terraform configuration MUST be organized so Cloudflare and GitHub resources are in clearly separated logical groupings (e.g., separate files or modules).
+- **FR-008**: Terraform configuration MUST be organized as two separate root modules: `terraform/cloudflare/` (Pages project, custom domain) and `terraform/github/` (repo settings, branch protection), each with its own TFC workspace and independent state. Each module contains `main.tf`, `variables.tf`, and `outputs.tf`.
 - **FR-009**: A `terraform plan` MUST be runnable without applying changes, producing a human-readable diff of drift.
 - **FR-010**: Terraform MUST output key resource identifiers (Pages project URL, custom domain status) after a successful apply.
 
