@@ -79,7 +79,7 @@ Any authorized team member can run Terraform from any machine and share state wi
 
 - **FR-001**: Terraform MUST manage the Cloudflare Pages project named `thingstead` with `main` as the production branch.
 - **FR-002**: Terraform MUST bind `thingstead.io` as a custom domain on the `thingstead` Pages project.
-- **FR-003**: Terraform MUST source Cloudflare credentials (API token, account ID) from encrypted Terraform Cloud workspace variables — never from committed files or local environment variables.
+- **FR-003**: Terraform MUST source shared Cloudflare credentials (`cloudflare_api_token`, `cloudflare_account_id`) from a TFC Variable Set named `tilde-shared` applied to both workspaces — never from committed files or local environment variables.
 
 **GitHub**
 

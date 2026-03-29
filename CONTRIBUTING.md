@@ -480,23 +480,28 @@ Both workspaces use **remote execution** — merging to `main` automatically que
 
 ### Required workspace variables
 
-Set these as **environment variables** (not Terraform variables) in each TFC workspace. Mark sensitive values as sensitive.
+Variables are split between a **shared Variable Set** (applied to both workspaces) and workspace-specific variables.
 
-**`tilde-cloudflare`**
+#### Shared Variable Set: `tilde-shared`
+
+Create this Variable Set in TFC (Organization → Settings → Variable Sets) and apply it to both `tilde-cloudflare` and `tilde-github`.
 
 | Type | Key | Sensitive | Description |
 |------|-----|-----------|-------------|
-| Environment variable | `CLOUDFLARE_API_TOKEN` | ✅ | Custom API token with **Cloudflare Pages: Edit** permission — used by the provider for auth |
-| Terraform variable | `account_id` | No | Your Cloudflare account ID — passed to `var.account_id` in resources |
+| Terraform variable | `cloudflare_api_token` | ✅ | Cloudflare API token — used by the CF provider for auth in `tilde-cloudflare` and stored as a GitHub secret by `tilde-github` |
+| Terraform variable | `cloudflare_account_id` | No | Cloudflare account ID — used in CF resources and stored as a GitHub secret |
+
+#### Workspace-specific: `tilde-cloudflare`
+
+| Type | Key | Sensitive | Description |
+|------|-----|-----------|-------------|
 | Terraform variable | `zone_id` | No | DNS zone ID for `thingstead.io` — found in CF Dashboard → thingstead.io → Overview (right sidebar) |
 
-**`tilde-github`**
+#### Workspace-specific: `tilde-github`
 
 | Type | Key | Sensitive | Description |
 |------|-----|-----------|-------------|
 | Environment variable | `GITHUB_TOKEN` | ✅ | Fine-grained PAT for `jwill824/tilde` with `Administration: Write` + `Contents: Read` |
-| Terraform variable | `cloudflare_api_token` | ✅ | Cloudflare API token — Terraform writes this as `CLOUDFLARE_API_TOKEN` secret into the `production` GitHub environment |
-| Terraform variable | `cloudflare_account_id` | No | Cloudflare account ID — Terraform writes this as `CLOUDFLARE_ACCOUNT_ID` secret into the `production` GitHub environment |
 
 ### First-time setup
 

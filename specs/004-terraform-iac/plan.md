@@ -59,7 +59,7 @@ terraform/
 ├── .gitignore           # Ignore .terraform/, *.tfstate, *.tfvars (local overrides)
 ├── cloudflare/
 │   ├── main.tf          # cloudflare_pages_project, cloudflare_pages_domain
-│   ├── variables.tf     # account_id, zone_id
+│   ├── variables.tf     # cloudflare_api_token, cloudflare_account_id (Variable Set), zone_id
 │   └── outputs.tf       # pages_url, domain_status
 └── github/
     ├── main.tf          # github_repository, github_branch_protection
@@ -91,8 +91,8 @@ See [research.md](./research.md) for full findings.
 
 | Workspace | Working Directory | VCS Trigger Path | Provider Credentials |
 |-----------|------------------|-----------------|---------------------|
-| `tilde-cloudflare` | `terraform/cloudflare` | `terraform/cloudflare/**` | `CLOUDFLARE_API_TOKEN`, `account_id`, `zone_id` |
-| `tilde-github` | `terraform/github` | `terraform/github/**` | `GITHUB_TOKEN`, `cloudflare_api_token`, `cloudflare_account_id` |
+| `tilde-cloudflare` | `terraform/cloudflare` | `terraform/cloudflare/**` | Variable Set: `cloudflare_api_token`, `cloudflare_account_id`; workspace: `zone_id` |
+| `tilde-github` | `terraform/github` | `terraform/github/**` | Variable Set: `cloudflare_api_token`, `cloudflare_account_id`; workspace: `GITHUB_TOKEN` (env) |
 
 ### Resource Map
 
@@ -100,11 +100,11 @@ See [research.md](./research.md) for full findings.
 ```
 cloudflare_pages_project "thingstead"
   - name            = "thingstead"
-  - account_id      = var.account_id
+  - account_id      = var.cloudflare_account_id
   - production_branch = "main"
 
 cloudflare_pages_domain "thingstead_io"
-  - account_id  = var.account_id
+  - account_id  = var.cloudflare_account_id
   - project_name = cloudflare_pages_project.thingstead.name
   - domain       = "thingstead.io"
 ```
