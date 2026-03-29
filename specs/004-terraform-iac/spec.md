@@ -5,6 +5,14 @@
 **Status**: Draft
 **Input**: User description: "Terraform IaC for GitHub and Cloudflare — manage the tilde repo settings, branch protections, and Cloudflare Pages project with custom domain using Terraform"
 
+## Clarifications
+
+### Session 2026-03-29
+
+- Q: Terraform Cloud execution mode — local with remote state, or remote execution triggered by VCS? → A: Remote execution — TFC is connected to the GitHub repo via VCS integration and automatically runs `terraform apply` when changes merge to `main`. Credentials are stored as encrypted TFC workspace variables.
+- Q: Which CI status check name(s) must pass before merging to `main`? → A: `CI`
+- Q: What GitHub token type should be used to manage repo settings and branch protections? → A: Fine-grained PAT scoped to `jwill824/tilde` with `Administration: Write` and `Contents: Read` permissions
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — Cloudflare infrastructure is reproducible (Priority: P1)
@@ -70,13 +78,13 @@ Any authorized team member can run Terraform from any machine and share state wi
 
 - **FR-001**: Terraform MUST manage the Cloudflare Pages project named `thingstead` with `main` as the production branch.
 - **FR-002**: Terraform MUST bind `thingstead.io` as a custom domain on the `thingstead` Pages project.
-- **FR-003**: Terraform MUST source Cloudflare credentials (API token, account ID) from environment variables or a secrets manager — never from committed files.
+- **FR-003**: Terraform MUST source Cloudflare credentials (API token, account ID) from encrypted Terraform Cloud workspace variables — never from committed files or local environment variables.
 
 **GitHub**
 
 - **FR-004**: Terraform MUST manage the `jwill824/tilde` GitHub repository settings including: squash merge only, delete branch on merge, and issue tracking enabled.
-- **FR-005**: Terraform MUST enforce a branch protection rule on `main` requiring: at least one passing CI status check before merging, no direct pushes, and linear history.
-- **FR-006**: Terraform MUST source the GitHub personal access token from environment variables or a secrets manager — never from committed files.
+- **FR-005**: Terraform MUST enforce a branch protection rule on `main` requiring: the `CI` status check passes before merging, no direct pushes, and linear history.
+- **FR-006**: Terraform MUST authenticate to GitHub using a fine-grained PAT scoped exclusively to the `jwill824/tilde` repository with `Administration: Write` and `Contents: Read` permissions, stored as an encrypted Terraform Cloud workspace variable.
 
 **State & Structure**
 
@@ -105,10 +113,10 @@ Any authorized team member can run Terraform from any machine and share state wi
 
 ## Assumptions
 
-- Terraform will be run locally by the maintainer; no CI-driven Terraform apply is in scope for this feature.
+- Terraform runs are executed remotely via Terraform Cloud, triggered automatically by the GitHub VCS integration when changes merge to `main`. No local `terraform apply` is required.
 - The Cloudflare account already owns the `thingstead.io` domain and it is active in Cloudflare DNS.
 - The `thingstead` Pages project may already exist; Terraform will import or adopt it rather than error on conflict.
-- GitHub Actions CI status checks that must pass before merging are already defined in the repo (e.g., `ci.yml`); Terraform only references them by name.
+- A fine-grained GitHub PAT (scoped to `jwill824/tilde`, `Administration: Write` + `Contents: Read`) is stored as an encrypted TFC workspace variable.
 - Terraform Cloud is used as the remote state backend (account already exists); state locking and remote execution are available out of the box.
 - The Cloudflare provider and GitHub provider for Terraform are used (both are official, actively maintained providers).
 - Destroying the Cloudflare Pages project does not delete deployed content permanently — it only removes the project configuration.
