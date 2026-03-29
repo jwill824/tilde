@@ -8,6 +8,12 @@
 
 set -euo pipefail
 
+# Require bash — fail fast if piped into sh (which ignores the shebang)
+[ -n "${BASH_VERSION:-}" ] || {
+  echo "✗ This script requires bash. Re-run: curl -fsSL https://get.tilde.sh/install.sh | bash" >&2
+  exit 1
+}
+
 # ─── Windows stub ────────────────────────────────────────────────────────────
 
 if [[ "${OSTYPE:-}" == "msys" || "${OSTYPE:-}" == "cygwin" ]]; then
