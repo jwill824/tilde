@@ -1,0 +1,38 @@
+---
+title: Welcome to tilde
+description: tilde configures your macOS developer environment from a single config file.
+template: splash
+hero:
+  tagline: Your entire macOS developer environment, configured from a single file — one command to get started.
+  actions:
+    - text: Getting Started
+      link: /getting-started/
+      icon: right-arrow
+    - text: Installation
+      link: /installation/
+      icon: document
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Why tilde?
+
+<CardGrid stagger>
+  <Card title="Configuration-First" icon="setting">
+    Define your entire dev environment in a single `tilde.config.json`. Every tool,
+    language, and preference is version-controlled and reproducible.
+  </Card>
+  <Card title="Idempotent" icon="approve-check">
+    Run tilde as many times as you want. It checks what's already installed and only
+    applies what's missing — safe to re-run after any change.
+  </Card>
+  <Card title="Extensible" icon="puzzle">
+    Install only what you need. tilde is built around a plugin-style tool list —
+    add languages, tools, and accounts as your setup evolves.
+  </Card>
+  <Card title="One command away" icon="rocket">
+    No prerequisites needed. A single `curl` command installs Homebrew, Node.js, and
+    tilde, then launches the interactive setup wizard.
+  </Card>
+</CardGrid>

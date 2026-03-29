@@ -27,6 +27,11 @@ Thumbs.db
 # Tilde state (never commit user state)
 ~/.tilde/
 
+# Docs site (Astro + Starlight)
+site/docs/node_modules/
+site/docs/dist/
+site/docs/.astro/
+
 # Logs
 *.log
 npm-debug.log*

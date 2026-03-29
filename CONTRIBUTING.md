@@ -351,3 +351,44 @@ Every push and PR runs the following jobs in order:
 Results are reported in the GitHub Actions job summary with labeled sections per suite. All steps must pass — failures block merging.
 
 Releases are handled by a separate workflow that runs only on pushes to `main`. It requires an `NPM_TOKEN` secret set in the repo settings.
+
+---
+
+## Site Deployment
+
+Changes to `site/**` on `main` trigger `.github/workflows/deploy-site.yml`, which
+deploys two Cloudflare Pages projects in parallel:
+
+| Job | Source | Domain |
+|-----|--------|--------|
+| `deploy-landing` | `site/landing/` (served as-is, no build) | `get.tilde.sh` |
+| `build-and-deploy-docs` | `site/docs/dist/` (Astro build) | `docs.tilde.sh` |
+
+### Required GitHub Actions secrets
+
+Set these in **Settings → Secrets and variables → Actions** in the GitHub repository:
+
+| Secret | Description | Where to find it |
+|--------|-------------|-----------------|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API token with **Cloudflare Pages: Edit** permission | [Cloudflare Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens) |
+| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID | Appears in the URL when you log in to the Cloudflare Dashboard: `https://dash.cloudflare.com/<account-id>/` |
+
+### Cloudflare Pages project setup
+
+Create two Cloudflare Pages projects (once, manually):
+
+1. **`tilde-get`** — for `get.tilde.sh`
+   - In the Cloudflare Dashboard, go to **Workers & Pages → Create application → Pages → Connect to Git**
+   - Set project name: `tilde-get`
+   - Build settings: no build command, output directory `site/landing`
+   - After creation, add a custom domain: `get.tilde.sh`
+   - Add a CNAME record in your DNS: `get` → `tilde-get.pages.dev`
+
+2. **`tilde-docs`** — for `docs.tilde.sh`
+   - Set project name: `tilde-docs`
+   - Build command: `npm run build` (working directory: `site/docs`)
+   - Output directory: `site/docs/dist`
+   - After creation, add a custom domain: `docs.tilde.sh`
+   - Add a CNAME record in your DNS: `docs` → `tilde-docs.pages.dev`
+
+Cloudflare Pages handles HTTPS automatically for custom domains.

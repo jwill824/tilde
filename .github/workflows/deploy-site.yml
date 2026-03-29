@@ -1,0 +1,58 @@
+name: Deploy Site
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'site/**'
+
+jobs:
+  # ── Job 1: Deploy landing page to get.tilde.sh ──────────────────────────────
+  deploy-landing:
+    name: Deploy Landing (get.tilde.sh)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: tilde-get
+          directory: site/landing
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── Job 2: Build docs and deploy to docs.tilde.sh ───────────────────────────
+  build-and-deploy-docs:
+    name: Build & Deploy Docs (docs.tilde.sh)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: site/docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: site/docs
+
+      - name: Build docs site
+        run: npm run build
+        working-directory: site/docs
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: tilde-docs
+          directory: site/docs/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
