@@ -1,6 +1,6 @@
 # Contract: Install Script Interface
 
-**File**: `site/landing/install.sh`
+**File**: `site/tilde/install.sh`
 **Served at**: `https://thingstead.io/tilde/install.sh`
 **Version**: 1.0.0 | **Date**: 2026-03-29
 

@@ -51,26 +51,22 @@ brew.sh (Jekyll), react.dev (Next.js custom)
 
 ## 3. Hosting & Deployment
 
-**Decision**: Cloudflare Pages (two separate projects: one per domain)
+**Decision**: Cloudflare Pages (single project: `thingstead`, path-based routing)
 
 **Rationale**:
 - Free tier supports unlimited bandwidth for static sites
-- Custom domains with automatic HTTPS on both `thingstead.io/tilde` and `thingstead.io/tilde/docs`
+- Custom domain `thingstead.io` with automatic HTTPS
 - Global CDN ensures fast loads worldwide without configuration
-- GitHub integration: push-to-deploy from `main` branch with per-directory build
-  config (build `site/docs/`, deploy `site/landing/` as-is)
-- Unlike GitHub Pages, Cloudflare Pages natively supports multiple custom domains
-  from a single repo without subdirectory path hacks
+- Single project scales to future tools (`thingstead.io/ordrctrl`, etc.) with zero new DNS
+- Unlike two-project approach, no per-subdomain CF project management needed
 
 **Alternatives considered**:
-- GitHub Pages: Harder to support two separate custom subdomains from one repo without
-  workarounds; `CNAME` file conflicts; no per-directory build targeting natively
+- GitHub Pages: No `_headers` support — can't set `Content-Type: text/plain` on `install.sh`, which breaks `curl | bash`
 - Vercel: Paid plan required for multiple projects from one repo; overkill for static
 - Netlify: Viable alternative; Cloudflare Pages preferred for CDN performance and cost
 
 **DNS setup**:
-- `thingstead.io/tilde` → CNAME → `<project-a>.pages.dev`
-- `thingstead.io/tilde/docs` → CNAME → `<project-b>.pages.dev`
+- `thingstead.io` → CNAME → `thingstead.pages.dev` (single record, proxied)
 
 ---
 
@@ -169,14 +165,11 @@ auto-generated in this iteration
 
 ## 8. CI/CD Workflow
 
-**Decision**: Single GitHub Actions workflow (`deploy-site.yml`) with two jobs
+**Decision**: Single GitHub Actions workflow (`deploy-site.yml`) with one job
 
-**Job 1 — Deploy landing** (`thingstead.io/tilde`):
-- Trigger: push to `main`, paths `site/landing/**`
-- Action: `cloudflare/pages-action` deploying `site/landing/` directly (no build)
-- CF Pages project: `tilde-get` → `thingstead.io/tilde`
-
-**Job 2 — Build & deploy docs** (`thingstead.io/tilde/docs`):
-- Trigger: push to `main`, paths `site/docs/**`
-- Steps: `npm ci` in `site/docs/`, `npm run build`, deploy `site/docs/dist/`
-- CF Pages project: `tilde-docs` → `thingstead.io/tilde/docs`
+**Job — Build & deploy** (`thingstead.io`):
+- Trigger: push to `main`, paths `site/**`
+- Steps: `npm ci` in `site/docs/`, `npm run build`, assemble `dist/tilde/` from `site/tilde/` + `site/docs/dist/`
+- Action: `cloudflare/wrangler-action@v3` running `wrangler pages deploy dist --project-name=thingstead`
+- Auto-creates the CF Pages project `thingstead` on first run
+- `gitHubToken` enables deployment status comments on PRs

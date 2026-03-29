@@ -113,11 +113,11 @@ See [research.md](./research.md) for full findings.
 |----------|--------|-----------|
 | Docs framework | Astro + Starlight | Minimal JS output, framework-agnostic, built-in search/dark mode/sidebar, aligns with modern CLI tool docs pattern |
 | Landing page | Plain HTML + Tailwind CDN | No build step; fast iteration; JS not required for core content (FR-010) |
-| Hosting | Cloudflare Pages | Free tier, global CDN, custom domain support for both subdomains, HTTPS automatic |
+| Hosting | Cloudflare Pages (single project `thingstead`) | Free tier, global CDN, path-based routing for all tools under `thingstead.io`, HTTPS automatic |
 | Version resolution | `npm view @jwill824/tilde version` at install time | Dynamic; no hardcoded version; always latest stable |
 | SHA-256 checksum | `npm view @jwill824/tilde dist.integrity` + `openssl dgst` | npm registry publishes sha512 of tarball natively; script extracts and verifies |
 | Install script base | Adapt `bootstrap.sh` | Already handles Xcode CLT, Homebrew, Node.js 20; add interactive PM prompt + checksum |
-| Monorepo structure | `site/landing/` + `site/docs/` | Separation of concerns; docs has own deps; both in same repo for co-location with source |
+| Monorepo structure | `site/tilde/` + `site/docs/` | Separation of concerns; docs has own deps; both in same repo for co-location with source; assembled into single `dist/` at deploy time |
 
 ## Phase 1: Design & Contracts
 

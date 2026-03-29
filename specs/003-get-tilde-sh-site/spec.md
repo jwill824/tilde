@@ -21,8 +21,9 @@ a public URL — modeled after sites like docs.astral.sh/uv and vfox.dev"
   if absent, then installs Node.js through it. Secondary package managers (npm, pip,
   etc.) follow. This mirrors tilde's Configuration-First principle.
 - Q: Where do the documentation pages live — under `thingstead.io/tilde/docs/...` or a
-  dedicated subdomain? → A: Dedicated subdomain `thingstead.io/tilde/docs` for all documentation;
-  `thingstead.io/tilde` hosts only the landing page and install script.
+  dedicated subdomain? → A: Path-based routing under `thingstead.io/tilde/docs` for all
+  documentation; `thingstead.io/tilde` hosts only the landing page and install script.
+  Both served from a single Cloudflare Pages project (`thingstead`).
 - Q: What is the security posture of the install script for curl-piped execution? →
   A: HTTPS transport required; npm automatically verifies the SHA-512 integrity hash
   (`dist.integrity`) of the tilde package during install and aborts if verification fails.
@@ -278,9 +279,10 @@ install script installs that version without changing the site source.
 - The tilde npm package (`@jwill824/tilde`) remains the canonical distribution artifact;
   the install script wraps it rather than replacing it.
 - A static site deployment is sufficient for both `thingstead.io/tilde` (landing page +
-  install script) and `thingstead.io/tilde/docs` (documentation). Both can be served from the
-  same hosting provider (GitHub Pages, Cloudflare Pages, or similar) using separate
-  subdomain CNAME records.
+  install script) and `thingstead.io/tilde/docs` (documentation). Both are served from a
+  single Cloudflare Pages project (`thingstead`) using path-based routing with an assembled
+  `dist/` directory. A single DNS CNAME record (`thingstead.io` → `thingstead.pages.dev`)
+  is required.
 - The existing `bootstrap.sh` in the repository root is the basis for the install script
   and will be adapted rather than rewritten from scratch.
 - Windows support is out of scope; the script MAY print a message directing Windows

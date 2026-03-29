@@ -21,10 +21,10 @@ Two co-deployed static sites from a single `site/` directory:
 
 ```bash
 # No build step — open directly in browser
-open site/landing/index.html
+open site/tilde/index.html
 
 # Or serve locally to test install.sh path
-npx serve site/landing
+npx serve site/tilde
 # → http://localhost:3000
 # → http://localhost:3000/install.sh
 ```
@@ -42,10 +42,10 @@ npm run dev
 
 ```bash
 # Dry run (inspect without executing)
-bash -n site/landing/install.sh
+bash -n site/tilde/install.sh
 
 # Full local test (uses local version of script)
-bash site/landing/install.sh
+bash site/tilde/install.sh
 ```
 
 ---
@@ -60,8 +60,8 @@ npm create astro@latest site/docs -- --template starlight
 cd site/docs && npm run build
 
 # 3. Add landing page files
-mkdir -p site/landing
-# Create site/landing/index.html and site/landing/install.sh
+mkdir -p site/tilde
+# Create site/tilde/index.html and site/tilde/install.sh
 ```
 
 ---
@@ -115,13 +115,13 @@ Starlight auto-registers the page in the sidebar based on `astro.config.mjs` nav
 
 ## Updating the Install Script
 
-The install script at `site/landing/install.sh` dynamically resolves the latest tilde
+The install script at `site/tilde/install.sh` dynamically resolves the latest tilde
 version at run time — **no manual version bumps needed**.
 
 To test a specific version locally:
 
 ```bash
-TILDE_VERSION=1.2.0 bash site/landing/install.sh
+TILDE_VERSION=1.2.0 bash site/tilde/install.sh
 ```
 
 ---
@@ -133,8 +133,8 @@ TILDE_VERSION=1.2.0 bash site/landing/install.sh
 cd site/docs && npm run build && echo "✓ Docs build OK"
 
 # Verify install script is valid bash
-bash -n site/landing/install.sh && echo "✓ install.sh syntax OK"
+bash -n site/tilde/install.sh && echo "✓ install.sh syntax OK"
 
 # Verify landing page is valid HTML (optional)
-npx html-validate site/landing/index.html
+npx html-validate site/tilde/index.html
 ```

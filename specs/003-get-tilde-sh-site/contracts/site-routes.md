@@ -8,8 +8,11 @@
 
 | Domain | Purpose | Deployment Source |
 |--------|---------|-------------------|
-| `thingstead.io/tilde` | Landing page + install script | `site/landing/` (no build) |
-| `thingstead.io/tilde/docs` | Full documentation site | `site/docs/dist/` (Astro build) |
+| `thingstead.io/tilde` | Landing page + install script | `site/tilde/` (no build, copied to `dist/tilde/`) |
+| `thingstead.io/tilde/docs` | Full documentation site | `site/docs/dist/` (Astro build, copied to `dist/tilde/docs/`) |
+
+Both paths are served from a single Cloudflare Pages project named `thingstead`.
+DNS: `thingstead.io` CNAME → `thingstead.pages.dev` (proxied, one record).
 
 ---
 
