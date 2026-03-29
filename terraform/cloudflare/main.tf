@@ -31,10 +31,11 @@ resource "cloudflare_pages_domain" "thingstead_io" {
 }
 
 # DNS CNAME is not auto-created by cloudflare_pages_domain — must be explicit
-resource "cloudflare_record" "thingstead_io" {
+resource "cloudflare_dns_record" "thingstead_io" {
   zone_id = var.zone_id
   name    = "thingstead.io"
   type    = "CNAME"
   content = "${cloudflare_pages_project.thingstead.name}.pages.dev"
   proxied = true
+  ttl     = 1
 }

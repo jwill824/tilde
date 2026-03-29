@@ -2,14 +2,14 @@
 
 ## Decision 1: Cloudflare Terraform Provider
 
-**Decision**: Use `cloudflare/cloudflare` provider v5; manage Pages with `cloudflare_pages_project`, `cloudflare_pages_domain`, and `cloudflare_record` for DNS
+**Decision**: Use `cloudflare/cloudflare` provider v5; manage Pages with `cloudflare_pages_project`, `cloudflare_pages_domain`, and `cloudflare_dns_record` for DNS
 
-**Rationale**: Both resources are stable in the official Cloudflare provider v5 (current: 5.18.0). `cloudflare_pages_project` manages project creation and production branch. `cloudflare_pages_domain` handles the custom domain binding using the `name` attribute (not `domain`). A separate `cloudflare_record` (CNAME) is required — unlike adding a domain via the CF dashboard, the Terraform resource does NOT auto-create the DNS record.
+**Rationale**: Both resources are stable in the official Cloudflare provider v5 (current: 5.18.0). `cloudflare_pages_project` manages project creation and production branch. `cloudflare_pages_domain` handles the custom domain binding using the `name` attribute (not `domain`). A separate `cloudflare_dns_record` (CNAME) is required — unlike adding a domain via the CF dashboard, the Terraform resource does NOT auto-create the DNS record.
 
 **Key attributes**:
 - `cloudflare_pages_project`: `account_id`, `name`, `production_branch` (required)
 - `cloudflare_pages_domain`: `account_id`, `project_name`, `name` (required; `name` is the domain string)
-- `cloudflare_record`: `zone_id`, `name`, `type = "CNAME"`, `content`, `proxied`
+- `cloudflare_dns_record`: `zone_id`, `name`, `type = "CNAME"`, `content`, `proxied`
 
 **Import**: `terraform import cloudflare_pages_project.thingstead <account_id>/thingstead`
 
