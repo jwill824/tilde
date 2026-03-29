@@ -12,6 +12,7 @@ Thanks for your interest in contributing! This guide covers everything you need 
 - [Testing](#testing)
 - [Writing a Plugin](#writing-a-plugin)
 - [Site Development](#site-development)
+- [Infrastructure (Terraform)](#infrastructure-terraform)
 - [Commit Conventions](#commit-conventions)
 - [Opening a Pull Request](#opening-a-pull-request)
 - [CI Pipeline](#ci-pipeline)
@@ -427,19 +428,125 @@ Changes to `site/**` on `main` trigger `.github/workflows/deploy-site.yml`. The 
 2. Assembles a `dist/` directory: `dist/tilde/` (landing) + `dist/tilde/docs/` (docs)
 3. Deploys `dist/` to Cloudflare Pages project `thingstead` via `wrangler-action@v3`
 
-The job runs in the **`prod` GitHub environment** — secrets must be set there (not repo-level).
+The job runs in the **`production` GitHub environment** — secrets are provisioned automatically by the `tilde-github` Terraform workspace. No manual secret management is needed after the first Terraform apply.
 
-### Required secrets (GitHub → Settings → Environments → prod)
+### Required secrets (GitHub → Settings → Environments → production)
 
-| Secret | Description | Where to find it |
-|--------|-------------|-----------------|
-| `CLOUDFLARE_API_TOKEN` | Custom token with **Cloudflare Pages: Edit** permission | [CF Dashboard → Manage Account → API Tokens](https://dash.cloudflare.com/?to=/:account/api-tokens) |
-| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID | URL when logged in: `https://dash.cloudflare.com/<account-id>/` |
+> These secrets are managed by Terraform (`tilde-github` workspace). Do not set them manually — they will be overwritten on next apply.
+
+| Secret | Provisioned by |
+|--------|---------------|
+| `CLOUDFLARE_API_TOKEN` | `github_actions_environment_secret.cloudflare_api_token` in `terraform/github/` |
+| `CLOUDFLARE_ACCOUNT_ID` | `github_actions_environment_secret.cloudflare_account_id` in `terraform/github/` |
 
 ### First-time Cloudflare setup
 
-`wrangler-action` auto-creates the `thingstead` Pages project on the first successful deploy — no manual project creation needed. After the first deploy:
+The `thingstead` Pages project, `thingstead.io` custom domain, and DNS record are all managed by the `tilde-cloudflare` Terraform workspace — no manual dashboard steps required. See the [Infrastructure (Terraform)](#infrastructure-terraform) section below for setup instructions.
 
-1. In the Cloudflare Dashboard, go to **Workers & Pages → thingstead → Custom domains**
-2. Add `thingstead.io`
-3. Cloudflare will automatically create the DNS record and provision HTTPS
+---
+
+## Infrastructure (Terraform)
+
+The `terraform/` directory contains two independent root modules that manage Cloudflare Pages and GitHub repository settings as code.
+
+### Directory structure
+
+```text
+terraform/
+├── .gitignore          # Ignores .terraform/, *.tfstate, *.tfvars
+├── cloudflare/         # Manages Cloudflare Pages project + custom domain
+│   ├── main.tf
+│   ├── variables.tf
+│   └── outputs.tf
+└── github/             # Manages GitHub repo settings + branch protection
+    ├── main.tf
+    ├── variables.tf
+    └── outputs.tf
+```
+
+Each module is a standalone Terraform root module with its own Terraform Cloud workspace and state.
+
+### Terraform Cloud workspaces
+
+| Workspace | Working Directory | Triggers on |
+|-----------|------------------|-------------|
+| `tilde-cloudflare` | `terraform/cloudflare` | Changes to `terraform/cloudflare/**` |
+| `tilde-github` | `terraform/github` | Changes to `terraform/github/**` |
+
+Both workspaces use **remote execution** — merging to `main` automatically queues a plan+apply in TFC via the VCS integration.
+
+### Required workspace variables
+
+Variables are split between a **shared Variable Set** (applied to both workspaces) and workspace-specific variables.
+
+#### Shared Variable Set: `tilde-shared`
+
+Create this Variable Set in TFC (Organization → Settings → Variable Sets) and apply it to both `tilde-cloudflare` and `tilde-github`.
+
+| Type | Key | Sensitive | Description |
+|------|-----|-----------|-------------|
+| Terraform variable | `cloudflare_api_token` | ✅ | Cloudflare API token with **Cloudflare Pages: Edit** + **Zone: DNS: Edit** permissions — used by the CF provider in `tilde-cloudflare` and stored as a GitHub secret by `tilde-github` |
+| Terraform variable | `cloudflare_account_id` | No | Cloudflare account ID — used in CF resources and stored as a GitHub secret |
+
+#### Workspace-specific: `tilde-cloudflare`
+
+| Type | Key | Sensitive | Description |
+|------|-----|-----------|-------------|
+| Terraform variable | `zone_id` | No | DNS zone ID for `thingstead.io` — found in CF Dashboard → thingstead.io → Overview (right sidebar) |
+
+#### Workspace-specific: `tilde-github`
+
+| Type | Key | Sensitive | Description |
+|------|-----|-----------|-------------|
+| Environment variable | `GITHUB_TOKEN` | ✅ | Fine-grained PAT for `jwill824/tilde` with **Administration: Write**, **Contents: Read**, **Environments: Read and write**, **Secrets: Read and write** |
+
+> ⚠️ `GITHUB_TOKEN` must be added as an **Environment variable** in the TFC workspace (not a Terraform variable). If added as a Terraform variable it will cause a "Value for undeclared variable" error during plan.
+
+### First-time setup
+
+The `thingstead` Cloudflare Pages project and `jwill824/tilde` GitHub repository already exist. Import them into Terraform state before the first apply.
+
+`terraform import` always runs locally. Because TFC workspace variables marked sensitive are unavailable locally, supply them as `TF_VAR_*` environment variables in your shell before running imports:
+
+```bash
+export TF_VAR_cloudflare_api_token=<token>
+export TF_VAR_cloudflare_account_id=<account_id>
+export TF_VAR_zone_id=<zone_id>
+```
+
+Then run imports:
+
+```bash
+# Cloudflare workspace
+cd terraform/cloudflare
+terraform login
+terraform init
+
+terraform import cloudflare_pages_project.thingstead <CLOUDFLARE_ACCOUNT_ID>/thingstead
+terraform import cloudflare_pages_domain.thingstead_io <CLOUDFLARE_ACCOUNT_ID>/thingstead/thingstead.io
+terraform import cloudflare_dns_record.thingstead_io <ZONE_ID>/<DNS_RECORD_ID>
+# DNS record ID: GET https://api.cloudflare.com/client/v4/zones/<zone_id>/dns_records?name=thingstead.io&type=CNAME
+
+# GitHub workspace
+cd ../github
+unset TF_VAR_GITHUB_TOKEN  # must NOT be set as TF_VAR_*
+export GITHUB_TOKEN=<fine-grained-PAT>
+terraform init
+
+terraform import github_repository.tilde tilde
+terraform import github_repository_environment.production tilde:production
+# github_branch_protection: skip import if branch protection doesn't exist yet —
+#   Terraform will create it on first apply.
+# github_actions_environment_secret: cannot be imported (write-only) —
+#   both secrets are created fresh on first apply.
+```
+
+After importing, run `terraform plan` in each workspace to confirm no unexpected changes, then open a PR. TFC will run `plan` on the PR and `apply` on merge.
+
+### Making infrastructure changes
+
+1. Edit the relevant `.tf` files in `terraform/cloudflare/` or `terraform/github/`
+2. Open a PR — TFC runs a **speculative plan** and posts results as a PR check
+3. Merge to `main` — TFC auto-applies the plan
+
+> Never commit `*.tfvars` files or Terraform state files — credentials and state are managed entirely by Terraform Cloud.

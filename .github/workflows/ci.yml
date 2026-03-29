@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'specs/**'
+      - 'terraform/**'
       - '**/*.md'
       - '.specify/**'
   pull_request:
