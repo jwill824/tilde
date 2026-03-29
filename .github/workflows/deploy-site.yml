@@ -41,6 +41,12 @@ jobs:
           cp -r site/tilde/. dist/tilde/
           cp -r site/docs/dist/. dist/tilde/docs/
 
+      - name: Create Cloudflare Pages project (if not exists)
+        run: npx wrangler pages project create thingstead --production-branch=main || true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
