@@ -9,3 +9,14 @@ variable "required_status_check_contexts" {
   type        = list(string)
   default     = ["CI"]
 }
+
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token — stored as CLOUDFLARE_API_TOKEN secret in the prod GitHub environment"
+  type        = string
+  sensitive   = true
+}
+
+variable "cloudflare_account_id" {
+  description = "Cloudflare account ID — stored as CLOUDFLARE_ACCOUNT_ID secret in the prod GitHub environment"
+  type        = string
+}

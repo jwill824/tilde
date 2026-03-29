@@ -495,6 +495,8 @@ Set these as **environment variables** (not Terraform variables) in each TFC wor
 | Type | Key | Sensitive | Description |
 |------|-----|-----------|-------------|
 | Environment variable | `GITHUB_TOKEN` | ✅ | Fine-grained PAT for `jwill824/tilde` with `Administration: Write` + `Contents: Read` |
+| Terraform variable | `cloudflare_api_token` | ✅ | Cloudflare API token — Terraform writes this as `CLOUDFLARE_API_TOKEN` secret into the `prod` GitHub environment |
+| Terraform variable | `cloudflare_account_id` | No | Cloudflare account ID — Terraform writes this as `CLOUDFLARE_ACCOUNT_ID` secret into the `prod` GitHub environment |
 
 ### First-time setup
 
@@ -511,6 +513,7 @@ terraform import cloudflare_pages_project.thingstead <CLOUDFLARE_ACCOUNT_ID>/thi
 cd ../github
 terraform init
 terraform import github_repository.tilde tilde
+terraform import github_repository_environment.prod tilde:prod
 ```
 
 After importing, push the `terraform/` files and TFC will run `plan` on the next merge.

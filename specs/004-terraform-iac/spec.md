@@ -86,6 +86,8 @@ Any authorized team member can run Terraform from any machine and share state wi
 - **FR-004**: Terraform MUST manage the `jwill824/tilde` GitHub repository settings including: squash merge only, delete branch on merge, and issue tracking enabled.
 - **FR-005**: Terraform MUST enforce a branch protection rule on `main` requiring: the `CI` status check passes before merging, no direct pushes, and linear history.
 - **FR-006**: Terraform MUST authenticate to GitHub using a fine-grained PAT scoped exclusively to the `jwill824/tilde` repository with `Administration: Write` and `Contents: Read` permissions, stored as an encrypted Terraform Cloud workspace variable.
+- **FR-011**: Terraform MUST create and manage a single `prod` GitHub Actions environment on the `jwill824/tilde` repository.
+- **FR-012**: Terraform MUST provision `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as encrypted secrets on the `prod` GitHub Actions environment, sourcing their values from encrypted TFC workspace variables.
 
 **State & Structure**
 
@@ -100,6 +102,7 @@ Any authorized team member can run Terraform from any machine and share state wi
 - **Custom Domain Binding**: `thingstead.io` attached to the `thingstead` Pages project
 - **GitHub Repository**: `jwill824/tilde`; settings and branch protections managed by Terraform
 - **Branch Protection Rule**: Applied to `main`; required checks, no direct push, linear history
+- **GitHub Actions Environment**: `prod` environment with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets
 - **Remote State Backend**: Stores Terraform state file; supports locking
 
 ## Success Criteria *(mandatory)*

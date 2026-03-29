@@ -91,8 +91,8 @@ See [research.md](./research.md) for full findings.
 
 | Workspace | Working Directory | VCS Trigger Path | Provider Credentials |
 |-----------|------------------|-----------------|---------------------|
-| `tilde-cloudflare` | `terraform/cloudflare` | `terraform/cloudflare/**` | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |
-| `tilde-github` | `terraform/github` | `terraform/github/**` | `GITHUB_TOKEN` (fine-grained PAT) |
+| `tilde-cloudflare` | `terraform/cloudflare` | `terraform/cloudflare/**` | `CLOUDFLARE_API_TOKEN`, `account_id`, `zone_id` |
+| `tilde-github` | `terraform/github` | `terraform/github/**` | `GITHUB_TOKEN`, `cloudflare_api_token`, `cloudflare_account_id` |
 
 ### Resource Map
 
@@ -119,6 +119,18 @@ github_repository "tilde"
   - delete_branch_on_merge = true
   - has_issues             = true
 
+github_repository_environment "prod"
+  - repository  = github_repository.tilde.name
+  - environment = "prod"
+
+github_actions_environment_secret "cloudflare_api_token"
+  - secret_name     = "CLOUDFLARE_API_TOKEN"
+  - plaintext_value = var.cloudflare_api_token
+
+github_actions_environment_secret "cloudflare_account_id"
+  - secret_name     = "CLOUDFLARE_ACCOUNT_ID"
+  - plaintext_value = var.cloudflare_account_id
+
 github_branch_protection "main"
   - repository_id          = github_repository.tilde.node_id
   - pattern                = "main"
@@ -133,11 +145,18 @@ github_branch_protection "main"
 
 ### Import Plan
 
-The `thingstead` Cloudflare Pages project already exists. Before first `terraform apply`, run:
+The `thingstead` Cloudflare Pages project, `jwill824/tilde` GitHub repository, and `prod` GitHub environment already exist. Before first `terraform apply`, run:
+
 ```bash
 # In terraform/cloudflare/
 terraform import cloudflare_pages_project.thingstead <account_id>/thingstead
+
+# In terraform/github/
+terraform import github_repository.tilde tilde
+terraform import github_repository_environment.prod tilde:prod
 ```
+
+> `github_actions_environment_secret` resources cannot be imported (write-only values). They will be created on first apply, overwriting any manually set secret values.
 
 ### Outputs
 
@@ -148,6 +167,7 @@ terraform import cloudflare_pages_project.thingstead <account_id>/thingstead
 **github outputs.tf**
 - `repository_url` — `https://github.com/jwill824/tilde`
 - `branch_protection_id` — TF resource ID for the `main` rule
+- `prod_environment_url` — GitHub prod environment deployments URL
 
 ## Complexity Tracking
 

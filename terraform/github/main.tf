@@ -28,6 +28,25 @@ resource "github_repository" "tilde" {
   has_issues             = true
 }
 
+resource "github_repository_environment" "prod" {
+  repository  = github_repository.tilde.name
+  environment = "prod"
+}
+
+resource "github_actions_environment_secret" "cloudflare_api_token" {
+  repository      = github_repository.tilde.name
+  environment     = github_repository_environment.prod.environment
+  secret_name     = "CLOUDFLARE_API_TOKEN"
+  plaintext_value = var.cloudflare_api_token
+}
+
+resource "github_actions_environment_secret" "cloudflare_account_id" {
+  repository      = github_repository.tilde.name
+  environment     = github_repository_environment.prod.environment
+  secret_name     = "CLOUDFLARE_ACCOUNT_ID"
+  plaintext_value = var.cloudflare_account_id
+}
+
 resource "github_branch_protection" "main" {
   repository_id = github_repository.tilde.node_id
   pattern       = "main"
