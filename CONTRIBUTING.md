@@ -11,6 +11,7 @@ Thanks for your interest in contributing! This guide covers everything you need 
 - [Building](#building)
 - [Testing](#testing)
 - [Writing a Plugin](#writing-a-plugin)
+- [Site Development](#site-development)
 - [Commit Conventions](#commit-conventions)
 - [Opening a Pull Request](#opening-a-pull-request)
 - [CI Pipeline](#ci-pipeline)
@@ -354,41 +355,91 @@ Releases are handled by a separate workflow that runs only on pushes to `main`. 
 
 ---
 
-## Site Deployment
+## Site Development
 
-Changes to `site/**` on `main` trigger `.github/workflows/deploy-site.yml`, which
-deploys two Cloudflare Pages projects in parallel:
+The tilde website lives entirely in the `site/` directory and is deployed as a single [Cloudflare Pages](https://pages.cloudflare.com/) project (`thingstead`) to [thingstead.io/tilde](https://thingstead.io/tilde).
 
-| Job | Source | Domain |
-|-----|--------|--------|
-| `deploy-landing` | `site/landing/` (served as-is, no build) | `get.tilde.sh` |
-| `build-and-deploy-docs` | `site/docs/dist/` (Astro build) | `docs.tilde.sh` |
+### Structure
 
-### Required GitHub Actions secrets
+```
+site/
+├── tilde/
+│   ├── index.html      # Landing page (thingstead.io/tilde)
+│   ├── install.sh      # Curl-piped installer (thingstead.io/tilde/install.sh)
+│   └── _headers        # Cloudflare cache + Content-Type rules
+└── docs/               # Astro + Starlight docs site (thingstead.io/tilde/docs)
+    ├── astro.config.mjs
+    ├── package.json
+    └── src/content/docs/
+        ├── index.mdx
+        ├── installation.md
+        ├── getting-started.md
+        └── config-reference.md
+```
 
-Set these in **Settings → Secrets and variables → Actions** in the GitHub repository:
+### Local preview
+
+**Landing page** — open directly in a browser (no build step):
+
+```bash
+open site/tilde/index.html
+```
+
+**Docs site** — Astro dev server with hot reload:
+
+```bash
+cd site/docs
+npm install
+npm run dev
+# → http://localhost:4321/tilde/docs
+```
+
+**Full assembled output** — mirrors exactly what gets deployed:
+
+```bash
+cd site/docs && npm run build && cd ../..
+mkdir -p dist/tilde/docs
+cp -r site/tilde/. dist/tilde/
+cp -r site/docs/dist/. dist/tilde/docs/
+# Serve dist/ with any static file server, e.g.:
+npx serve dist
+# → http://localhost:3000/tilde
+```
+
+### Adding or updating content
+
+| What to change | Where |
+|----------------|-------|
+| Landing page copy or styling | `site/tilde/index.html` |
+| Install script logic | `site/tilde/install.sh` |
+| Cache or Content-Type headers | `site/tilde/_headers` |
+| Docs pages | `site/docs/src/content/docs/*.md` |
+| Docs sidebar / nav | `site/docs/astro.config.mjs` → `starlight.sidebar` |
+| Docs site title or base URL | `site/docs/astro.config.mjs` → `site` / `base` |
+
+> **Important:** Do not change `site` or `base` in `astro.config.mjs` without a corresponding DNS/routing update — Astro uses them to generate all internal links.
+
+### Deployment
+
+Changes to `site/**` on `main` trigger `.github/workflows/deploy-site.yml`. The workflow:
+
+1. Builds the Astro docs site (`npm run build` in `site/docs/`)
+2. Assembles a `dist/` directory: `dist/tilde/` (landing) + `dist/tilde/docs/` (docs)
+3. Deploys `dist/` to Cloudflare Pages project `thingstead` via `wrangler-action@v3`
+
+The job runs in the **`prod` GitHub environment** — secrets must be set there (not repo-level).
+
+### Required secrets (GitHub → Settings → Environments → prod)
 
 | Secret | Description | Where to find it |
 |--------|-------------|-----------------|
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API token with **Cloudflare Pages: Edit** permission | [Cloudflare Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens) |
-| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID | Appears in the URL when you log in to the Cloudflare Dashboard: `https://dash.cloudflare.com/<account-id>/` |
+| `CLOUDFLARE_API_TOKEN` | Custom token with **Cloudflare Pages: Edit** permission | [CF Dashboard → Manage Account → API Tokens](https://dash.cloudflare.com/?to=/:account/api-tokens) |
+| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID | URL when logged in: `https://dash.cloudflare.com/<account-id>/` |
 
-### Cloudflare Pages project setup
+### First-time Cloudflare setup
 
-Create two Cloudflare Pages projects (once, manually):
+`wrangler-action` auto-creates the `thingstead` Pages project on the first successful deploy — no manual project creation needed. After the first deploy:
 
-1. **`tilde-get`** — for `get.tilde.sh`
-   - In the Cloudflare Dashboard, go to **Workers & Pages → Create application → Pages → Connect to Git**
-   - Set project name: `tilde-get`
-   - Build settings: no build command, output directory `site/landing`
-   - After creation, add a custom domain: `get.tilde.sh`
-   - Add a CNAME record in your DNS: `get` → `tilde-get.pages.dev`
-
-2. **`tilde-docs`** — for `docs.tilde.sh`
-   - Set project name: `tilde-docs`
-   - Build command: `npm run build` (working directory: `site/docs`)
-   - Output directory: `site/docs/dist`
-   - After creation, add a custom domain: `docs.tilde.sh`
-   - Add a CNAME record in your DNS: `docs` → `tilde-docs.pages.dev`
-
-Cloudflare Pages handles HTTPS automatically for custom domains.
+1. In the Cloudflare Dashboard, go to **Workers & Pages → thingstead → Custom domains**
+2. Add `thingstead.io`
+3. Cloudflare will automatically create the DNS record and provision HTTPS
