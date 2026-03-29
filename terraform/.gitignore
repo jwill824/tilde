@@ -1,0 +1,21 @@
+# Terraform state files (managed remotely by TFC)
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Sensitive variable files - never commit
+*.tfvars
+*.tfvars.json
+!example.tfvars
+
+# Terraform lock file - commit this for reproducible provider versions
+# .terraform.lock.hcl
+
+# Terraform working directory
+.terraform/
+
+# Terraform plan output files
+*.tfplan

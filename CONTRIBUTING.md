@@ -12,6 +12,7 @@ Thanks for your interest in contributing! This guide covers everything you need 
 - [Testing](#testing)
 - [Writing a Plugin](#writing-a-plugin)
 - [Site Development](#site-development)
+- [Infrastructure (Terraform)](#infrastructure-terraform)
 - [Commit Conventions](#commit-conventions)
 - [Opening a Pull Request](#opening-a-pull-request)
 - [CI Pipeline](#ci-pipeline)
@@ -443,3 +444,82 @@ The job runs in the **`prod` GitHub environment** — secrets must be set there 
 1. In the Cloudflare Dashboard, go to **Workers & Pages → thingstead → Custom domains**
 2. Add `thingstead.io`
 3. Cloudflare will automatically create the DNS record and provision HTTPS
+
+
+---
+
+## Infrastructure (Terraform)
+
+The `terraform/` directory contains two independent root modules that manage Cloudflare Pages and GitHub repository settings as code.
+
+### Directory structure
+
+```text
+terraform/
+├── .gitignore          # Ignores .terraform/, *.tfstate, *.tfvars
+├── cloudflare/         # Manages Cloudflare Pages project + custom domain
+│   ├── main.tf
+│   ├── variables.tf
+│   └── outputs.tf
+└── github/             # Manages GitHub repo settings + branch protection
+    ├── main.tf
+    ├── variables.tf
+    └── outputs.tf
+```
+
+Each module is a standalone Terraform root module with its own Terraform Cloud workspace and state.
+
+### Terraform Cloud workspaces
+
+| Workspace | Working Directory | Triggers on |
+|-----------|------------------|-------------|
+| `tilde-cloudflare` | `terraform/cloudflare` | Changes to `terraform/cloudflare/**` |
+| `tilde-github` | `terraform/github` | Changes to `terraform/github/**` |
+
+Both workspaces use **remote execution** — merging to `main` automatically queues a plan+apply in TFC via the VCS integration.
+
+### Required workspace variables
+
+Set these as **environment variables** (not Terraform variables) in each TFC workspace. Mark sensitive values as sensitive.
+
+**`tilde-cloudflare`**
+
+| Variable | Sensitive | Description |
+|----------|-----------|-------------|
+| `CLOUDFLARE_API_TOKEN` | ✅ | Custom API token with **Cloudflare Pages: Edit** permission |
+| `CLOUDFLARE_ACCOUNT_ID` | No | Your Cloudflare account ID |
+| `TF_VAR_account_id` | No | Same as `CLOUDFLARE_ACCOUNT_ID` (passed to `var.account_id`) |
+| `TF_VAR_zone_id` | No | Cloudflare DNS zone ID for `thingstead.io` (found in CF Dashboard → Overview) |
+
+**`tilde-github`**
+
+| Variable | Sensitive | Description |
+|----------|-----------|-------------|
+| `GITHUB_TOKEN` | ✅ | Fine-grained PAT for `jwill824/tilde` with `Administration: Write` + `Contents: Read` |
+
+### First-time setup
+
+The `thingstead` Cloudflare Pages project and `jwill824/tilde` GitHub repository already exist. Import them into Terraform state before the first apply:
+
+```bash
+# Cloudflare workspace — run locally with TFC remote state
+cd terraform/cloudflare
+terraform login
+terraform init
+terraform import cloudflare_pages_project.thingstead <CLOUDFLARE_ACCOUNT_ID>/thingstead
+
+# GitHub workspace
+cd ../github
+terraform init
+terraform import github_repository.tilde tilde
+```
+
+After importing, push the `terraform/` files and TFC will run `plan` on the next merge.
+
+### Making infrastructure changes
+
+1. Edit the relevant `.tf` files in `terraform/cloudflare/` or `terraform/github/`
+2. Open a PR — TFC runs a **speculative plan** and posts results as a PR check
+3. Merge to `main` — TFC auto-applies the plan
+
+> Never commit `*.tfvars` files or Terraform state files — credentials and state are managed entirely by Terraform Cloud.
