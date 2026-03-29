@@ -52,7 +52,7 @@ resource "github_branch_protection" "main" {
   pattern       = "main"
 
   enforce_admins        = true
-  require_linear_history = true
+  required_linear_history = true
 
   required_status_checks {
     strict   = true
