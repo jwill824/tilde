@@ -87,7 +87,7 @@ Any authorized team member can run Terraform from any machine and share state wi
 - **FR-005**: Terraform MUST enforce a branch protection rule on `main` requiring: the `CI` status check passes before merging, no direct pushes, and linear history.
 - **FR-006**: Terraform MUST authenticate to GitHub using a fine-grained PAT scoped exclusively to the `jwill824/tilde` repository with `Administration: Write` and `Contents: Read` permissions, stored as an encrypted Terraform Cloud workspace variable.
 - **FR-011**: Terraform MUST create and manage a single `production` GitHub Actions environment on the `jwill824/tilde` repository.
-- **FR-012**: Terraform MUST provision `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as encrypted secrets on the `production` GitHub Actions environment, sourcing their values from encrypted TFC workspace variables.
+- **FR-012**: Terraform MUST provision `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as encrypted secrets on the `production` GitHub Actions environment, sourcing their values from the `tilde-shared` TFC Variable Set.
 
 **State & Structure**
 

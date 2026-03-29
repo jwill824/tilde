@@ -428,23 +428,20 @@ Changes to `site/**` on `main` trigger `.github/workflows/deploy-site.yml`. The 
 2. Assembles a `dist/` directory: `dist/tilde/` (landing) + `dist/tilde/docs/` (docs)
 3. Deploys `dist/` to Cloudflare Pages project `thingstead` via `wrangler-action@v3`
 
-The job runs in the **`production` GitHub environment** — secrets must be set there (not repo-level).
+The job runs in the **`production` GitHub environment** — secrets are provisioned automatically by the `tilde-github` Terraform workspace. No manual secret management is needed after the first Terraform apply.
 
 ### Required secrets (GitHub → Settings → Environments → production)
 
-| Secret | Description | Where to find it |
-|--------|-------------|-----------------|
-| `CLOUDFLARE_API_TOKEN` | Custom token with **Cloudflare Pages: Edit** permission | [CF Dashboard → Manage Account → API Tokens](https://dash.cloudflare.com/?to=/:account/api-tokens) |
-| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID | URL when logged in: `https://dash.cloudflare.com/<account-id>/` |
+> These secrets are managed by Terraform (`tilde-github` workspace). Do not set them manually — they will be overwritten on next apply.
+
+| Secret | Provisioned by |
+|--------|---------------|
+| `CLOUDFLARE_API_TOKEN` | `github_actions_environment_secret.cloudflare_api_token` in `terraform/github/` |
+| `CLOUDFLARE_ACCOUNT_ID` | `github_actions_environment_secret.cloudflare_account_id` in `terraform/github/` |
 
 ### First-time Cloudflare setup
 
-`wrangler-action` auto-creates the `thingstead` Pages project on the first successful deploy — no manual project creation needed. After the first deploy:
-
-1. In the Cloudflare Dashboard, go to **Workers & Pages → thingstead → Custom domains**
-2. Add `thingstead.io`
-3. Cloudflare will automatically create the DNS record and provision HTTPS
-
+The `thingstead` Pages project, `thingstead.io` custom domain, and DNS record are all managed by the `tilde-cloudflare` Terraform workspace — no manual dashboard steps required. See the [Infrastructure (Terraform)](#infrastructure-terraform) section below for setup instructions.
 
 ---
 

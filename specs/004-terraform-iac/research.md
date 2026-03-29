@@ -106,14 +106,20 @@ These are run once locally (even with TFC remote execution — `terraform import
 
 ## Decision 6: Sensitive Variable Handling
 
-**Decision**: All API tokens stored as TFC workspace variables marked as "sensitive". No `terraform.tfvars` committed.
+**Decision**: Shared credentials stored in a TFC Variable Set (`tilde-shared`) applied to both workspaces. Workspace-specific variables set per workspace. No `terraform.tfvars` committed.
 
-**Variables per workspace**:
+**Variable Set: `tilde-shared`** (applied to both workspaces):
+
+| Variable | Type | Source |
+|----------|------|--------|
+| `cloudflare_api_token` | Terraform, sensitive | CF Dashboard → API Tokens |
+| `cloudflare_account_id` | Terraform | CF Dashboard → Account ID |
+
+**Workspace-specific variables**:
 
 | Workspace | Variable | Type | Source |
 |-----------|----------|------|--------|
-| `tilde-cloudflare` | `CLOUDFLARE_API_TOKEN` | env, sensitive | CF Dashboard → API Tokens |
-| `tilde-cloudflare` | `CLOUDFLARE_ACCOUNT_ID` | env | CF Dashboard |
+| `tilde-cloudflare` | `zone_id` | Terraform | CF Dashboard → thingstead.io → Zone ID |
 | `tilde-github` | `GITHUB_TOKEN` | env, sensitive | Fine-grained PAT (repo: tilde, Admin:Write + Contents:Read) |
 
-Environment variables (prefixed with no `TF_VAR_`) are passed directly to the provider auth; no `variables.tf` declaration needed for provider credentials.
+The `cloudflare_api_token` variable is consumed by the Cloudflare provider (`api_token` attribute) in `tilde-cloudflare` and written as a GitHub environment secret by `tilde-github`.
