@@ -428,9 +428,9 @@ Changes to `site/**` on `main` trigger `.github/workflows/deploy-site.yml`. The 
 2. Assembles a `dist/` directory: `dist/tilde/` (landing) + `dist/tilde/docs/` (docs)
 3. Deploys `dist/` to Cloudflare Pages project `thingstead` via `wrangler-action@v3`
 
-The job runs in the **`prod` GitHub environment** — secrets must be set there (not repo-level).
+The job runs in the **`production` GitHub environment** — secrets must be set there (not repo-level).
 
-### Required secrets (GitHub → Settings → Environments → prod)
+### Required secrets (GitHub → Settings → Environments → production)
 
 | Secret | Description | Where to find it |
 |--------|-------------|-----------------|
@@ -495,8 +495,8 @@ Set these as **environment variables** (not Terraform variables) in each TFC wor
 | Type | Key | Sensitive | Description |
 |------|-----|-----------|-------------|
 | Environment variable | `GITHUB_TOKEN` | ✅ | Fine-grained PAT for `jwill824/tilde` with `Administration: Write` + `Contents: Read` |
-| Terraform variable | `cloudflare_api_token` | ✅ | Cloudflare API token — Terraform writes this as `CLOUDFLARE_API_TOKEN` secret into the `prod` GitHub environment |
-| Terraform variable | `cloudflare_account_id` | No | Cloudflare account ID — Terraform writes this as `CLOUDFLARE_ACCOUNT_ID` secret into the `prod` GitHub environment |
+| Terraform variable | `cloudflare_api_token` | ✅ | Cloudflare API token — Terraform writes this as `CLOUDFLARE_API_TOKEN` secret into the `production` GitHub environment |
+| Terraform variable | `cloudflare_account_id` | No | Cloudflare account ID — Terraform writes this as `CLOUDFLARE_ACCOUNT_ID` secret into the `production` GitHub environment |
 
 ### First-time setup
 
@@ -513,7 +513,7 @@ terraform import cloudflare_pages_project.thingstead <CLOUDFLARE_ACCOUNT_ID>/thi
 cd ../github
 terraform init
 terraform import github_repository.tilde tilde
-terraform import github_repository_environment.prod tilde:prod
+terraform import github_repository_environment.production tilde:production
 ```
 
 After importing, push the `terraform/` files and TFC will run `plan` on the next merge.

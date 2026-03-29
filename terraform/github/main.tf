@@ -28,21 +28,21 @@ resource "github_repository" "tilde" {
   has_issues             = true
 }
 
-resource "github_repository_environment" "prod" {
+resource "github_repository_environment" "production" {
   repository  = github_repository.tilde.name
-  environment = "prod"
+  environment = "production"
 }
 
 resource "github_actions_environment_secret" "cloudflare_api_token" {
   repository      = github_repository.tilde.name
-  environment     = github_repository_environment.prod.environment
+  environment     = github_repository_environment.production.environment
   secret_name     = "CLOUDFLARE_API_TOKEN"
   plaintext_value = var.cloudflare_api_token
 }
 
 resource "github_actions_environment_secret" "cloudflare_account_id" {
   repository      = github_repository.tilde.name
-  environment     = github_repository_environment.prod.environment
+  environment     = github_repository_environment.production.environment
   secret_name     = "CLOUDFLARE_ACCOUNT_ID"
   plaintext_value = var.cloudflare_account_id
 }

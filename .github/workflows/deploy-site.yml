@@ -12,7 +12,7 @@ jobs:
   build-and-deploy:
     name: Build & Deploy (thingstead.io)
     runs-on: ubuntu-latest
-    environment: prod
+    environment: production
     permissions:
       contents: read
       deployments: write

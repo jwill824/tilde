@@ -119,9 +119,9 @@ github_repository "tilde"
   - delete_branch_on_merge = true
   - has_issues             = true
 
-github_repository_environment "prod"
+github_repository_environment "production"
   - repository  = github_repository.tilde.name
-  - environment = "prod"
+  - environment = "production"
 
 github_actions_environment_secret "cloudflare_api_token"
   - secret_name     = "CLOUDFLARE_API_TOKEN"
@@ -145,7 +145,7 @@ github_branch_protection "main"
 
 ### Import Plan
 
-The `thingstead` Cloudflare Pages project, `jwill824/tilde` GitHub repository, and `prod` GitHub environment already exist. Before first `terraform apply`, run:
+The `thingstead` Cloudflare Pages project, `jwill824/tilde` GitHub repository, and `production` GitHub environment already exist. Before first `terraform apply`, run:
 
 ```bash
 # In terraform/cloudflare/
@@ -153,7 +153,7 @@ terraform import cloudflare_pages_project.thingstead <account_id>/thingstead
 
 # In terraform/github/
 terraform import github_repository.tilde tilde
-terraform import github_repository_environment.prod tilde:prod
+terraform import github_repository_environment.production tilde:production
 ```
 
 > `github_actions_environment_secret` resources cannot be imported (write-only values). They will be created on first apply, overwriting any manually set secret values.
@@ -167,7 +167,7 @@ terraform import github_repository_environment.prod tilde:prod
 **github outputs.tf**
 - `repository_url` — `https://github.com/jwill824/tilde`
 - `branch_protection_id` — TF resource ID for the `main` rule
-- `prod_environment_url` — GitHub prod environment deployments URL
+- `production_environment_url` — GitHub production environment deployments URL
 
 ## Complexity Tracking
 
