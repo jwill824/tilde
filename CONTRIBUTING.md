@@ -372,7 +372,16 @@ Every push and PR runs the following jobs in order:
 
 Results are reported in the GitHub Actions job summary with labeled sections per suite. All steps must pass — failures block merging.
 
-Releases are handled by a separate workflow that runs only on pushes to `main`. It requires an `NPM_TOKEN` secret set in the repo settings.
+### Release workflow
+
+Releases are handled by a separate `release.yml` workflow triggered on pushes to `main` (filtered to relevant paths) or manually via `workflow_dispatch`. It uses [semantic-release](https://semantic-release.gitbook.io) to:
+
+1. Determine the next version from [Conventional Commits](#commit-conventions)
+2. Publish to npm using GitHub OIDC (no stored npm token — requires npm trusted publisher configured with `environment: production`)
+3. Push the version bump commit + updated `CHANGELOG.md` back to `main`
+4. Create a GitHub release with generated release notes
+
+The workflow requires the `GH_TOKEN` secret in the `production` environment (see [Required secrets](#required-secrets-github--settings--environments--production)). This PAT must belong to a repo admin to bypass branch protection on the version bump commit.
 
 ---
 
@@ -454,10 +463,11 @@ The job runs in the **`production` GitHub environment** — secrets are provisio
 
 > These secrets are managed by Terraform (`tilde-github` workspace). Do not set them manually — they will be overwritten on next apply.
 
-| Secret | Provisioned by |
-|--------|---------------|
-| `CLOUDFLARE_API_TOKEN` | `github_actions_environment_secret.cloudflare_api_token` in `terraform/github/` |
-| `CLOUDFLARE_ACCOUNT_ID` | `github_actions_environment_secret.cloudflare_account_id` in `terraform/github/` |
+| Secret | Provisioned by | Used by |
+|--------|---------------|---------|
+| `CLOUDFLARE_API_TOKEN` | `github_actions_environment_secret.cloudflare_api_token` in `terraform/github/` | `deploy-site.yml` — Cloudflare Pages deploy |
+| `CLOUDFLARE_ACCOUNT_ID` | `github_actions_environment_secret.cloudflare_account_id` in `terraform/github/` | `deploy-site.yml` — Cloudflare Pages deploy |
+| `GH_TOKEN` | `github_actions_environment_secret.gh_token` in `terraform/github/` | `release.yml` — semantic-release version bump push + GitHub release |
 
 ### First-time Cloudflare setup
 
@@ -518,9 +528,32 @@ Create this Variable Set in TFC (Organization → Settings → Variable Sets) an
 
 | Type | Key | Sensitive | Description |
 |------|-----|-----------|-------------|
-| Environment variable | `GITHUB_TOKEN` | ✅ | Fine-grained PAT for `jwill824/tilde` with **Administration: Write**, **Contents: Read**, **Environments: Read and write**, **Secrets: Read and write** |
+| Terraform variable | `github_token` | ✅ | Fine-grained PAT for `jwill824/tilde` — see [GitHub PAT requirements](#github-pat-requirements) below |
 
-> ⚠️ `GITHUB_TOKEN` must be added as an **Environment variable** in the TFC workspace (not a Terraform variable). If added as a Terraform variable it will cause a "Value for undeclared variable" error during plan.
+> **Why a Terraform variable (not an env var)?** The `tilde-github` provider block uses `token = var.github_token` explicitly so the same PAT value is also stored as the `GH_TOKEN` GitHub Actions secret by Terraform. If you previously had `GITHUB_TOKEN` as a TFC environment variable, it is now superseded by `github_token` as a Terraform variable and can be removed.
+
+### GitHub PAT requirements
+
+A single fine-grained PAT serves two roles in this project:
+
+| Role | Where it's used | TFC storage |
+|------|----------------|-------------|
+| **IaC auth** — authenticates the `integrations/github` Terraform provider to manage repo settings, branch protection, and secrets | `terraform/github/main.tf` provider block (`token = var.github_token`) | `github_token` Terraform variable in `tilde-github` workspace |
+| **CI release** — allows semantic-release to push the version bump commit and create the GitHub release | `release.yml` workflow (`GH_TOKEN` secret) | Provisioned automatically by `github_actions_environment_secret.gh_token` resource |
+
+**Required PAT permissions** (fine-grained, scoped to `jwill824/tilde`):
+
+| Permission | Level | Required for |
+|------------|-------|-------------|
+| Administration | Read | Terraform reads repo settings |
+| Contents | Read & Write | Terraform manages files; semantic-release pushes version bump commit |
+| Environments | Read & Write | Terraform manages the `production` environment |
+| Issues | Read & Write | semantic-release comments on issues for each release |
+| Metadata | Read | Required by all fine-grained PATs |
+| Pull requests | Read & Write | semantic-release comments on merged PRs for each release |
+| Secrets | Read & Write | Terraform provisions `GH_TOKEN`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` secrets |
+
+> **Tip**: A classic PAT with the `repo` scope covers all of the above. Fine-grained is preferred for least-privilege.
 
 ### First-time setup
 
@@ -532,6 +565,7 @@ The `thingstead` Cloudflare Pages project and `jwill824/tilde` GitHub repository
 export TF_VAR_cloudflare_api_token=<token>
 export TF_VAR_cloudflare_account_id=<account_id>
 export TF_VAR_zone_id=<zone_id>
+export TF_VAR_github_token=<fine-grained-PAT>
 ```
 
 Then run imports:
@@ -549,8 +583,6 @@ terraform import cloudflare_dns_record.thingstead_io <ZONE_ID>/<DNS_RECORD_ID>
 
 # GitHub workspace
 cd ../github
-unset TF_VAR_GITHUB_TOKEN  # must NOT be set as TF_VAR_*
-export GITHUB_TOKEN=<fine-grained-PAT>
 terraform init
 
 terraform import github_repository.tilde tilde
@@ -558,7 +590,7 @@ terraform import github_repository_environment.production tilde:production
 # github_branch_protection: skip import if branch protection doesn't exist yet —
 #   Terraform will create it on first apply.
 # github_actions_environment_secret: cannot be imported (write-only) —
-#   both secrets are created fresh on first apply.
+#   all secrets are created fresh on first apply.
 ```
 
 After importing, run `terraform plan` in each workspace to confirm no unexpected changes, then open a PR. TFC will run `plan` on the PR and `apply` on merge.
