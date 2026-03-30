@@ -10,6 +10,12 @@ variable "required_status_check_contexts" {
   default     = ["Lint, Build & Test"]
 }
 
+variable "gh_token" {
+  description = "GitHub Personal Access Token for semantic-release to push version bump commits past branch protection — stored as GH_TOKEN secret in the production GitHub environment"
+  type        = string
+  sensitive   = true
+}
+
 variable "cloudflare_api_token" {
   description = "Cloudflare API token — stored as CLOUDFLARE_API_TOKEN secret in the production GitHub environment"
   type        = string
