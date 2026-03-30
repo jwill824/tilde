@@ -90,7 +90,7 @@ A contributor or new user visits the GitHub repository. They find a README that 
 - **FR-003**: Duplicate component key warnings MUST be eliminated from the CLI render output.
 - **FR-004**: All internal navigation links on the docs site MUST resolve to correct paths relative to the `/tilde/` base path.
 - **FR-005**: A standard Thingstead logo MUST be created and delivered as an SVG source file plus PNG exports, committed to `docs/design/` in the repository. A `design-tokens.md` file in the same directory MUST document the approved color palette and typeface. Design tooling (e.g., Storybook) is out of scope for this iteration but the tokens foundation enables future migration.
-- **FR-006**: Brand colors and typeface MUST be defined and applied consistently across: README, install page, docs site, and CLI splash screen.
+- **FR-006**: Brand colors and typeface MUST be defined and applied consistently across: the install page, docs site, and CLI splash screen. GitHub Markdown surfaces (README) are excluded — custom CSS cannot be applied to GitHub-rendered Markdown.
 - **FR-007**: A favicon derived from the Thingstead logo MUST be present on all web surfaces (install page, docs site).
 - **FR-008**: The README MUST be consolidated to contain: a tagline, the one-liner install command, a short list of feature highlights, and a prominent link to the full docs site. Content beyond this scope MUST be removed from the README and confirmed to exist in the docs site instead.
 - **FR-009**: All markdown documentation files MUST be located within the `docs/` folder, with the exception of standard top-level repo files (README.md, CONTRIBUTING.md, CHANGELOG.md, LICENSE).
