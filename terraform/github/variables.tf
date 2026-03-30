@@ -10,6 +10,12 @@ variable "required_status_check_contexts" {
   default     = ["Lint, Build & Test"]
 }
 
+variable "github_token" {
+  description = "GitHub PAT used by the provider and stored as GH_TOKEN secret for semantic-release branch protection bypass"
+  type        = string
+  sensitive   = true
+}
+
 variable "cloudflare_api_token" {
   description = "Cloudflare API token — stored as CLOUDFLARE_API_TOKEN secret in the production GitHub environment"
   type        = string
