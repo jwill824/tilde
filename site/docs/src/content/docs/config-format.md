@@ -1,6 +1,9 @@
-# tilde.config.json Format
+---
+title: Configuration Format
+description: Complete field-by-field reference for tilde.config.json — schema, types, valid values, and examples.
+---
 
-> JSON Schema: `https://tilde.sh/config-schema/v1.json`  
+> JSON Schema: `https://thingstead.io/tilde/config-schema/v1.json`  
 > Schema version: `1`
 
 `tilde.config.json` is the declarative configuration file for tilde. It describes your entire developer environment so that `tilde` can reproduce it on any machine.
@@ -9,7 +12,7 @@
 
 ```json
 {
-  "$schema": "https://tilde.sh/config-schema/v1.json",
+  "$schema": "https://thingstead.io/tilde/config-schema/v1.json",
   "version": "1",
   "os": "macos",
   "shell": "zsh",
@@ -267,3 +270,4 @@ tilde --reconfigure
 - **No config found**: tilde exits with a message directing you to run `tilde` (without `--reconfigure`) to create your initial configuration
 - **Invalid config**: tilde displays each invalid field by name before opening the wizard; those fields use their wizard defaults. All other fields remain pre-populated from the stored config.
 - **Early exit** (Escape or Cancel): the original config file is **not modified**. tilde exits with code `5` to indicate user cancellation.
+

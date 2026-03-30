@@ -260,5 +260,12 @@ success "tilde v${TILDE_VERSION} installed"
 
 # ─── Launch tilde ─────────────────────────────────────────────────────────────
 
-success "Setup complete — launching tilde..."
-exec tilde "$@"
+# When piped (curl | bash), stdin/stdout are not a TTY — Ink cannot render.
+# Print a success message and exit cleanly instead of crashing with a raw mode error.
+if [ -t 0 ] && [ -t 1 ]; then
+  success "Setup complete — launching tilde..."
+  exec tilde "$@"
+else
+  success "Installation complete — open a new terminal and run: tilde"
+  exit 0
+fi

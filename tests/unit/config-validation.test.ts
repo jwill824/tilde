@@ -3,7 +3,7 @@ import { fromZodError } from 'zod-validation-error';
 import { TildeConfigSchema } from '../../src/config/schema.js';
 
 const MINIMAL_CONFIG = {
-  $schema: 'https://tilde.sh/config-schema/v1.json',
+  $schema: 'https://thingstead.io/tilde/config-schema/v1.json',
   version: '1' as const,
   os: 'macos' as const,
   shell: 'zsh' as const,

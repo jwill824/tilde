@@ -6,13 +6,18 @@ on:
       - main
     paths:
       - 'site/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'site/**'
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build:
     name: Build & Deploy (thingstead.io)
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || '' }}
     permissions:
       contents: read
       deployments: write
@@ -42,6 +47,7 @@ jobs:
           cp -r site/docs/dist/. dist/tilde/docs/
 
       - name: Deploy to Cloudflare Pages
+        if: github.ref == 'refs/heads/main'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -3,7 +3,7 @@ import { TildeConfigSchema } from '../../../src/config/schema.js';
 import { CURRENT_SCHEMA_VERSION } from '../../../src/config/migrations/runner.js';
 
 const MINIMAL_CONFIG = {
-  $schema: 'https://tilde.sh/config-schema/v1.json',
+  $schema: 'https://thingstead.io/tilde/config-schema/v1.json',
   version: '1' as const,
   os: 'macos' as const,
   shell: 'zsh' as const,
