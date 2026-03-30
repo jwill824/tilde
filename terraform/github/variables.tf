@@ -7,7 +7,7 @@ variable "github_owner" {
 variable "required_status_check_contexts" {
   description = "Status check context names required to pass before merging to main"
   type        = list(string)
-  default     = ["CI"]
+  default     = ["Lint, Build & Test", "Build & Deploy (thingstead.io)"]
 }
 
 variable "cloudflare_api_token" {
