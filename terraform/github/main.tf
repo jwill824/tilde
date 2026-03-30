@@ -47,13 +47,6 @@ resource "github_actions_environment_secret" "cloudflare_account_id" {
   plaintext_value = var.cloudflare_account_id
 }
 
-resource "github_actions_environment_secret" "gh_token" {
-  repository      = github_repository.tilde.name
-  environment     = github_repository_environment.production.environment
-  secret_name     = "GH_TOKEN"
-  plaintext_value = var.gh_token
-}
-
 resource "github_branch_protection" "main" {
   repository_id = github_repository.tilde.node_id
   pattern       = "main"
