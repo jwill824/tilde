@@ -4,10 +4,9 @@ on:
   push:
     branches: ['**']
     paths-ignore:
-      - 'docs/**'
       - 'specs/**'
       - 'terraform/**'
-      - '**/*.md'
+      - '*.md'
       - '.specify/**'
   pull_request:
     branches: [main]
@@ -37,6 +36,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Validate config doc example
+        run: npm run validate:config-doc
 
       - name: Unit tests
         run: |

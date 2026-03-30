@@ -1,4 +1,6 @@
 <div align="center">
+  <img src="docs/design/tilde-logo-variation.svg" alt="tilde" width="160"/>
+  <br/><br/>
   <img src="docs/banner.svg" alt="tilde — developer environment bootstrap" width="560"/>
 
   [![CI](https://github.com/jwill824/tilde/actions/workflows/ci.yml/badge.svg)](https://github.com/jwill824/tilde/actions/workflows/ci.yml)
@@ -34,6 +36,7 @@ npx @jwill824/tilde
 - **Idempotent** — safe to re-run; skips anything already correctly configured
 - **Plugin architecture** — every integration (package manager, version manager, secrets backend) is swappable
 - **Checkpoint / resume** — interrupted mid-wizard? Pick up where you left off
+- 📄 [Configuration reference](docs/config-format.md)
 
 ---
 

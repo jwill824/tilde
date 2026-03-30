@@ -81,6 +81,8 @@
 - [X] T0020 [US3] Add Thingstead logo to `site/tilde/index.html` — add parent brand attribution (e.g., "by Thingstead" with logo) in page footer using `docs/design/thingstead-logo.svg` referenced inline or as `<img src>` with correct relative path
 - [X] T0021 [US3] Configure Starlight favicon in `site/docs/astro.config.mjs` — add `favicon: { href: '/favicon.svg', type: 'image/svg+xml' }` to the Starlight integration config so the favicon from T017 is used on the docs site
 
+  **Depends on**: T0011 — both T0021 and T0011 modify `site/docs/astro.config.mjs`; run T0011 to completion before starting T0021 to avoid merge conflicts
+
 **Checkpoint**: `site/tilde/index.html` shows favicon in browser tab. `site/docs/` (built) shows favicon. `docs/design/` contains `thingstead-logo.svg`, `thingstead-logo.png`, `design-tokens.md`.
 
 ---
@@ -95,6 +97,8 @@
 - [X] T0023 [P] [US4] Update schema URL in `docs/config-format.md` — replace `tilde.sh` URL with `thingstead.io/tilde` URL (pre-migration cleanup before T024)
 - [X] T0024 [US4] Migrate `docs/config-format.md` to `site/docs/src/content/docs/config-format.md` — copy file with frontmatter (`title: Configuration Format`, `description: ...`) compatible with Starlight content collection format
 - [X] T0025 [US4] Add `config-format` page to Starlight sidebar in `site/docs/astro.config.mjs` — insert `{ label: 'Configuration Format', slug: 'config-format' }` in appropriate sidebar position
+
+  **Depends on**: T0011 — both T0025 and T0011 modify `site/docs/astro.config.mjs`; run T0011 to completion before starting T0025 to avoid merge conflicts
 - [X] T0026 [US4] Delete `docs/config-format.md` from repository root `docs/` — file has been migrated to `site/docs/src/content/docs/config-format.md` in T024
 - [X] T0027 [US4] Consolidate `README.md` — trim to: (1) Thingstead/tilde tagline, (2) one-liner install command, (3) 3–5 feature highlights, (4) "Full documentation →" link to `https://thingstead.io/tilde/docs/`; verify any content removed already exists in the docs site
 - [X] T0028 [US4] Update `CONTRIBUTING.md` project/file structure section — replace any outdated directory tree with current actual structure (reflecting `site/`, `docs/design/`, `src/`, `specs/`, `tests/`, `scripts/`, `terraform/`)

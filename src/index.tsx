@@ -2,8 +2,9 @@
 import React from 'react';
 import { render } from 'ink';
 import { parseArgs } from 'node:util';
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { resolve, dirname } from 'node:path';
 import { assertMacOS } from './utils/os.js';
 import { App } from './app.js';
 import { loadConfig } from './config/reader.js';
@@ -12,7 +13,19 @@ import { run } from './utils/exec.js';
 import { PluginError } from './plugins/api.js';
 import type { PluginCategory, AccountConnectorPlugin } from './plugins/api.js';
 
-const VERSION = '0.1.0';
+export function readPackageVersion(): string {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const pkgPath = resolve(__dirname, '../package.json');
+    const raw = readFileSync(pkgPath, 'utf8');
+    return (JSON.parse(raw) as { version?: string }).version ?? 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+const VERSION = readPackageVersion();
 
 function parseCliArgs() {
   // Check env vars first
@@ -289,15 +302,21 @@ async function main() {
   );
 }
 
-main().catch((err: Error) => {
-  if (err instanceof PluginError) {
-    process.stderr.write(`Plugin error: ${err.message}\n`);
-    process.exit(4);
-  }
-  if (err.message?.includes('Config validation failed')) {
-    process.stderr.write(`Config error: ${err.message}\n`);
-    process.exit(2);
-  }
-  process.stderr.write(`Fatal error: ${err.message}\n`);
-  process.exit(1);
-});
+// Guard: only execute the CLI when this file is run directly (not imported as a module in tests)
+const isMain = process.argv[1] != null && fileURLToPath(import.meta.url).endsWith(process.argv[1].replace(/\\/g, '/'))
+  || process.argv[1] === fileURLToPath(import.meta.url);
+
+if (isMain || process.env.TILDE_FORCE_RUN === '1') {
+  main().catch((err: Error) => {
+    if (err instanceof PluginError) {
+      process.stderr.write(`Plugin error: ${err.message}\n`);
+      process.exit(4);
+    }
+    if (err.message?.includes('Config validation failed')) {
+      process.stderr.write(`Config error: ${err.message}\n`);
+      process.exit(2);
+    }
+    process.stderr.write(`Fatal error: ${err.message}\n`);
+    process.exit(1);
+  });
+}
