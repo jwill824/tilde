@@ -1,3 +1,23 @@
+# [1.2.0](https://github.com/jwill824/tilde/compare/v1.1.0...v1.2.0) (2026-03-30)
+
+
+### Bug Fixes
+
+* **ci:** switch to wrangler-action@v3 for Pages deploy (recommended approach) ([0671768](https://github.com/jwill824/tilde/commit/0671768147dd1d3f5bfd00756bce723a0d0e86c2))
+* correct required_linear_history typo in branch protection ([c1fcc95](https://github.com/jwill824/tilde/commit/c1fcc950d9811a7a7d5aef98b0666209ae3475a5))
+* rename prod environment to production; exclude terraform from CI ([ce0e616](https://github.com/jwill824/tilde/commit/ce0e61652a23df5311e4c6600e3d01baef12e4cd))
+* **site:** apply post-analysis remediation (G2, I1, G1) ([7b9b257](https://github.com/jwill824/tilde/commit/7b9b257ce6547ce4dc4d4a545868db3ae9aa793e))
+* **terraform:** lower required_version to >= 1.5 for TFC compatibility ([401fcbd](https://github.com/jwill824/tilde/commit/401fcbdc04b6a72591c381c1fc6a66c928a91b50))
+* **terraform:** rename cloudflare_record to cloudflare_dns_record ([503a835](https://github.com/jwill824/tilde/commit/503a8354a24d20ec2c79d065d8f6cf7627f9b303))
+
+
+### Features
+
+* **site:** implement get.tilde.sh landing + docs.tilde.sh scaffold ([91a08b7](https://github.com/jwill824/tilde/commit/91a08b7255000ca286e208bafb17e42a4432061b))
+* **terraform:** add IaC for Cloudflare Pages and GitHub repo ([16bb867](https://github.com/jwill824/tilde/commit/16bb86781fe8a4d5ab2c1973aae62c0315ec194b))
+* **terraform:** manage prod GitHub environment and secrets via IaC ([0568f4f](https://github.com/jwill824/tilde/commit/0568f4f6f242f12fd7414d2b939d57770b773f7a))
+* UI/UX and branding consolidation ([#29](https://github.com/jwill824/tilde/issues/29)) ([26255f7](https://github.com/jwill824/tilde/commit/26255f777f0065ca006f1edfd3ad8f1292e6cb69)), closes [#22](https://github.com/jwill824/tilde/issues/22) [#20](https://github.com/jwill824/tilde/issues/20) [#21](https://github.com/jwill824/tilde/issues/21) [#22](https://github.com/jwill824/tilde/issues/22) [#23](https://github.com/jwill824/tilde/issues/23) [#24](https://github.com/jwill824/tilde/issues/24) [#24](https://github.com/jwill824/tilde/issues/24) [#26](https://github.com/jwill824/tilde/issues/26) [#28](https://github.com/jwill824/tilde/issues/28)
+
 # [1.1.0](https://github.com/jwill824/tilde/compare/v1.0.1...v1.1.0) (2026-03-28)
 
 
