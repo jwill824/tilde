@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/jwill824/tilde/compare/v1.2.0...v1.3.0) (2026-03-30)
+
+
+### Features
+
+* spec 006 — docs polish and spec hygiene ([#40](https://github.com/jwill824/tilde/issues/40)) ([39638c7](https://github.com/jwill824/tilde/commit/39638c74b8a62551a75ea086c8bcf7c69554eb9f)), closes [#35](https://github.com/jwill824/tilde/issues/35) [#36](https://github.com/jwill824/tilde/issues/36) [#37](https://github.com/jwill824/tilde/issues/37) [#38](https://github.com/jwill824/tilde/issues/38) [#39](https://github.com/jwill824/tilde/issues/39) [#32](https://github.com/jwill824/tilde/issues/32)
+
 # [1.2.0](https://github.com/jwill824/tilde/compare/v1.1.0...v1.2.0) (2026-03-30)
 
 
