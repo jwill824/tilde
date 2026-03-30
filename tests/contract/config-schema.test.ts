@@ -16,7 +16,7 @@ import { CURRENT_SCHEMA_VERSION } from '../../src/config/migrations/runner.js';
 import type { TildeConfig } from '../../src/config/schema.js';
 
 const MINIMAL_CONFIG: TildeConfig = {
-  $schema: 'https://tilde.sh/config-schema/v1.json',
+  $schema: 'https://thingstead.io/tilde/config-schema/v1.json',
   version: '1',
   schemaVersion: 1,
   os: 'macos',

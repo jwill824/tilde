@@ -270,6 +270,13 @@ async function main() {
     mode = 'wizard';
   }
 
+  // Guard: Ink requires a TTY for raw mode. When tilde is invoked from a piped
+  // install script (curl | bash), stdin is not a TTY — exit cleanly with a message.
+  if (!process.stdin.isTTY && mode !== 'non-interactive') {
+    process.stdout.write('✓ tilde is installed — open a new terminal and run: tilde\n');
+    process.exit(0);
+  }
+
   render(
     React.createElement(App, {
       mode,

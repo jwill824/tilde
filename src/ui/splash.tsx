@@ -52,7 +52,7 @@ export function Splash({ environment, onDone }: SplashProps) {
   return (
     <Box flexDirection="column" marginLeft={2} marginBottom={1}>
       {rows.map((row, i) => (
-        <Text key={i} color="cyan">
+        <Text key={`wave-row-${i}`} color="cyan">
           {row}
         </Text>
       ))}

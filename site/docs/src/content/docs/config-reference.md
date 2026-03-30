@@ -15,13 +15,13 @@ it directly — tilde validates the schema on startup.
 
 **Type**: `string`  
 **Required**: No  
-**Default**: `"https://tilde.sh/config-schema/v1.json"`  
+**Default**: `"https://thingstead.io/tilde/config-schema/v1.json"`  
 **Description**: JSON Schema URL for editor validation and autocomplete. Recommended.  
 **Since**: `0.1.0`
 
 ```json
 {
-  "$schema": "https://tilde.sh/config-schema/v1.json"
+  "$schema": "https://thingstead.io/tilde/config-schema/v1.json"
 }
 ```
 
@@ -344,7 +344,7 @@ and `accounts[].secretRef`.
 
 ```json
 {
-  "$schema": "https://tilde.sh/config-schema/v1.json",
+  "$schema": "https://thingstead.io/tilde/config-schema/v1.json",
   "schemaVersion": 1,
   "os": "macos",
   "shell": "zsh",

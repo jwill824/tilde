@@ -46,7 +46,7 @@ For a full walkthrough — including how to simulate a fresh-machine wizard run 
 
 ```
 src/
-├── index.tsx              # CLI entry point — arg parsing, mode detection
+├── index.tsx              # CLI entry point — arg parsing, mode detection, TTY guard
 ├── app.tsx                # Root Ink component — splash + mode routing
 ├── steps/                 # One file per wizard step (00–13)
 ├── plugins/
@@ -67,10 +67,30 @@ tests/
 └── integration/           # End-to-end flows on temp directories
 
 specs/
-└── 001-mvp-macos-bootstrap/
-    ├── spec.md            # Feature specification
-    ├── plan.md            # Architecture and implementation plan
-    └── tasks.md           # Ordered task checklist
+├── 001-mvp-macos-bootstrap/
+│   ├── spec.md            # Feature specification
+│   ├── plan.md            # Architecture and implementation plan
+│   └── tasks.md           # Ordered task checklist
+└── ###-feature-name/      # Each feature gets its own directory
+
+site/
+├── tilde/                 # Install page + curl-pipe install script
+│   ├── index.html         # Landing page (Tailwind CDN)
+│   ├── install.sh         # Bash install script
+│   └── favicon.svg        # Brand favicon
+└── docs/                  # Astro + Starlight documentation site
+    ├── astro.config.mjs
+    ├── package.json
+    └── src/content/docs/  # Markdown/MDX documentation pages
+
+docs/
+└── design/                # Brand assets and design tokens
+    ├── thingstead-logo.svg # Thingstead parent brand wordmark
+    ├── thingstead-logo.png # PNG export (512×512)
+    └── design-tokens.md   # Canonical colours, typeface, CLI ANSI equivalents
+
+scripts/                   # Build and release scripts
+terraform/                 # Infrastructure as code (Cloudflare, Terraform Cloud)
 ```
 
 ---
@@ -334,7 +354,7 @@ Semantic-release reads these on every push to `main` and automatically bumps the
 PRs that add new features should include:
 - The implementation
 - Unit and/or integration tests
-- An update to `docs/config-format.md` if the config schema changes
+- An update to `site/docs/src/content/docs/config-format.md` if the config schema changes
 
 ---
 
