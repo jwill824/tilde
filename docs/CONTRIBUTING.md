@@ -86,7 +86,6 @@ site/
 docs/
 └── design/                # Brand assets and design tokens
     ├── thingstead-logo.svg # Thingstead parent brand wordmark
-    ├── thingstead-logo.png # PNG export (512×512)
     └── design-tokens.md   # Canonical colours, typeface, CLI ANSI equivalents
 
 scripts/                   # Build and release scripts

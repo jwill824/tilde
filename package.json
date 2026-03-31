@@ -12,7 +12,7 @@
   },
   "type": "module",
   "bin": {
-    "tilde": "dist/index.js"
+    "tilde": "dist/bin/tilde.js"
   },
   "main": "./dist/index.js",
   "files": [
@@ -23,7 +23,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p tsconfig.bin.json",
     "dev": "tsx src/index.tsx",
     "test": "vitest run",
     "test:watch": "vitest",

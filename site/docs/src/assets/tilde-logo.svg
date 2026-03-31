@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 32" fill="none">
   <!-- Tilde wave mark -->
+  <!-- verified against design-tokens.md 007-cli-fix-brand-docs -->
   <path d="M8 20 C12 12, 18 12, 22 20 C26 28, 32 28, 36 20"
         stroke="#4ade80" stroke-width="3" stroke-linecap="round" fill="none"/>
   <!-- Wordmark: tilde -->

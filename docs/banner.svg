@@ -4,120 +4,120 @@
 
   <!-- animated ~ wave -->
   <text x="20" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="0.00s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="57" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="0.11s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="94" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="0.21s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="131" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="0.32s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="169" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="0.43s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="206" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="0.53s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="243" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="0.64s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="280" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="0.75s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="317" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="0.85s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="354" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="0.96s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="391" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="1.07s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="429" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="1.17s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="466" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="1.28s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="503" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="1.39s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
       keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
   </text>
   <text x="540" y="48"
-    font-family="'Courier New',Courier,monospace"
-    font-size="26" font-weight="bold" fill="#22d3ee">~
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
+    font-size="26" font-weight="bold" fill="#4ade80">~
     <animate attributeName="y" values="26;70;26"
       dur="1.6s" begin="1.49s" repeatCount="indefinite"
       calcMode="spline" keyTimes="0;0.5;1"
@@ -127,13 +127,13 @@
   <!-- wordmark -->
   <text x="280" y="122"
     text-anchor="middle"
-    font-family="'Courier New',Courier,monospace"
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
     font-size="58" font-weight="bold" letter-spacing="4"
-    fill="#22d3ee">tilde</text>
+    fill="#4ade80">tilde</text>
 
   <!-- subtitle -->
   <text x="280" y="156"
     text-anchor="middle"
-    font-family="'Courier New',Courier,monospace"
+    font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
     font-size="13" fill="#7d8590">developer environment bootstrap</text>
 </svg>

@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 48" fill="none" role="img" aria-label="Thingstead">
-  <!-- Tilde wave mark -->
-  <path d="M8 32 C13 18, 21 18, 26 32 C31 46, 39 46, 44 32"
-        stroke="#4ade80" stroke-width="4" stroke-linecap="round" fill="none"/>
-  <!-- Wordmark: thingstead -->
-  <text x="60" y="34"
-        font-family="ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace"
-        font-size="22" font-weight="600" fill="#f9fafb" letter-spacing="-0.5">thingstead</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 154 48" fill="none" role="img" aria-label="Thingstead">
+  <title>Thingstead</title>
+  <!-- Left bracket: single continuous path for clean miter corners -->
+  <path d="M12 8 L4 8 L4 40 L12 40" stroke="#4ade80" stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="miter" fill="none"/>
+  <!-- Right bracket: single continuous path for clean miter corners -->
+  <path d="M142 8 L150 8 L150 40 L142 40" stroke="#4ade80" stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="miter" fill="none"/>
+  <!-- Wordmark centered between bracket inner arms (x=12 to x=142, center=77) -->
+  <text x="77" y="33" text-anchor="middle" font-family="ui-monospace,'Cascadia Code','Fira Code','JetBrains Mono',monospace" font-size="20" font-weight="600" fill="#f9fafb" letter-spacing="-0.5">Thingstead</text>
 </svg>
