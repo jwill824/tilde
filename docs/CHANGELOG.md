@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/jwill824/tilde/compare/v1.3.0...v1.4.0) (2026-03-31)
+
+
+### Features
+
+* CLI fix, brand consolidation & docs reorganization ([#48](https://github.com/jwill824/tilde/issues/48)) ([0ff93d9](https://github.com/jwill824/tilde/commit/0ff93d9103187c38dd3c54cda1a0d91f0db624ec)), closes [41-#46](https://github.com/41-/issues/46)
+
 # [1.3.0](https://github.com/jwill824/tilde/compare/v1.2.0...v1.3.0) (2026-03-30)
 
 
