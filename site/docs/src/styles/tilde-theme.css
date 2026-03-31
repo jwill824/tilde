@@ -1,0 +1,19 @@
+/* Tilde design token overrides for Starlight docs theme */
+
+:root {
+  --sl-font: ui-monospace, 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+}
+
+:root[data-theme='dark'] {
+  --sl-color-accent-low: #14532d;
+  --sl-color-accent: #4ade80;
+  --sl-color-accent-high: #86efac;
+  --sl-color-white: #f9fafb;
+  --sl-color-gray-1: #f9fafb;
+  --sl-color-gray-2: #9ca3af;
+  --sl-color-gray-3: #6b7280;
+  --sl-color-gray-4: #374151;
+  --sl-color-gray-5: #1f2937;
+  --sl-color-gray-6: #111827;
+  --sl-color-black: #030712;
+}

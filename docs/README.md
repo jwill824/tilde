@@ -1,13 +1,11 @@
 <div align="center">
-  <img src="docs/design/tilde-logo-variation.svg" alt="tilde" width="160"/>
-  <br/><br/>
-  <img src="docs/banner.svg" alt="tilde — developer environment bootstrap" width="560"/>
+  <img src="banner.svg" alt="tilde — developer environment bootstrap" width="560"/>
 
   [![CI](https://github.com/jwill824/tilde/actions/workflows/ci.yml/badge.svg)](https://github.com/jwill824/tilde/actions/workflows/ci.yml)
   [![Release](https://github.com/jwill824/tilde/actions/workflows/release.yml/badge.svg)](https://github.com/jwill824/tilde/actions/workflows/release.yml)
-  [![npm version](https://img.shields.io/npm/v/%40jwill824%2Ftilde?color=22d3ee&logo=npm)](https://www.npmjs.com/package/@jwill824/tilde)
-  [![npm downloads](https://img.shields.io/npm/dm/%40jwill824%2Ftilde?color=22d3ee)](https://www.npmjs.com/package/@jwill824/tilde)
-  [![License: MIT](https://img.shields.io/badge/license-MIT-22d3ee)](https://opensource.org/licenses/MIT)
+  [![npm version](https://img.shields.io/npm/v/%40jwill824%2Ftilde?color=4ade80&logo=npm)](https://www.npmjs.com/package/@jwill824/tilde)
+  [![npm downloads](https://img.shields.io/npm/dm/%40jwill824%2Ftilde?color=4ade80)](https://www.npmjs.com/package/@jwill824/tilde)
+  [![License: MIT](https://img.shields.io/badge/license-MIT-4ade80)](https://opensource.org/licenses/MIT)
 </div>
 
 > Your entire macOS developer environment, configured from a single file — one command to get started.

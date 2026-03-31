@@ -5,21 +5,27 @@ import { parseArgs } from 'node:util';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
+export { PluginError } from './plugins/api.js';
 import { assertMacOS } from './utils/os.js';
 import { App } from './app.js';
 import { loadConfig } from './config/reader.js';
 import { pluginRegistry } from './plugins/registry.js';
 import { run } from './utils/exec.js';
-import { PluginError } from './plugins/api.js';
 import type { PluginCategory, AccountConnectorPlugin } from './plugins/api.js';
 
 export function readPackageVersion(): string {
   try {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-    const pkgPath = resolve(__dirname, '../package.json');
-    const raw = readFileSync(pkgPath, 'utf8');
-    return (JSON.parse(raw) as { version?: string }).version ?? 'unknown';
+    // Try parent and grandparent to support different output structures (dist/ and dist/src/)
+    for (const rel of ['../package.json', '../../package.json']) {
+      const pkgPath = resolve(__dirname, rel);
+      if (existsSync(pkgPath)) {
+        const raw = readFileSync(pkgPath, 'utf8');
+        return (JSON.parse(raw) as { version?: string }).version ?? 'unknown';
+      }
+    }
+    return 'unknown';
   } catch {
     return 'unknown';
   }
@@ -226,7 +232,7 @@ async function handleConfigSubcommand(sub: string, pathArg: string | undefined, 
   process.exit(1);
 }
 
-async function main() {
+export async function main() {
   // Disable colors if requested
   if (process.env.TILDE_NO_COLOR) {
     process.env.FORCE_COLOR = '0';
@@ -302,21 +308,3 @@ async function main() {
   );
 }
 
-// Guard: only execute the CLI when this file is run directly (not imported as a module in tests)
-const isMain = process.argv[1] != null && fileURLToPath(import.meta.url).endsWith(process.argv[1].replace(/\\/g, '/'))
-  || process.argv[1] === fileURLToPath(import.meta.url);
-
-if (isMain || process.env.TILDE_FORCE_RUN === '1') {
-  main().catch((err: Error) => {
-    if (err instanceof PluginError) {
-      process.stderr.write(`Plugin error: ${err.message}\n`);
-      process.exit(4);
-    }
-    if (err.message?.includes('Config validation failed')) {
-      process.stderr.write(`Config error: ${err.message}\n`);
-      process.exit(2);
-    }
-    process.stderr.write(`Fatal error: ${err.message}\n`);
-    process.exit(1);
-  });
-}

@@ -23,6 +23,7 @@ export default defineConfig({
 				{ label: 'Configuration Reference', slug: 'config-reference' },
 				{ label: 'Configuration Format', slug: 'config-format' },
 			],
+			customCss: ['./src/styles/tilde-theme.css'],
 		}),
 	],
 });
