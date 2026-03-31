@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/banner.svg" alt="tilde — developer environment bootstrap" width="560"/>
+  <img src="banner.svg" alt="tilde — developer environment bootstrap" width="560"/>
 
   [![CI](https://github.com/jwill824/tilde/actions/workflows/ci.yml/badge.svg)](https://github.com/jwill824/tilde/actions/workflows/ci.yml)
   [![Release](https://github.com/jwill824/tilde/actions/workflows/release.yml/badge.svg)](https://github.com/jwill824/tilde/actions/workflows/release.yml)
