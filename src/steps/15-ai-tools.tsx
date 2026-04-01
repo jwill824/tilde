@@ -1,8 +1,9 @@
 /**
  * Step 15: AI Coding Tools
  *
- * Shows a curated list of AI coding assistant tools with Homebrew install status.
- * Users can select tools to install. Tools with variants appear as separate labeled rows.
+ * Renders AI coding assistant tools sourced from the AI_TOOL_PLUGINS registry
+ * (Principle VIII compliance — no inline literals). Users can select tools to
+ * install. Tools with variants appear as separate labeled rows.
  *
  * This step is optional (required: false) — users can skip it.
  */
@@ -11,6 +12,8 @@ import { Box, Text, useInput } from 'ink';
 import Spinner from 'ink-spinner';
 import SelectInput from 'ink-select-input';
 import type { AIToolConfig } from '../config/schema.js';
+import type { AIToolPlugin } from '../plugins/api.js';
+import { AI_TOOL_PLUGINS } from '../plugins/first-party/ai-tools/index.js';
 
 interface Props {
   onComplete: (data: { aiTools: AIToolConfig[] }) => void;
@@ -20,57 +23,35 @@ interface Props {
 }
 
 interface AIToolEntry {
-  name: string;
-  label: string;
-  variant: string;
-  brewId: string;
-  brewType: 'formula' | 'cask';
+  plugin: AIToolPlugin;
   installed: boolean;
   selected: boolean;
 }
-
-// Curated list per research.md §5
-const CURATED_AI_TOOLS: Omit<AIToolEntry, 'installed' | 'selected'>[] = [
-  { name: 'claude-code',   label: 'Claude Code',          variant: 'cli-tool',          brewId: 'anthropics/tap/claude',  brewType: 'formula' },
-  { name: 'claude',        label: 'Claude Desktop',       variant: 'desktop-app',       brewId: 'claude',                 brewType: 'cask' },
-  { name: 'cursor',        label: 'Cursor',               variant: 'ai-editor',         brewId: 'cursor',                 brewType: 'cask' },
-  { name: 'windsurf',      label: 'Windsurf (Codeium)',   variant: 'ai-editor',         brewId: 'windsurf',               brewType: 'cask' },
-  { name: 'gh',            label: 'GitHub Copilot CLI',   variant: 'cli-extension',     brewId: 'gh',                     brewType: 'formula' },
-];
 
 type Phase = 'loading' | 'select' | 'installing' | 'done' | 'error';
 
 export function AIToolsStep({ onComplete, onBack, isOptional, onSkip }: Props) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [tools, setTools] = useState<AIToolEntry[]>([]);
-  const [cursor, setCursor] = useState(0);
+  const [cursorIdx, setCursorIdx] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
   const [skippedInstalls, setSkippedInstalls] = useState<string[]>([]);
 
   useEffect(() => {
     async function loadTools() {
       try {
-        const { listInstalledFormulae, listInstalledCasks } = await import('../utils/package-manager.js');
-        const [formulae, casks] = await Promise.allSettled([
-          listInstalledFormulae(),
-          listInstalledCasks(),
-        ]);
-        const installedFormulae = formulae.status === 'fulfilled' ? formulae.value : [];
-        const installedCasks = casks.status === 'fulfilled' ? casks.value : [];
-
-        const entries: AIToolEntry[] = CURATED_AI_TOOLS.map(t => ({
-          ...t,
-          installed: t.brewType === 'formula'
-            ? installedFormulae.some(f => f === t.brewId || f.includes(t.brewId))
-            : installedCasks.some(c => c === t.brewId),
-          selected: false,
-        }));
+        const entries: AIToolEntry[] = await Promise.all(
+          AI_TOOL_PLUGINS.map(async (plugin) => ({
+            plugin,
+            installed: await plugin.detectInstalled().catch(() => false),
+            selected: false,
+          }))
+        );
         setTools(entries);
         setPhase('select');
       } catch (err) {
         setErrorMsg((err as Error).message);
-        // Fallback: show tools as not installed
-        setTools(CURATED_AI_TOOLS.map(t => ({ ...t, installed: false, selected: false })));
+        setTools(AI_TOOL_PLUGINS.map(plugin => ({ plugin, installed: false, selected: false })));
         setPhase('select');
       }
     }
@@ -79,10 +60,10 @@ export function AIToolsStep({ onComplete, onBack, isOptional, onSkip }: Props) {
 
   useInput((input, key) => {
     if (phase === 'select') {
-      if (key.upArrow) setCursor(c => Math.max(0, c - 1));
-      if (key.downArrow) setCursor(c => Math.min(tools.length - 1, c + 1));
+      if (key.upArrow) setCursorIdx(c => Math.max(0, c - 1));
+      if (key.downArrow) setCursorIdx(c => Math.min(tools.length - 1, c + 1));
       if (input === ' ') {
-        setTools(prev => prev.map((t, i) => i === cursor ? { ...t, selected: !t.selected } : t));
+        setTools(prev => prev.map((t, i) => i === cursorIdx ? { ...t, selected: !t.selected } : t));
       }
       if (input === 'b' && onBack) { onBack(); return; }
       if (input === 's' && isOptional && onSkip) { onSkip(); return; }
@@ -98,17 +79,12 @@ export function AIToolsStep({ onComplete, onBack, isOptional, onSkip }: Props) {
 
     setPhase('installing');
     const skipped: string[] = [];
-    const { installFormula, installCask } = await import('../utils/package-manager.js');
 
-    for (const tool of toInstall) {
+    for (const entry of toInstall) {
       try {
-        if (tool.brewType === 'formula') {
-          await installFormula(tool.brewId);
-        } else {
-          await installCask(tool.brewId);
-        }
+        await entry.plugin.install();
       } catch {
-        skipped.push(tool.label);
+        skipped.push(entry.plugin.label);
       }
     }
 
@@ -120,9 +96,9 @@ export function AIToolsStep({ onComplete, onBack, isOptional, onSkip }: Props) {
     const selectedTools: AIToolConfig[] = tools
       .filter(t => t.selected || t.installed)
       .map(t => ({
-        name: t.name,
-        label: t.label,
-        variant: t.variant,
+        name: t.plugin.name,
+        label: t.plugin.label,
+        variant: t.plugin.variant,
       }));
     onComplete({ aiTools: selectedTools });
   }
@@ -153,7 +129,6 @@ export function AIToolsStep({ onComplete, onBack, isOptional, onSkip }: Props) {
     );
   }
 
-  // select phase
   return (
     <Box flexDirection="column">
       <Text bold>AI Coding Tools</Text>
@@ -161,12 +136,12 @@ export function AIToolsStep({ onComplete, onBack, isOptional, onSkip }: Props) {
       {errorMsg && <Text color="yellow">⚠ Could not check install status (offline?): using defaults</Text>}
       <Box flexDirection="column" marginTop={1}>
         {tools.map((t, idx) => (
-          <Box key={t.name}>
-            <Text color={idx === cursor ? 'cyan' : undefined}>
-              {idx === cursor ? '❯ ' : '  '}
+          <Box key={t.plugin.name}>
+            <Text color={idx === cursorIdx ? 'cyan' : undefined}>
+              {idx === cursorIdx ? '❯ ' : '  '}
               {t.selected ? '[x] ' : '[ ] '}
-              <Text bold>{t.label}</Text>
-              <Text dimColor> ({t.variant})</Text>
+              <Text bold>{t.plugin.label}</Text>
+              <Text dimColor> ({t.plugin.variant})</Text>
               {t.installed ? <Text color="green"> ✓</Text> : null}
             </Text>
           </Box>

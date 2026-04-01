@@ -62,6 +62,7 @@ A developer wants to swap out a tool — say, replace their shell from `zsh` to 
 1. **Given** an existing config with a shell value of `zsh`, **When** the user runs the update command targeting the shell resource, **Then** they are prompted to select a new shell and the config is updated only for that field.
 2. **Given** an existing config, **When** the user runs the update command targeting applications, **Then** they can add, remove, or modify individual applications without affecting other sections.
 3. **Given** an invalid resource name is passed to the update command, **When** the command runs, **Then** tilde displays a list of valid updatable resources and exits without modifying the config.
+4. **Given** the user runs `tilde update languages` and multiple workspace contexts exist, **When** the mini-wizard opens, **Then** a context selector is presented first; once a context is selected, the language binding form for that context is shown; only the selected context's `languageBindings` field is updated in the config.
 
 ---
 
@@ -150,13 +151,13 @@ A developer who switches between a personal project (using Node 22) and a work p
 - **FR-002**: The wizard MUST allow users to skip any step marked as optional without requiring input.
 - **FR-003**: The wizard MUST reuse already-collected values (e.g., user name) across steps and contexts without prompting again.
 - **FR-004**: Running a config-dependent command without a discoverable config file MUST result in a clear error message with guidance — the wizard MUST NOT be invoked automatically.
-- **FR-005**: tilde MUST automatically discover a config file in the standard location (current directory or `~/.config/tilde/`) when `--config` is not specified.
-- **FR-006**: Users MUST be able to update a single named configuration resource (shell, editor, applications, language, etc.) via an interactive mini-wizard (e.g., `tilde update shell`) without affecting other parts of the config. Non-interactive flag-based updates are out of scope for this spec.
+- **FR-005**: tilde MUST automatically discover a config file in the standard location (current directory, `~/.config/tilde/`, or `~/`) when `--config` is not specified. When a config is found via auto-discovery, tilde MUST display the resolved file path and a summary of the settings that will be applied, and MUST require explicit user confirmation before proceeding.
+- **FR-006**: Users MUST be able to update a single named configuration resource (shell, editor, applications, languages, etc.) via an interactive mini-wizard (e.g., `tilde update shell`) without affecting other parts of the config. Non-interactive flag-based updates are out of scope for this spec.
 - **FR-007**: The targeted update command MUST validate the resource name and display available resource types when an invalid name is provided.
 - **FR-008**: The wizard MUST include a browser selection step that detects installed browsers and offers installation of supported options.
 - **FR-009**: The browser step MUST offer to configure a system default browser, with clear messaging if a system confirmation dialog is required.
 - **FR-010**: The wizard MUST include an editor selection step offering VS Code, Cursor, JetBrains IDEs, Neovim, and Zed as options.
-- **FR-011**: The wizard MUST include an AI coding assistant step listing all tools installable via the active package manager (CLI tools such as Claude Code and `gh copilot`, and desktop apps such as Cursor and Claude Desktop). Tools with multiple variants (e.g., Claude CLI vs. Claude Desktop) MUST appear as distinct entries labeled by purpose. Installation status for each tool MUST be shown.
+- **FR-011**: The wizard MUST include an AI coding assistant step listing all tools installable via the active package manager (CLI tools such as Claude Code and `gh copilot`, and desktop apps such as Cursor and Claude Desktop). Tools with multiple variants (e.g., Claude CLI vs. Claude Desktop) MUST appear as distinct entries labeled by purpose. Installation status for each tool MUST be shown. Each AI tool MUST be implemented as an `AIToolPlugin` (see Plugin Interface Extensions in the data model) — the step MUST NOT embed tool definitions as inline literals.
 - **FR-012**: Each workspace context MUST support optional language runtime and version configuration.
 - **FR-013**: When a workspace context is activated, any configured language runtime versions MUST be applied automatically.
 - **FR-014**: When a configured language version is not installed, tilde MUST prompt the user to install it or provide clear installation guidance.
@@ -168,6 +169,7 @@ A developer who switches between a personal project (using Node 22) and a work p
 - **Workspace Context**: A named environment profile (e.g., "personal", "work") containing shell preferences, tools, and language version bindings.
 - **Language Binding**: An association between a workspace context and a specific language runtime and version (e.g., Node 22, Java 21, Python 3.12).
 - **Configuration Resource**: A named top-level section of the config that can be independently targeted for updates (shell, editor, applications, browser, AI tools, contexts).
+- **AIToolPlugin**: A plugin implementing the `ai-tool` category. Each supported AI coding tool (Claude Code, Claude Desktop, Cursor, etc.) MUST be registered as an `AIToolPlugin` instance; the AI tools wizard step renders the plugin registry dynamically rather than embedding tool definitions as literals. Cursor appears in both the editor and AI tools plugin registries as separate entries labeled by context ("Cursor — editor" vs "Cursor — AI coding assistant").
 
 ## Success Criteria *(mandatory)*
 

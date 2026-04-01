@@ -18,7 +18,10 @@ export type PluginCategory =
   | 'secrets-backend'
   | 'account-connector'
   | 'env-loader'
-  | 'version-manager';
+  | 'version-manager'
+  | 'browser'
+  | 'editor'
+  | 'ai-tool';
 
 export interface TildePlugin {
   readonly id: string;
@@ -88,7 +91,7 @@ export interface VersionManagerPlugin extends TildePlugin {
 }
 
 // ---------------------------------------------------------------------------
-// New plugin categories (v1.5): browser and editor
+// New plugin categories (v1.5): browser, editor, and ai-tool
 // ---------------------------------------------------------------------------
 
 export interface BrowserPlugin {
@@ -120,4 +123,18 @@ export interface EditorPlugin {
   applyProfile?(): Promise<void>;
   /** Optional: return human-readable setup instructions */
   getProfileGuidance?(): string;
+}
+
+export interface AIToolPlugin {
+  readonly category: 'ai-tool';
+  readonly name: string;           // e.g., "claude-desktop"
+  readonly label: string;          // e.g., "Claude Desktop"
+  readonly variant: string;        // e.g., "desktop-app" | "cli-tool" | "editor-extension"
+  readonly brewId: string;         // Homebrew formula or cask name
+  readonly brewType: 'formula' | 'cask';
+
+  /** Returns true if the tool is currently installed */
+  detectInstalled(): Promise<boolean>;
+  /** Install via Homebrew (formula or cask) */
+  install(): Promise<void>;
 }

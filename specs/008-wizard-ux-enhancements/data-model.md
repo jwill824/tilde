@@ -186,6 +186,26 @@ interface EditorPlugin extends Plugin {
 }
 ```
 
+### `AIToolPlugin` (new, extends `Plugin`)
+
+```typescript
+interface AIToolPlugin extends Plugin {
+  category: "ai-tool";
+  name: string;       // e.g., "claude-desktop"
+  label: string;      // e.g., "Claude Desktop"
+  variant: string;    // e.g., "desktop-app" | "cli-tool" | "editor-extension"
+  brewId: string;     // Homebrew formula or cask name
+  brewType: "formula" | "cask";
+  detectInstalled(): Promise<boolean>;
+  install(): Promise<void>;
+}
+```
+
+**Registration**: AI tools are registered as `AIToolPlugin` instances via the plugin registry
+(same pattern as `BrowserPlugin` and `EditorPlugin`). The AI tools wizard step queries the
+registry for all plugins with `category === "ai-tool"` and renders the result dynamically —
+no tool definitions are embedded as inline literals in the step component.
+
 ---
 
 ## 5. `tilde update` Command Routing
