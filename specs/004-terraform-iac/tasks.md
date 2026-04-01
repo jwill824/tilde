@@ -23,8 +23,8 @@ description: "Task list for Terraform IaC — GitHub and Cloudflare"
 
 **Purpose**: Create the Terraform directory skeleton and shared ignore rules.
 
-- [ ] T001 Create Terraform directory structure: `mkdir -p terraform/cloudflare terraform/github` at repository root — produces empty `terraform/cloudflare/` and `terraform/github/` directories
-- [ ] T002 Create `terraform/.gitignore` with the following entries: `.terraform/`, `*.tfstate`, `*.tfstate.*`, `*.tfvars`, `*.tfvars.json`, `crash.log`, `override.tf`, `override.tf.json`, `*_override.tf`, `*_override.tf.json`, `.terraformrc`, `terraform.rc` — prevents secrets, lock files, and local state from being committed
+- [X] T001 Create Terraform directory structure: `mkdir -p terraform/cloudflare terraform/github` at repository root — produces empty `terraform/cloudflare/` and `terraform/github/` directories
+- [X] T002 Create `terraform/.gitignore` with the following entries: `.terraform/`, `*.tfstate`, `*.tfstate.*`, `*.tfvars`, `*.tfvars.json`, `crash.log`, `override.tf`, `override.tf.json`, `*_override.tf`, `*_override.tf.json`, `.terraformrc`, `terraform.rc` — prevents secrets, lock files, and local state from being committed
 
 **Checkpoint**: Directory scaffold exists; no secrets can slip through.
 
@@ -53,15 +53,15 @@ description: "Task list for Terraform IaC — GitHub and Cloudflare"
 
 ### Implementation for User Story 1
 
-- [ ] T007 [P] [US1] Create `terraform/cloudflare/variables.tf` declaring two input variables: `account_id` (type `string`, `sensitive = true`, description "Cloudflare account ID — set via TF_VAR_account_id in TFC workspace variables") and `zone_id` (type `string`, description "Cloudflare zone ID for thingstead.io — set via TF_VAR_zone_id in TFC workspace variables")
+- [X] T007 [P] [US1] Create `terraform/cloudflare/variables.tf` declaring two input variables: `account_id` (type `string`, `sensitive = true`, description "Cloudflare account ID — set via TF_VAR_account_id in TFC workspace variables") and `zone_id` (type `string`, description "Cloudflare zone ID for thingstead.io — set via TF_VAR_zone_id in TFC workspace variables")
 
-- [ ] T008 [US1] Create `terraform/cloudflare/main.tf` with four blocks in this order:
+- [X] T008 [US1] Create `terraform/cloudflare/main.tf` with four blocks in this order:
   1. `terraform` block: `required_version = ">= 1.6"`, `cloud` sub-block with `organization = "thingstead"` and `workspaces { name = "tilde-cloudflare" }`, `required_providers` sub-block with `cloudflare = { source = "cloudflare/cloudflare", version = "~> 4.0" }`
   2. `provider "cloudflare"` block: empty body (API token sourced from `CLOUDFLARE_API_TOKEN` env var set in TFC)
   3. `resource "cloudflare_pages_project" "thingstead"` block: `account_id = var.account_id`, `name = "thingstead"`, `production_branch = "main"`
   4. `resource "cloudflare_pages_domain" "thingstead_io"` block: `account_id = var.account_id`, `project_name = cloudflare_pages_project.thingstead.name`, `domain = "thingstead.io"`
 
-- [ ] T009 [P] [US1] Create `terraform/cloudflare/outputs.tf` with two outputs: `pages_project_url` (value `"${cloudflare_pages_project.thingstead.name}.pages.dev"`, description "Cloudflare Pages subdomain for the thingstead project") and `custom_domain_status` (value `cloudflare_pages_domain.thingstead_io.status`, description "Verification/activation status of the thingstead.io custom domain binding")
+- [X] T009 [P] [US1] Create `terraform/cloudflare/outputs.tf` with two outputs: `pages_project_url` (value `"${cloudflare_pages_project.thingstead.name}.pages.dev"`, description "Cloudflare Pages subdomain for the thingstead project") and `custom_domain_status` (value `cloudflare_pages_domain.thingstead_io.status`, description "Verification/activation status of the thingstead.io custom domain binding")
 
 - [ ] T010 [US1] Run `terraform init` inside `terraform/cloudflare/`: authenticate the Terraform CLI to TFC first via `terraform login`, then run `terraform init` — confirm the output shows "Terraform Cloud has been successfully initialized!" and the `cloudflare/cloudflare` provider is downloaded
 
@@ -83,15 +83,15 @@ description: "Task list for Terraform IaC — GitHub and Cloudflare"
 
 ### Implementation for User Story 2
 
-- [ ] T014 [P] [US2] Create `terraform/github/variables.tf` declaring one input variable: `github_owner` (type `string`, `default = "jwill824"`, description "GitHub user or organization that owns the tilde repository")
+- [X] T014 [P] [US2] Create `terraform/github/variables.tf` declaring one input variable: `github_owner` (type `string`, `default = "jwill824"`, description "GitHub user or organization that owns the tilde repository")
 
-- [ ] T015 [US2] Create `terraform/github/main.tf` with four blocks in this order:
+- [X] T015 [US2] Create `terraform/github/main.tf` with four blocks in this order:
   1. `terraform` block: `required_version = ">= 1.6"`, `cloud` sub-block with `organization = "thingstead"` and `workspaces { name = "tilde-github" }`, `required_providers` sub-block with `github = { source = "integrations/github", version = "~> 6.0" }`
   2. `provider "github"` block: `owner = var.github_owner` (token sourced from `GITHUB_TOKEN` env var set in TFC)
   3. `resource "github_repository" "tilde"` block: `name = "tilde"`, `allow_squash_merge = true`, `allow_merge_commit = false`, `allow_rebase_merge = false`, `delete_branch_on_merge = true`, `has_issues = true`
   4. `resource "github_branch_protection" "main"` block: `repository_id = github_repository.tilde.node_id`, `pattern = "main"`, `enforce_admins = true`, `require_linear_history = true`, nested `required_status_checks { strict = true; contexts = ["CI"] }`, nested `required_pull_request_reviews { required_approving_review_count = 0 }`
 
-- [ ] T016 [P] [US2] Create `terraform/github/outputs.tf` with two outputs: `repository_url` (value `github_repository.tilde.html_url`, description "HTTPS URL of the jwill824/tilde GitHub repository") and `branch_protection_id` (value `github_branch_protection.main.id`, description "Terraform resource ID for the main branch protection rule")
+- [X] T016 [P] [US2] Create `terraform/github/outputs.tf` with two outputs: `repository_url` (value `github_repository.tilde.html_url`, description "HTTPS URL of the jwill824/tilde GitHub repository") and `branch_protection_id` (value `github_branch_protection.main.id`, description "Terraform resource ID for the main branch protection rule")
 
 - [ ] T017 [US2] Run `terraform init` inside `terraform/github/` — confirm the output shows "Terraform Cloud has been successfully initialized!" and the `integrations/github` provider is downloaded
 
