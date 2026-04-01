@@ -74,7 +74,7 @@
 
 **Independent Test**: Run `tilde update shell` against an existing config → interactive shell-selection prompt appears → only `shell` field changes in saved config, all other fields identical. Run `tilde update widgets` → error listing valid resources, exit code 1.
 
-- [X] T015 Create `src/modes/update.tsx` — `UpdateCommand` mode: accept `resource: UpdateResource`, validate against the enum from `contracts/cli-schema.md §1`, load full config via reader, mount only the matching step component as a standalone mini-wizard, write only the updated section back via `atomicWriteConfig`
+- [X] T015 Create `src/modes/update.tsx` — `UpdateCommand` mode: accept `resource: UpdateResource`, validate against the enum from `contracts/cli-schema.md §1`, load full config via reader; for `languages` resource: two-step flow — first render a context selector (list all contexts from config), then render the language bindings form for the selected context only; for all other resources: mount the matching step component as a standalone mini-wizard; write only the updated section back via `atomicWriteConfig`
 - [X] T016 Update `src/index.tsx` — add `tilde update <resource>` subcommand: parse resource arg, resolve config path (auto-discovery from Phase 4), route to `UpdateCommand` mode; display usage help when no resource provided
 - [X] T017 Add validation and error output to `src/modes/update.tsx` — when resource name is not in `UpdateResource` enum, print the error format from `contracts/cli-schema.md §1` (invalid-name message + valid resource list) and exit code 1; when no config discoverable, print config-missing error and exit code 2
 - [X] T018 Write `tests/unit/update-command.test.ts` — tests covering: valid resource routes to correct step, invalid resource prints error + exit 1, no-config-found prints error + exit 2, only targeted section changes after update, all other config fields preserved
@@ -91,7 +91,7 @@
 
 - [X] T019 Create `src/plugins/first-party/browser/index.ts` — `BrowserPlugin` implementations for Safari, Chrome, Firefox, Arc, Brave, Edge; `detectInstalled()` checks known `.app` bundle paths (per research.md §2); `install()` calls `installCask()` from package-manager.ts; `setAsDefault()` runs `defaultbrowser <id>` and handles the macOS dialog confirmation message
 - [X] T020 Create `src/steps/14-browser.tsx` — browser selection wizard step: on mount call `detectInstalled()` for all registered browser plugins and pre-select installed ones; multi-select UI via `ink-select-input`; "Set as default" sub-prompt after selection; offline detection (catch install errors) → warn with skipped-installs list and continue; skip action (isOptional: true)
-- [X] T021 Register step 14 (browser) in `src/modes/wizard.tsx` step list — `{ id: "browser", label: "Browser Selection", required: false }` — positioned after step 13 (config-export) or before step 11 (accounts) as determined by logical flow
+- [X] T021 Register step 14 (browser) in `src/modes/wizard.tsx` step list — `{ id: "browser", label: "Browser Selection", required: false }` — positioned after step 13 (config-export) per constitution v2.3.0 §Setup Wizard Flow
 - [X] T022 Write `tests/unit/browser-step.test.ts` — tests covering: installed browser detection via app path, pre-selection of detected browsers, install triggers Homebrew cask install, default-setting shows macOS dialog guidance, skip advances without changes, offline error produces warn-and-skip behavior
 
 **Checkpoint**: Browser step fully functional, skippable, and gracefully handles offline and permission scenarios
@@ -118,7 +118,7 @@
 
 **Independent Test**: Run wizard to step 15 → curated tool list shown with install status for each. Select Claude Code → installed via Homebrew formula. Select Claude Desktop → installed via Homebrew cask. Tools with variants (Claude CLI vs Desktop) appear as separate labeled rows. Skip → no tools installed.
 
-- [X] T026 Create `src/steps/15-ai-tools.tsx` — AI tools step: define curated tools list (per research.md §5: Claude Code, Claude Desktop, Cursor, Windsurf, gh+copilot-extension) with `name`, `label`, `variant`, `brewId`, `brewType` fields; on mount call `listInstalledFormulae()` and `listInstalledCasks()` from package-manager.ts to mark install status; multi-select with variant labels; install selected tools on confirm; catch network errors → warn with uninstalled list and continue; skip action (isOptional: true)
+- [X] T026 Create `src/steps/15-ai-tools.tsx` — AI tools step: query `AI_TOOL_PLUGINS` from `src/plugins/first-party/ai-tools/index.ts` (all plugins with `category === "ai-tool"`); on mount call `listInstalledFormulae()` and `listInstalledCasks()` from package-manager.ts to mark install status against each plugin's `brewId`; multi-select with variant labels; install selected tools on confirm via each plugin's `install()` method; catch network errors → warn with uninstalled list and continue; skip action (isOptional: true) — no tool definitions embedded as inline literals in the step component
 - [X] T027 Register step 15 (ai-tools) in `src/modes/wizard.tsx` step list — `{ id: "ai-tools", label: "AI Coding Tools", required: false }` — positioned after step 14 (browser)
 - [X] T028 Write `tests/unit/ai-tools-step.test.ts` — tests covering: curated list loads with install status, variant tools appear as separate labeled entries, install triggers correct Homebrew command (formula vs cask), offline error produces warn-and-skip, skip advances without installing anything
 
@@ -149,6 +149,7 @@
 - [X] T036 [P] Update `src/dotfiles/vscode.ts` import references throughout codebase to point to `src/plugins/first-party/vscode/index.ts` after T023 refactor — run `grep -r "dotfiles/vscode"` to find all consumers
 - [X] T037 Run `npm test` — fix any regressions introduced by the `src/modes/wizard.tsx` StepHistory refactor in T007–T009; confirm all pre-existing unit, integration, and contract tests pass
 - [X] T038 Validate `quickstart.md` scenarios manually — run each documented user flow (back nav, `tilde update shell`, browser step, AI tools step, language bindings) against a local build to confirm the quickstart accurately reflects delivered behavior
+- [X] T039 Write `tests/integration/context-switching.test.ts` — integration tests for language version activation on context switch (required by constitution Dev Workflow §362): (1) cd to personal context (Node 22 binding) → `.nvmrc` contains `22`; (2) cd to work context (Java 21 + Node 18 bindings) → `.tool-versions` contains correct entries; (3) context with no bindings activates cleanly with no version files written; (4) version files are overwritten idempotently when context is re-activated with different binding values; use `tmp` directories and real `fs` writes (no mocks for file I/O)
 
 ---
 

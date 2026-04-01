@@ -20,6 +20,10 @@ interface WizardState {
 
   // Index into `steps` for the currently rendered step
   currentIndex: number;
+
+  // Values shared across all steps (e.g., shell selection reused by update command)
+  // Populated progressively as steps complete; steps may read earlier steps' values
+  sharedValues: Record<string, unknown>;
 }
 
 interface StepDefinition {
