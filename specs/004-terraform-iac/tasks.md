@@ -63,13 +63,13 @@ description: "Task list for Terraform IaC — GitHub and Cloudflare"
 
 - [X] T009 [P] [US1] Create `terraform/cloudflare/outputs.tf` with two outputs: `pages_project_url` (value `"${cloudflare_pages_project.thingstead.name}.pages.dev"`, description "Cloudflare Pages subdomain for the thingstead project") and `custom_domain_status` (value `cloudflare_pages_domain.thingstead_io.status`, description "Verification/activation status of the thingstead.io custom domain binding")
 
-- [ ] T010 [US1] Run `terraform init` inside `terraform/cloudflare/`: authenticate the Terraform CLI to TFC first via `terraform login`, then run `terraform init` — confirm the output shows "Terraform Cloud has been successfully initialized!" and the `cloudflare/cloudflare` provider is downloaded
+- [X] T010 [US1] Run `terraform init` inside `terraform/cloudflare/`: authenticate the Terraform CLI to TFC first via `terraform login`, then run `terraform init` — confirm the output shows "Terraform Cloud has been successfully initialized!" and the `cloudflare/cloudflare` provider is downloaded
 
-- [ ] T011 [US1] Run `terraform validate` inside `terraform/cloudflare/` — confirm output is "Success! The configuration is valid." Resolve any HCL syntax or schema errors before proceeding
+- [X] T011 [US1] Run `terraform validate` inside `terraform/cloudflare/` — confirm output is "Success! The configuration is valid." Resolve any HCL syntax or schema errors before proceeding
 
-- [ ] T012 [US1] Import the existing Cloudflare Pages project into TFC state — run `terraform import cloudflare_pages_project.thingstead <CLOUDFLARE_ACCOUNT_ID>/thingstead` from `terraform/cloudflare/` (substituting the real account ID); this command runs locally but pushes state to TFC; confirm the import succeeds with "Import successful!" before running plan
+- [X] T012 [US1] Import the existing Cloudflare Pages project into TFC state — run `terraform import cloudflare_pages_project.thingstead <CLOUDFLARE_ACCOUNT_ID>/thingstead` from `terraform/cloudflare/` (substituting the real account ID); this command runs locally but pushes state to TFC; confirm the import succeeds with "Import successful!" before running plan
 
-- [ ] T013 [US1] Run `terraform plan` in the `tilde-cloudflare` TFC workspace (triggered by pushing the branch to GitHub, or via `terraform plan` locally with remote execution): verify the plan output shows **0 to add, 0 to change, 0 to destroy** — this confirms the imported state matches the live Cloudflare configuration and the module is idempotent (SC-002)
+- [X] T013 [US1] Run `terraform plan` in the `tilde-cloudflare` TFC workspace (triggered by pushing the branch to GitHub, or via `terraform plan` locally with remote execution): verify the plan output shows **0 to add, 0 to change, 0 to destroy** — this confirms the imported state matches the live Cloudflare configuration and the module is idempotent (SC-002)
 
 **Checkpoint**: User Story 1 complete — Cloudflare infrastructure is fully codified, imported, and idempotent. The Pages project and domain binding can be destroyed and recreated with a single `terraform apply`.
 
@@ -93,13 +93,13 @@ description: "Task list for Terraform IaC — GitHub and Cloudflare"
 
 - [X] T016 [P] [US2] Create `terraform/github/outputs.tf` with two outputs: `repository_url` (value `github_repository.tilde.html_url`, description "HTTPS URL of the jwill824/tilde GitHub repository") and `branch_protection_id` (value `github_branch_protection.main.id`, description "Terraform resource ID for the main branch protection rule")
 
-- [ ] T017 [US2] Run `terraform init` inside `terraform/github/` — confirm the output shows "Terraform Cloud has been successfully initialized!" and the `integrations/github` provider is downloaded
+- [X] T017 [US2] Run `terraform init` inside `terraform/github/` — confirm the output shows "Terraform Cloud has been successfully initialized!" and the `integrations/github` provider is downloaded
 
-- [ ] T018 [US2] Run `terraform validate` inside `terraform/github/` — confirm output is "Success! The configuration is valid." Resolve any HCL syntax or schema errors before proceeding
+- [X] T018 [US2] Run `terraform validate` inside `terraform/github/` — confirm output is "Success! The configuration is valid." Resolve any HCL syntax or schema errors before proceeding
 
-- [ ] T019 [US2] Import the existing GitHub repository into TFC state — run `terraform import github_repository.tilde tilde` from `terraform/github/` (uses repo name only, not the full `owner/repo` path); confirm the import succeeds with "Import successful!" before running plan; note: `github_branch_protection` does NOT need a separate import — it will be created fresh on first apply if the protection already exists (Terraform will reconcile it)
+- [X] T019 [US2] Import the existing GitHub repository into TFC state — run `terraform import github_repository.tilde tilde` from `terraform/github/` (uses repo name only, not the full `owner/repo` path); confirm the import succeeds with "Import successful!" before running plan; note: `github_branch_protection` does NOT need a separate import — it will be created fresh on first apply if the protection already exists (Terraform will reconcile it)
 
-- [ ] T020 [US2] Run `terraform plan` in the `tilde-github` TFC workspace: verify the plan output shows **0 to add, 0 to change, 0 to destroy** for the repository resource; the branch protection rule may show as a new resource to add if it did not previously exist in state — review the planned changes match the intended configuration before applying (SC-002)
+- [X] T020 [US2] Run `terraform plan` in the `tilde-github` TFC workspace: verify the plan output shows **0 to add, 0 to change, 0 to destroy** for the repository resource; the branch protection rule may show as a new resource to add if it did not previously exist in state — review the planned changes match the intended configuration before applying (SC-002)
 
 **Checkpoint**: User Story 2 complete — GitHub repository settings and branch protections are fully codified and drift-detectable. Stories 1 and 2 are independently testable.
 
