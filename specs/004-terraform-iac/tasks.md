@@ -117,7 +117,7 @@ description: "Task list for Terraform IaC — GitHub and Cloudflare"
 
 - [X] T022 [P] [US3] Verify remote state is active in the `tilde-github` workspace: log into app.terraform.io → Workspaces → `tilde-github` → States tab — confirm at least one state version is listed after the import step (T019); confirm no `terraform.tfstate` file exists locally in `terraform/github/`
 
-- [ ] T023 [US3] Test concurrent plan isolation: from two separate terminal sessions (or two machines with valid TFC credentials), trigger `terraform plan` in both `terraform/cloudflare/` and `terraform/github/` within the same minute — verify both plans complete successfully and independently with no stale-state errors; verify that running both simultaneously does not cause either to report unexpected changes or state lock errors (TFC serializes runs per workspace automatically)
+- [X] T023 [US3] Test concurrent plan isolation: from two separate terminal sessions (or two machines with valid TFC credentials), trigger `terraform plan` in both `terraform/cloudflare/` and `terraform/github/` within the same minute — verify both plans complete successfully and independently with no stale-state errors; verify that running both simultaneously does not cause either to report unexpected changes or state lock errors (TFC serializes runs per workspace automatically)
 
 **Checkpoint**: All three user stories are complete. Remote state is confirmed active, locking is provided by TFC, and a fresh `terraform init` on any authorized machine downloads current state without needing local files.
 
@@ -137,7 +137,7 @@ description: "Task list for Terraform IaC — GitHub and Cloudflare"
   - **Credentials**: never commit API tokens or PATs; all secrets live as encrypted TFC workspace variables (see T005, T006)
   - **TFC workspace URLs**: `https://app.terraform.io/app/thingstead/workspaces/tilde-cloudflare` and `https://app.terraform.io/app/thingstead/workspaces/tilde-github`
 
-- [ ] T025 [P] Final end-to-end validation: delete the `.terraform/` directories in both `terraform/cloudflare/` and `terraform/github/`, run `terraform init` in each from scratch, then run `terraform plan` — confirm both plans show **0 changes** and outputs are populated; this simulates a fresh-machine contributor experience and validates SC-003 ("any contributor with valid credentials can run `terraform plan` from a fresh machine in under 5 minutes")
+- [X] T025 [P] Final end-to-end validation: delete the `.terraform/` directories in both `terraform/cloudflare/` and `terraform/github/`, run `terraform init` in each from scratch, then run `terraform plan` — confirm both plans show **0 changes** and outputs are populated; this simulates a fresh-machine contributor experience and validates SC-003 ("any contributor with valid credentials can run `terraform plan` from a fresh machine in under 5 minutes")
 
 ---
 

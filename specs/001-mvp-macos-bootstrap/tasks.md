@@ -178,7 +178,7 @@ context directory; run `git config user.email`; verify correct identity per cont
 - [X] T089 [P] Run `quickstart.md` validation — execute each code block in `specs/001-mvp-macos-bootstrap/quickstart.md` against the built project; confirm `npm install`, `npm run build`, `npm test` all succeed
 - [X] T090 [P] Security audit: scan all file write paths in `src/dotfiles/` and `src/config/writer.ts` — assert no code path writes a string matching `/^(ghp_|sk-|AKIA|op:\/\/).*[A-Za-z0-9]{20}/` directly to disk; add a unit test asserting this invariant
 - [X] T092 Wire `--reconfigure` flag into wizard sequencer in `src/app.tsx` — when `--reconfigure` is present, load existing `tilde.config.json` via `reader.ts`, pass it as `initialValues` to each wizard step so every field pre-populates with the stored choice; user navigates the full 14-step wizard; on completion, overwrite existing config (FR-020)
-- [ ] T091 [P] Write unit test for --reconfigure flag in `tests/unit/reconfigure.test.ts` — assert that when --reconfigure is passed and config exists, wizard renders with pre-populated defaults from config; assert that final config overwrites existing tilde.config.json; depends on T092
+- [X] T091 [P] Write unit test for --reconfigure flag in `tests/unit/reconfigure.test.ts` — assert that when --reconfigure is passed and config exists, wizard renders with pre-populated defaults from config; assert that final config overwrites existing tilde.config.json; depends on T092
 
 ---
 
