@@ -32,7 +32,7 @@
 - [X] T003 Add schema migration `v1.5` in `src/config/migrations/` (new file `v1-5.ts`) — auto-populate `browser: {selected:[], default:null}`, `aiTools: []`, `languageBindings: []` per context, normalize `editors` string → `{primary, additional:[]}` on load
 - [X] T004 [P] Add `BrowserPlugin` and `EditorPlugin` interface types to `src/plugins/api.ts` — per data-model.md §4; include `detectInstalled()`, `install()`, `setAsDefault?()`, `applyProfile?()`, `getProfileGuidance?()` signatures
 - [X] T005 [P] Create `src/utils/package-manager.ts` — Homebrew helpers: `listInstalledFormulae()`, `listInstalledCasks()`, `installCask(name: string)`, `installFormula(name: string)`, `runBrew(args: string[]): Promise<string>`
-- [X] T006 Update `tests/contract/config-schema.test.ts` — add contract tests validating schema v1.5 shape: browser, aiTools, editors object, languageBindings per context, and migration from v1.3
+- [X] T006 Update `tests/contract/config-schema.test.ts` — add contract tests validating schema v1.5 shape: browser, aiTools, editors object, languageBindings per context, and migration from v1 (original — `schemaVersion` absent or integer `1`)
 
 **Checkpoint**: Schema, plugin API contracts, and Homebrew utils are ready — all user stories can now begin
 
@@ -44,7 +44,8 @@
 
 **Independent Test**: Run the wizard, advance past 4 steps, press Back — previous step renders with original values intact. Navigate back to the contexts step after defining 2 contexts — both contexts appear in a list, none are lost.
 
-- [X] T007 Refactor `src/modes/wizard.tsx` — replace `currentStep: number` with `WizardState` containing `steps: StepDefinition[]` and `history: StepFrame[]`; implement `goNext(values)`, `goBack()`, and `skip()` navigation actions; StepDefinition carries `required: boolean` flag
+- [X] T007 Refactor `src/modes/wizard.tsx` — replace `currentStep: number` with `WizardState` containing `steps: StepDefinition[]`, `history: StepFrame[]`, and `sharedValues: Record<string, unknown>`; implement `goNext(values)` (merges step output into `sharedValues`), `goBack()`, and `skip()` navigation actions; StepDefinition carries `required: boolean` flag
+- [X] T007a Add `sharedValues` field to `WizardState` interface in `src/modes/wizard.tsx` — initialize as `{}`; extend `goNext(values)` to shallow-merge the provided step values into `sharedValues` so later steps can read earlier steps' values (e.g., shell selection pre-populated when reopened via `tilde update`); expose `sharedValues` in `StepProps` as optional `initialValues?: Record<string, unknown>` for consuming steps to read from
 - [X] T008 [P] Add `StepDefinition` and `StepFrame` type declarations to `src/modes/wizard.tsx` — per data-model.md §1; register all 14 existing steps (00–13) with `required: true`; mark step 10 (app-config) and step 11 (accounts) as `required: false`
 - [X] T009 Update step props type (in `src/modes/wizard.tsx` or shared types file) — add `onBack?: () => void` and `isOptional: boolean` to `StepProps`; propagate `onBack` and `isOptional` from wizard state to all existing step components `src/steps/00-config-detection.tsx` through `src/steps/13-config-export.tsx`; render Back control when `onBack` defined, Skip control when `isOptional: true`
 - [X] T010 Update `src/steps/07-contexts.tsx` — add `ContextListView` sub-component rendered when `history` shows user arrived via back-navigation; list all previously defined contexts with edit/remove actions; "Add new" enters blank form; "Done" advances to next step; no contexts discarded on back-nav
@@ -77,7 +78,7 @@
 - [X] T015 Create `src/modes/update.tsx` — `UpdateCommand` mode: accept `resource: UpdateResource`, validate against the enum from `contracts/cli-schema.md §1`, load full config via reader; for `languages` resource: two-step flow — first render a context selector (list all contexts from config), then render the language bindings form for the selected context only; for all other resources: mount the matching step component as a standalone mini-wizard; write only the updated section back via `atomicWriteConfig`
 - [X] T016 Update `src/index.tsx` — add `tilde update <resource>` subcommand: parse resource arg, resolve config path (auto-discovery from Phase 4), route to `UpdateCommand` mode; display usage help when no resource provided
 - [X] T017 Add validation and error output to `src/modes/update.tsx` — when resource name is not in `UpdateResource` enum, print the error format from `contracts/cli-schema.md §1` (invalid-name message + valid resource list) and exit code 1; when no config discoverable, print config-missing error and exit code 2
-- [X] T018 Write `tests/unit/update-command.test.ts` — tests covering: valid resource routes to correct step, invalid resource prints error + exit 1, no-config-found prints error + exit 2, only targeted section changes after update, all other config fields preserved
+- [X] T018 Write `tests/unit/update-command.test.ts` — tests covering: valid resource routes to correct step, invalid resource prints error + exit 1, no-config-found prints error + exit 2, only targeted section changes after update, all other config fields preserved; for `languages` resource: context selector renders all contexts from config, context selection scopes the language bindings form to that context only, write-back modifies only the targeted context's `languageBindings` (other contexts unchanged)
 
 **Checkpoint**: `tilde update <resource>` fully functional for all 7 resource types
 
@@ -116,11 +117,11 @@
 
 **Goal**: Wizard step 15 shows all Homebrew-installable AI coding tools with variant labels and install status; user selects tools to install; offline degrades gracefully
 
-**Independent Test**: Run wizard to step 15 → curated tool list shown with install status for each. Select Claude Code → installed via Homebrew formula. Select Claude Desktop → installed via Homebrew cask. Tools with variants (Claude CLI vs Desktop) appear as separate labeled rows. Skip → no tools installed.
+**Independent Test**: Run wizard to step 15 → all registered `AI_TOOL_PLUGINS` shown with install status for each. Select Claude Code → installed via Homebrew formula. Select Claude Desktop → installed via Homebrew cask. Tools with variants (Claude CLI vs Desktop) appear as separate labeled rows. Skip → no tools installed.
 
 - [X] T026 Create `src/steps/15-ai-tools.tsx` — AI tools step: query `AI_TOOL_PLUGINS` from `src/plugins/first-party/ai-tools/index.ts` (all plugins with `category === "ai-tool"`); on mount call `listInstalledFormulae()` and `listInstalledCasks()` from package-manager.ts to mark install status against each plugin's `brewId`; multi-select with variant labels; install selected tools on confirm via each plugin's `install()` method; catch network errors → warn with uninstalled list and continue; skip action (isOptional: true) — no tool definitions embedded as inline literals in the step component
 - [X] T027 Register step 15 (ai-tools) in `src/modes/wizard.tsx` step list — `{ id: "ai-tools", label: "AI Coding Tools", required: false }` — positioned after step 14 (browser)
-- [X] T028 Write `tests/unit/ai-tools-step.test.ts` — tests covering: curated list loads with install status, variant tools appear as separate labeled entries, install triggers correct Homebrew command (formula vs cask), offline error produces warn-and-skip, skip advances without installing anything
+- [X] T028 Write `tests/unit/ai-tools-step.test.ts` — tests covering: plugin registry queried on mount — all `AI_TOOL_PLUGINS` returned with install status, variant plugins appear as separate labeled entries, install triggers correct Homebrew command (formula vs cask) via each plugin's `install()` method, offline error produces warn-and-skip, skip advances without installing anything
 
 **Checkpoint**: AI tools step fully functional with Homebrew discovery, variant labeling, and offline resilience
 
@@ -144,12 +145,12 @@
 **Purpose**: Integration tests, documentation, and regression validation
 
 - [X] T033 [P] Update `tests/integration/wizard-flow.test.ts` — extend existing integration tests to cover: back navigation across 3+ steps with value restoration, skip on browser and ai-tools steps, new step sequence (14-browser, 15-ai-tools), context list view on back-nav
-- [X] T034 [P] Update `tests/contract/config-schema.test.ts` — validate complete schema v1.5 round-trip: write config with all new fields, reload, assert equality; validate v1.3 → v1.5 migration produces correct defaults
+- [X] T034 [P] Update `tests/contract/config-schema.test.ts` — validate complete schema v1.5 round-trip: write config with all new fields, reload, assert equality; validate v1 (original — `schemaVersion` absent or integer `1`) → v1.5 migration produces correct defaults
 - [X] T035 [P] Update `docs/config-format.md` — document new config fields: `browser` (selected, default), `aiTools` (name, label, variant), `editors` object (primary, additional), `contexts[].languageBindings` (runtime, version); add annotated examples
 - [X] T036 [P] Update `src/dotfiles/vscode.ts` import references throughout codebase to point to `src/plugins/first-party/vscode/index.ts` after T023 refactor — run `grep -r "dotfiles/vscode"` to find all consumers
 - [X] T037 Run `npm test` — fix any regressions introduced by the `src/modes/wizard.tsx` StepHistory refactor in T007–T009; confirm all pre-existing unit, integration, and contract tests pass
 - [X] T038 Validate `quickstart.md` scenarios manually — run each documented user flow (back nav, `tilde update shell`, browser step, AI tools step, language bindings) against a local build to confirm the quickstart accurately reflects delivered behavior
-- [X] T039 Write `tests/integration/context-switching.test.ts` — integration tests for language version activation on context switch (required by constitution Dev Workflow §362): (1) cd to personal context (Node 22 binding) → `.nvmrc` contains `22`; (2) cd to work context (Java 21 + Node 18 bindings) → `.tool-versions` contains correct entries; (3) context with no bindings activates cleanly with no version files written; (4) version files are overwritten idempotently when context is re-activated with different binding values; use `tmp` directories and real `fs` writes (no mocks for file I/O)
+- [X] T039 Write `tests/integration/context-switching.test.ts` — integration tests for language version activation on context switch (required by constitution Dev Workflow §362): (1) cd to personal context (Node 22 binding) → `.nvmrc` contains `22`; (2) cd to work context (Java 21 + Node 18 bindings) → `.tool-versions` contains correct entries; (3) context with no bindings activates cleanly with no version files written; (4) version files are overwritten idempotently when context is re-activated with different binding values; (5) context with a binding whose version is not installed → installation guidance prompt is displayed and activation does not block; use `tmp` directories and real `fs` writes (no mocks for file I/O); assert each activation completes in ≤ 5 seconds (SC-006)
 
 ---
 

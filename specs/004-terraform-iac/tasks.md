@@ -36,10 +36,10 @@ description: "Task list for Terraform IaC — GitHub and Cloudflare"
 
 **⚠️ CRITICAL**: Both workspaces must be fully configured before any module can be initialized or validated.
 
-- [ ] T003 Create the `tilde-cloudflare` TFC workspace: log into app.terraform.io → Organization `thingstead` → New Workspace → Version Control Workflow → connect `jwill824/tilde` → set **Working Directory** to `terraform/cloudflare` → enable **Automatic Run Triggering** scoped to the `terraform/cloudflare/**` path → set Execution Mode to **Remote**
-- [ ] T004 Create the `tilde-github` TFC workspace: same process → connect `jwill824/tilde` → set **Working Directory** to `terraform/github` → enable **Automatic Run Triggering** scoped to the `terraform/github/**` path → set Execution Mode to **Remote**
-- [ ] T005 [P] Add sensitive environment variables to the `tilde-cloudflare` workspace in TFC (Settings → Variables): `CLOUDFLARE_API_TOKEN` (Environment variable, mark **Sensitive**) from Cloudflare Dashboard → API Tokens; `CLOUDFLARE_ACCOUNT_ID` (Environment variable, not sensitive) from Cloudflare Dashboard → right-side Account ID; `TF_VAR_account_id` (Terraform variable, mark **Sensitive**) set to the same account ID value — used by resource arguments `var.account_id`; `TF_VAR_zone_id` (Terraform variable) set to the Cloudflare zone ID for `thingstead.io` from Cloudflare Dashboard → DNS → Zone ID
-- [ ] T006 [P] Add sensitive environment variable to the `tilde-github` workspace in TFC (Settings → Variables): `GITHUB_TOKEN` (Environment variable, mark **Sensitive**) — a fine-grained PAT scoped exclusively to `jwill824/tilde` with **Administration: Write** and **Contents: Read** permissions; create at github.com → Settings → Developer settings → Fine-grained personal access tokens → New token
+- [X] T003 Create the `tilde-cloudflare` TFC workspace: log into app.terraform.io → Organization `thingstead` → New Workspace → Version Control Workflow → connect `jwill824/tilde` → set **Working Directory** to `terraform/cloudflare` → enable **Automatic Run Triggering** scoped to the `terraform/cloudflare/**` path → set Execution Mode to **Remote**
+- [X] T004 Create the `tilde-github` TFC workspace: same process → connect `jwill824/tilde` → set **Working Directory** to `terraform/github` → enable **Automatic Run Triggering** scoped to the `terraform/github/**` path → set Execution Mode to **Remote**
+- [X] T005 [P] Add sensitive environment variables to the `tilde-cloudflare` workspace in TFC (Settings → Variables): `CLOUDFLARE_API_TOKEN` (Environment variable, mark **Sensitive**) from Cloudflare Dashboard → API Tokens; `CLOUDFLARE_ACCOUNT_ID` (Environment variable, not sensitive) from Cloudflare Dashboard → right-side Account ID; `TF_VAR_account_id` (Terraform variable, mark **Sensitive**) set to the same account ID value — used by resource arguments `var.account_id`; `TF_VAR_zone_id` (Terraform variable) set to the Cloudflare zone ID for `thingstead.io` from Cloudflare Dashboard → DNS → Zone ID
+- [X] T006 [P] Add sensitive environment variable to the `tilde-github` workspace in TFC (Settings → Variables): `GITHUB_TOKEN` (Environment variable, mark **Sensitive**) — a fine-grained PAT scoped exclusively to `jwill824/tilde` with **Administration: Write** and **Contents: Read** permissions; create at github.com → Settings → Developer settings → Fine-grained personal access tokens → New token
 
 **Checkpoint**: Both TFC workspaces exist, VCS integration is active, and all credentials are stored as encrypted workspace variables. Module implementation can now begin.
 
@@ -113,9 +113,9 @@ description: "Task list for Terraform IaC — GitHub and Cloudflare"
 
 ### Implementation for User Story 3
 
-- [ ] T021 [P] [US3] Verify remote state is active in the `tilde-cloudflare` workspace: log into app.terraform.io → Workspaces → `tilde-cloudflare` → States tab — confirm at least one state version is listed after the import step (T012) with a non-empty serial number; confirm no `terraform.tfstate` file exists locally in `terraform/cloudflare/`
+- [X] T021 [P] [US3] Verify remote state is active in the `tilde-cloudflare` workspace: log into app.terraform.io → Workspaces → `tilde-cloudflare` → States tab — confirm at least one state version is listed after the import step (T012) with a non-empty serial number; confirm no `terraform.tfstate` file exists locally in `terraform/cloudflare/`
 
-- [ ] T022 [P] [US3] Verify remote state is active in the `tilde-github` workspace: log into app.terraform.io → Workspaces → `tilde-github` → States tab — confirm at least one state version is listed after the import step (T019); confirm no `terraform.tfstate` file exists locally in `terraform/github/`
+- [X] T022 [P] [US3] Verify remote state is active in the `tilde-github` workspace: log into app.terraform.io → Workspaces → `tilde-github` → States tab — confirm at least one state version is listed after the import step (T019); confirm no `terraform.tfstate` file exists locally in `terraform/github/`
 
 - [ ] T023 [US3] Test concurrent plan isolation: from two separate terminal sessions (or two machines with valid TFC credentials), trigger `terraform plan` in both `terraform/cloudflare/` and `terraform/github/` within the same minute — verify both plans complete successfully and independently with no stale-state errors; verify that running both simultaneously does not cause either to report unexpected changes or state lock errors (TFC serializes runs per workspace automatically)
 
@@ -127,7 +127,7 @@ description: "Task list for Terraform IaC — GitHub and Cloudflare"
 
 **Purpose**: Documentation, final validation, and end-to-end verification.
 
-- [ ] T024 [P] Update `CONTRIBUTING.md`: add a new top-level section **"Infrastructure (Terraform)"** after the existing "CI Pipeline" section; include the following sub-sections:
+- [X] T024 [P] Update `CONTRIBUTING.md`: add a new top-level section **"Infrastructure (Terraform)"** after the existing "CI Pipeline" section; include the following sub-sections:
   - **Prerequisites**: Terraform CLI ≥ 1.6 (`brew install terraform`), access to the `thingstead` TFC organization
   - **First-time local setup**: `terraform login` to authenticate CLI to TFC, then `terraform init` in each module directory
   - **Running a plan locally**: `cd terraform/cloudflare && terraform plan` (runs remotely in TFC, output streamed to terminal); same for `terraform/github/`
