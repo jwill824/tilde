@@ -9,7 +9,7 @@
  * registered step in sequence. Missing steps (no-op versions) are skipped.
  *
  * Versions are compared as floating-point numbers (parseFloat).
- * Current version: '1.4'
+ * Current version: '1.5'
  */
 
 export type MigrationStep = (config: Record<string, unknown>) => Record<string, unknown>;
@@ -22,7 +22,7 @@ export interface MigrationResult {
   isFutureVersion: boolean;
 }
 
-export const CURRENT_SCHEMA_VERSION = '1.4';
+export const CURRENT_SCHEMA_VERSION = '1.5';
 
 /**
  * Migration registry — keyed by *source* version string.

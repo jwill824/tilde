@@ -1,7 +1,7 @@
 # tilde Configuration Format
 
 > JSON Schema: `https://thingstead.io/tilde/config-schema/v1.json`  
-> Schema version: `1.4`
+> Schema version: `1.5`
 
 `tilde.config.json` is the declarative configuration file for tilde. It describes your entire developer environment so that `tilde` can reproduce it on any machine.
 
@@ -14,7 +14,7 @@ The following complete example shows every field with inline explanations. (Stan
 ```json
 {
   "$schema": "https://thingstead.io/tilde/config-schema/v1.json", // enables editor autocomplete and validation
-  "schemaVersion": "1.4",      // version of the config file format — bumped to 1.4 with browser/editor/ai support
+  "schemaVersion: '1.5' with browser/editor/ai support
   "version": "1",              // tilde configuration format revision — always "1"
   "os": "macos",               // target OS — only macOS is currently supported
   "shell": "zsh",              // your primary shell: "zsh", "bash", or "fish"
@@ -57,7 +57,7 @@ The following complete example shows every field with inline explanations. (Stan
       "envVars": [],                          // environment variables to load when you're working in this context (use your secrets backend references — not raw tokens)
       "vscodeProfile": "personal",            // which VS Code profile should be active in this context? (optional)
       "isDefault": true,                      // is this the context tilde should use when you're not inside any named workspace path? (optional)
-      "languageBindings": [                   // NEW v1.4: runtime version bindings for this context
+      "languageBindings": [                   // NEW v1.5: runtime version bindings for this context
         { "runtime": "nodejs", "version": "22.0.0" }
       ]
     },
@@ -101,9 +101,9 @@ The following complete example shows every field with inline explanations. (Stan
 | `configurations` | ConfigurationDomains | **yes** | Feature flags for which dotfiles and integrations tilde manages |
 | `accounts` | list of Account | no | Service account references |
 | `secretsBackend` | one of `"1password"`, `"keychain"`, `"env-only"` | **yes** | Where should tilde store and retrieve your secrets? |
-| `browser` | BrowserConfig | no | **NEW v1.4** — browser selection and default configuration |
-| `editors` | EditorsConfig | no | **NEW v1.4** — editor configuration (primary + additional editors) |
-| `aiTools` | list of AIToolConfig | no | **NEW v1.4** — AI coding tools to install and configure |
+| `browser` | BrowserConfig | no | **NEW v1.5** — browser selection and default configuration |
+| `editors` | EditorsConfig | no | **NEW v1.5** — editor configuration (primary + additional editors) |
+| `aiTools` | list of AIToolConfig | no | **NEW v1.5** — AI coding tools to install and configure |
 
 ---
 
@@ -165,7 +165,7 @@ A context maps a filesystem path to a git identity and optional tooling configur
 | `envVars` | list of EnvVarReference | no | Environment variables to load when you're working in this context (use your secrets backend references — not raw tokens) |
 | `vscodeProfile` | string | no | Which VS Code profile should be active in this context? |
 | `isDefault` | boolean | no | Is this the context tilde should use when you're not inside any named workspace path? |
-| `languageBindings` | list of LanguageBinding | no | **NEW v1.4** — runtime version bindings for this context. Written as version files (`.nvmrc`, `.vfox.json`, `.tool-versions`) on first tilde run. |
+| `languageBindings` | list of LanguageBinding | no | **NEW v1.5** — runtime version bindings for this context. Written as version files (`.nvmrc`, `.vfox.json`, `.tool-versions`) on first tilde run. |
 
 > **Validation**: Context labels must be unique across all contexts.
 

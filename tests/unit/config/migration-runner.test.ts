@@ -6,32 +6,32 @@ import { runMigrations, CURRENT_SCHEMA_VERSION, type MigrationStep } from '../..
 
 describe('runMigrations()', () => {
   it('same-version input → MigrationResult with didMigrate: false', () => {
-    const raw = { schemaVersion: '1.4', name: 'test' };
-    const result = runMigrations(raw, '1.4');
+    const raw = { schemaVersion: '1.5', name: 'test' };
+    const result = runMigrations(raw, '1.5');
     expect(result.didMigrate).toBe(false);
     expect(result.isFutureVersion).toBe(false);
-    expect(result.migratedFrom).toBe('1.4');
-    expect(result.migratedTo).toBe('1.4');
+    expect(result.migratedFrom).toBe('1.5');
+    expect(result.migratedTo).toBe('1.5');
     expect(result.config).toEqual(raw);
   });
 
-  it('single-hop: input at v1 → output at v1.4 with original fields preserved and schemaVersion updated', () => {
+  it('single-hop: input at v1 → output at v1.5 with original fields preserved and schemaVersion updated', () => {
     // No-op path: schemaVersion gets bumped to target even without a transform step
     const raw = { schemaVersion: '1', someField: 'hello' };
-    const result = runMigrations(raw, '1.4');
+    const result = runMigrations(raw, '1.5');
     expect(result.didMigrate).toBe(true);
     expect(result.migratedFrom).toBe('1');
-    expect(result.migratedTo).toBe('1.4');
-    expect(String(result.config['schemaVersion'])).toBe('1.4');
+    expect(result.migratedTo).toBe('1.5');
+    expect(String(result.config['schemaVersion'])).toBe('1.5');
     expect(result.config['someField']).toBe('hello');
   });
 
   it('integer schemaVersion 1 is treated as version "1" for migration', () => {
     const raw = { schemaVersion: 1, someField: 'hello' };
-    const result = runMigrations(raw, '1.4');
+    const result = runMigrations(raw, '1.5');
     expect(result.didMigrate).toBe(true);
     expect(result.migratedFrom).toBe('1');
-    expect(String(result.config['schemaVersion'])).toBe('1.4');
+    expect(String(result.config['schemaVersion'])).toBe('1.5');
   });
 
   it('missing schemaVersion field defaults to "1" (FR-020)', () => {
@@ -43,7 +43,7 @@ describe('runMigrations()', () => {
 
   it('schemaVersion higher than target → isFutureVersion: true, didMigrate: false (FR-018)', () => {
     const raw = { schemaVersion: '99', field: 'x' };
-    const result = runMigrations(raw, '1.4');
+    const result = runMigrations(raw, '1.5');
     expect(result.isFutureVersion).toBe(true);
     expect(result.didMigrate).toBe(false);
     expect(result.config).toEqual(raw);
@@ -68,7 +68,7 @@ describe('runMigrations()', () => {
     expect(raw).toEqual({ schemaVersion: '1', field: 'x' });
   });
 
-  it('CURRENT_SCHEMA_VERSION is "1.4"', () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe('1.4');
+  it('CURRENT_SCHEMA_VERSION is "1.5"', () => {
+    expect(CURRENT_SCHEMA_VERSION).toBe('1.5');
   });
 });

@@ -88,7 +88,7 @@ export interface VersionManagerPlugin extends TildePlugin {
 }
 
 // ---------------------------------------------------------------------------
-// New plugin categories (v1.4): browser and editor
+// New plugin categories (v1.5): browser and editor
 // ---------------------------------------------------------------------------
 
 export interface BrowserPlugin {

@@ -134,9 +134,9 @@ Steps 14 and 15 are inserted between `config-export` and final completion, or ma
 | Version | Changes |
 |---------|---------|
 | `1.3` (current) | — |
-| `1.4` (this feature) | Add `browser`, `aiTools`; extend `editors` object; add `contexts[].languageBindings` array |
+| `1.5` (this feature) | Add `browser`, `aiTools`; extend `editors` object; add `contexts[].languageBindings` array |
 
-**Migration rule**: Configs with `schemaVersion < 1.4` are auto-migrated on load:
+**Migration rule**: Configs with `schemaVersion: '1.5'` are auto-migrated on load:
 - `browser` → `{ selected: [], default: null }`
 - `aiTools` → `[]`
 - `editors` string → `{ primary: <value>, additional: [] }`

@@ -32,11 +32,11 @@ const MINIMAL_CONFIG = {
 };
 
 describe('schemaVersion field — round-trip', () => {
-  it('valid config with schemaVersion: "1.4" passes Zod validation', () => {
-    const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, schemaVersion: '1.4' });
+  it('valid config with schemaVersion: "1.5" passes Zod validation', () => {
+    const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, schemaVersion: '1.5' });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.schemaVersion).toBe('1.4');
+      expect(result.data.schemaVersion).toBe('1.5');
     }
   });
 
@@ -48,11 +48,11 @@ describe('schemaVersion field — round-trip', () => {
     }
   });
 
-  it('config without schemaVersion field defaults to "1.4"', () => {
+  it('config without schemaVersion field defaults to "1.5"', () => {
     const result = TildeConfigSchema.safeParse(MINIMAL_CONFIG);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.schemaVersion).toBe('1.4');
+      expect(result.data.schemaVersion).toBe('1.5');
     }
   });
 
@@ -72,8 +72,8 @@ describe('schemaVersion field — round-trip', () => {
     }
   });
 
-  it('CURRENT_SCHEMA_VERSION is "1.4"', () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe('1.4');
+  it('CURRENT_SCHEMA_VERSION is "1.5"', () => {
+    expect(CURRENT_SCHEMA_VERSION).toBe('1.5');
   });
 
   it('config default schemaVersion matches CURRENT_SCHEMA_VERSION', () => {

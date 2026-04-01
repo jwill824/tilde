@@ -28,11 +28,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [X] T002 Extend Zod schema in `src/config/schema.ts` — add `BrowserConfig`, `EditorsConfig` (primary + additional), `AIToolConfig`, and `LanguageBinding` types; bump `schemaVersion` from `1.3` to `1.4`; update `TildeConfig` root type
-- [X] T003 Add schema migration `v1.4` in `src/config/migrations/` (new file `v1-4.ts`) — auto-populate `browser: {selected:[], default:null}`, `aiTools: []`, `languageBindings: []` per context, normalize `editors` string → `{primary, additional:[]}` on load
+- [X] T002 Extend Zod schema in `src/config/schema.ts` — add `BrowserConfig`, `EditorsConfig` (primary + additional), `AIToolConfig`, and `LanguageBinding` types; bump `schemaVersion: '1.5'`; update `TildeConfig` root type
+- [X] T003 Add schema migration `v1.5` in `src/config/migrations/` (new file `v1-5.ts`) — auto-populate `browser: {selected:[], default:null}`, `aiTools: []`, `languageBindings: []` per context, normalize `editors` string → `{primary, additional:[]}` on load
 - [X] T004 [P] Add `BrowserPlugin` and `EditorPlugin` interface types to `src/plugins/api.ts` — per data-model.md §4; include `detectInstalled()`, `install()`, `setAsDefault?()`, `applyProfile?()`, `getProfileGuidance?()` signatures
 - [X] T005 [P] Create `src/utils/package-manager.ts` — Homebrew helpers: `listInstalledFormulae()`, `listInstalledCasks()`, `installCask(name: string)`, `installFormula(name: string)`, `runBrew(args: string[]): Promise<string>`
-- [X] T006 Update `tests/contract/config-schema.test.ts` — add contract tests validating schema v1.4 shape: browser, aiTools, editors object, languageBindings per context, and migration from v1.3
+- [X] T006 Update `tests/contract/config-schema.test.ts` — add contract tests validating schema v1.5 shape: browser, aiTools, editors object, languageBindings per context, and migration from v1.3
 
 **Checkpoint**: Schema, plugin API contracts, and Homebrew utils are ready — all user stories can now begin
 
@@ -144,7 +144,7 @@
 **Purpose**: Integration tests, documentation, and regression validation
 
 - [X] T033 [P] Update `tests/integration/wizard-flow.test.ts` — extend existing integration tests to cover: back navigation across 3+ steps with value restoration, skip on browser and ai-tools steps, new step sequence (14-browser, 15-ai-tools), context list view on back-nav
-- [X] T034 [P] Update `tests/contract/config-schema.test.ts` — validate complete schema v1.4 round-trip: write config with all new fields, reload, assert equality; validate v1.3 → v1.4 migration produces correct defaults
+- [X] T034 [P] Update `tests/contract/config-schema.test.ts` — validate complete schema v1.5 round-trip: write config with all new fields, reload, assert equality; validate v1.3 → v1.5 migration produces correct defaults
 - [X] T035 [P] Update `docs/config-format.md` — document new config fields: `browser` (selected, default), `aiTools` (name, label, variant), `editors` object (primary, additional), `contexts[].languageBindings` (runtime, version); add annotated examples
 - [X] T036 [P] Update `src/dotfiles/vscode.ts` import references throughout codebase to point to `src/plugins/first-party/vscode/index.ts` after T023 refactor — run `grep -r "dotfiles/vscode"` to find all consumers
 - [X] T037 Run `npm test` — fix any regressions introduced by the `src/modes/wizard.tsx` StepHistory refactor in T007–T009; confirm all pre-existing unit, integration, and contract tests pass

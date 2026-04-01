@@ -49,7 +49,7 @@ interface StepFrame {
 
 ## 2. Config Schema Changes (tilde.config.json)
 
-All changes are additive. `schemaVersion` bumps from current minor version to next minor (e.g., `1.3` → `1.4`). Existing configs without new fields remain valid; missing fields default to empty/null.
+All changes are additive. `schemaVersion: '1.5'`). Existing configs without new fields remain valid; missing fields default to empty/null.
 
 ### New top-level `browser` field
 
@@ -105,7 +105,7 @@ interface ContextConfig {
 
 ```json
 {
-  "schemaVersion": "1.4",
+  "schemaVersion": "1.5",
   "shell": "zsh",
   "editors": {
     "primary": "cursor",

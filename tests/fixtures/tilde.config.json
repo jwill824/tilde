@@ -31,5 +31,5 @@
     "direnv": true
   },
   "secretsBackend": "1password",
-  "schemaVersion": "1.4"
+  "schemaVersion": "1.5"
 }

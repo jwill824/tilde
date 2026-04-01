@@ -2,11 +2,11 @@
  * Contract tests for config schema — schemaVersion field assertions.
  *
  * These tests verify the schemaVersion contract:
- * - writeConfig() always stamps schemaVersion: CURRENT_SCHEMA_VERSION ('1.4')
+ * - writeConfig() always stamps schemaVersion: CURRENT_SCHEMA_VERSION ('1.5')
  * - loadConfig() accepts files without schemaVersion (defaults to '1')
- * - loadConfig() migrates v1 configs to v1.4 automatically
- * - loadConfig() accepts files with schemaVersion: '1.4'
- * - v1.4 schema fields (browser, aiTools, editors, languageBindings) round-trip correctly
+ * - loadConfig() migrates v1 configs to v1.5 automatically
+ * - loadConfig() accepts files with schemaVersion: '1.5'
+ * - v1.5 schema fields (browser, aiTools, editors, languageBindings) round-trip correctly
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { writeFile, readFile, mkdir, unlink } from 'node:fs/promises';
@@ -20,7 +20,7 @@ import type { TildeConfig } from '../../src/config/schema.js';
 const MINIMAL_CONFIG: TildeConfig = {
   $schema: 'https://thingstead.io/tilde/config-schema/v1.json',
   version: '1',
-  schemaVersion: '1.4',
+  schemaVersion: '1.5',
   os: 'macos',
   shell: 'zsh',
   packageManager: 'homebrew',
@@ -122,7 +122,7 @@ describe('writeConfig() — schemaVersion contract', () => {
     const content = await readFile(outputPath, 'utf-8');
     const parsed = JSON.parse(content) as Record<string, unknown>;
     expect(String(parsed['schemaVersion'])).toBe(CURRENT_SCHEMA_VERSION);
-    expect(CURRENT_SCHEMA_VERSION).toBe('1.4');
+    expect(CURRENT_SCHEMA_VERSION).toBe('1.5');
   });
 });
 
@@ -138,7 +138,7 @@ describe('loadConfig() — schemaVersion contract', () => {
     expect(String(loaded.schemaVersion)).toBe(CURRENT_SCHEMA_VERSION);
   });
 
-  it('config with schemaVersion: "1.4" loads successfully', async () => {
+  it('config with schemaVersion: "1.5" loads successfully', async () => {
     const configPath = join(tmpDir, 'with-schema-version.json');
     await writeFile(configPath, JSON.stringify(MINIMAL_CONFIG, null, 2), 'utf-8');
 
@@ -146,17 +146,17 @@ describe('loadConfig() — schemaVersion contract', () => {
     expect(String(loaded.schemaVersion)).toBe(CURRENT_SCHEMA_VERSION);
   });
 
-  it('v1 config (schemaVersion: 1) is migrated to v1.4', async () => {
+  it('v1 config (schemaVersion: 1) is migrated to v1.5', async () => {
     const configPath = join(tmpDir, 'v1-config.json');
     const v1Config = { ...MINIMAL_CONFIG, schemaVersion: 1 };
     await writeFile(configPath, JSON.stringify(v1Config, null, 2), 'utf-8');
 
     const loaded = await loadConfig(configPath);
-    expect(String(loaded.schemaVersion)).toBe('1.4');
+    expect(String(loaded.schemaVersion)).toBe('1.5');
   });
 });
 
-describe('schema v1.4 — new fields round-trip', () => {
+describe('schema v1.5 — new fields round-trip', () => {
   it('browser field survives write/load cycle', async () => {
     const configPath = join(tmpDir, 'browser-config.json');
     await writeFile(configPath, JSON.stringify(FULL_V1_4_CONFIG, null, 2), 'utf-8');
@@ -192,7 +192,7 @@ describe('schema v1.4 — new fields round-trip', () => {
   });
 });
 
-describe('schema v1.4 — v1 migration defaults', () => {
+describe('schema v1.5 — v1 migration defaults', () => {
   it('v1 config without browser gets browser: { selected: [], default: null }', async () => {
     const configPath = join(tmpDir, 'v1-no-browser.json');
     const v1Config: Record<string, unknown> = {
