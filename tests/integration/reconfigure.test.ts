@@ -29,6 +29,8 @@ const VALID_CONFIG = {
       path: '~/Developer/personal',
       git: { name: 'Test User', email: 'test@example.com' },
       authMethod: 'gh-cli' as const,
+      envVars: [],
+      languageBindings: [],
     },
   ],
   tools: ['ripgrep'],
@@ -41,7 +43,9 @@ const VALID_CONFIG = {
   },
   accounts: [],
   secretsBackend: '1password' as const,
-  schemaVersion: 1,
+  schemaVersion: '1.4',
+  browser: { selected: [], default: null },
+  aiTools: [],
 };
 
 let tmpDir: string;

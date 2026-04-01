@@ -86,3 +86,38 @@ export interface VersionManagerPlugin extends TildePlugin {
   listInstalled(language: string): Promise<string[]>;
   generateShellHook(shell: 'zsh' | 'bash' | 'fish'): string;
 }
+
+// ---------------------------------------------------------------------------
+// New plugin categories (v1.4): browser and editor
+// ---------------------------------------------------------------------------
+
+export interface BrowserPlugin {
+  readonly category: 'browser';
+  readonly id: string;          // e.g., "chrome", "arc"
+  readonly label: string;       // e.g., "Google Chrome", "Arc"
+  readonly appPath: string;     // e.g., "/Applications/Arc.app"
+  readonly brewCask?: string;   // e.g., "arc" — undefined if not Homebrew-installable
+
+  /** Returns true if the browser .app bundle exists on disk */
+  detectInstalled(): Promise<boolean>;
+  /** Install via Homebrew cask */
+  install(): Promise<void>;
+  /** Invoke `defaultbrowser <id>` — triggers macOS system confirmation dialog */
+  setAsDefault(): Promise<void>;
+}
+
+export interface EditorPlugin {
+  readonly category: 'editor';
+  readonly id: string;         // e.g., "neovim", "cursor", "webstorm"
+  readonly label: string;      // e.g., "Neovim", "Cursor", "WebStorm"
+  readonly brewCask?: string;  // e.g., "neovim", "cursor"
+
+  /** Returns true if the editor .app or binary exists on disk */
+  detectInstalled(): Promise<boolean>;
+  /** Install via Homebrew (cask or formula) */
+  install(): Promise<void>;
+  /** Optional: apply dotfiles/settings profile */
+  applyProfile?(): Promise<void>;
+  /** Optional: return human-readable setup instructions */
+  getProfileGuidance?(): string;
+}

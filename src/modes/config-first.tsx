@@ -74,7 +74,11 @@ export function ConfigFirstMode({ configPath, onComplete }: Props) {
         const migrationResult = runMigrations(raw, CURRENT_SCHEMA_VERSION);
         if (migrationResult.didMigrate) {
           const migrated = JSON.stringify({ ...migrationResult.config, schemaVersion: CURRENT_SCHEMA_VERSION }, null, 2) + '\n';
-          await atomicWriteConfig(expanded, migrated);
+          try {
+            await atomicWriteConfig(expanded, migrated);
+          } catch {
+            // Non-fatal: continue even if migration write fails
+          }
         }
         setPhase(validateAndTransition(migrationResult.config as Record<string, unknown>));
       } catch (err) {

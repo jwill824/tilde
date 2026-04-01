@@ -11,6 +11,7 @@ import { App } from './app.js';
 import { loadConfig } from './config/reader.js';
 import { pluginRegistry } from './plugins/registry.js';
 import { run } from './utils/exec.js';
+import { discoverConfig, getDiscoveryPaths, formatNoConfigError } from './utils/config-discovery.js';
 import type { PluginCategory, AccountConnectorPlugin } from './plugins/api.js';
 
 export function readPackageVersion(): string {
@@ -70,9 +71,13 @@ function parseCliArgs() {
 tilde — developer environment bootstrap
 
 Usage: tilde [install] [options]
+       tilde update <resource> [--config <path>]
        tilde context <list|current|switch> [label]
        tilde plugin <list|add|remove> [name]
        tilde config <validate|show|edit> [path]
+
+Resources for tilde update:
+  shell, editor, applications, browser, ai-tools, contexts, languages
 
 Options:
   --config <path|url>   Load tilde.config.json (activates config-first mode)
@@ -258,6 +263,41 @@ export async function main() {
     return;
   }
 
+  // T016: tilde update <resource> subcommand
+  if (subcommand === 'update' || subcommand === 'install') {
+    // Both 'install' and 'update' require a discoverable config
+    const resolvedForCmd = configPath ?? await discoverConfig();
+
+    if (!resolvedForCmd) {
+      // T013: config-required error — do NOT launch wizard
+      process.stderr.write(formatNoConfigError(subcommand) + '\n');
+      process.exit(2);
+    }
+
+    if (subcommand === 'update') {
+      const resource = sub;
+      const { UpdateCommand } = await import('./modes/update.js');
+      render(React.createElement(UpdateCommand, {
+        resource: resource ?? '',
+        configPath: resolvedForCmd,
+      }));
+      return;
+    }
+
+    // subcommand === 'install': handled by config-first mode below
+    // fall through with resolvedForCmd
+    const { App: AppForInstall } = await import('./app.js');
+    render(React.createElement(AppForInstall, {
+      mode: 'config-first',
+      configPath: resolvedForCmd,
+      dryRun,
+      resume: false,
+      reconfigure: false,
+      version: VERSION,
+    }));
+    return;
+  }
+
   // Platform check
   try {
     assertMacOS();
@@ -266,13 +306,10 @@ export async function main() {
     process.exit(1);
   }
 
-  // Auto-detect tilde.config.json in cwd if no explicit --config given
+  // Auto-discover tilde.config.json using standard search order (T012)
   let resolvedConfigPath = configPath;
   if (!resolvedConfigPath) {
-    const cwdConfig = resolve(process.cwd(), 'tilde.config.json');
-    if (existsSync(cwdConfig)) {
-      resolvedConfigPath = cwdConfig;
-    }
+    resolvedConfigPath = await discoverConfig() ?? undefined;
   }
 
   // Determine mode

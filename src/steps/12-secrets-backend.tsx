@@ -6,6 +6,8 @@ type SecretsBackend = '1password' | 'keychain' | 'env-only';
 
 interface Props {
   onComplete: (data: { secretsBackend: SecretsBackend }) => void;
+  onBack?: () => void;
+  isOptional?: boolean;
 }
 
 const items = [
@@ -14,7 +16,7 @@ const items = [
   { label: 'Environment variables only (no secrets manager)', value: 'env-only' },
 ];
 
-export function SecretsBackendStep({ onComplete }: Props) {
+export function SecretsBackendStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
   return (
     <Box flexDirection="column">
       <Text bold>Secrets backend:</Text>

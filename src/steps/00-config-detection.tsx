@@ -12,6 +12,8 @@ interface ConfigDetectionResult {
 
 interface Props {
   onComplete: (result: ConfigDetectionResult) => void;
+  onBack?: () => void;
+  isOptional?: boolean;
 }
 
 const CONFIG_SEARCH_PATHS = [
@@ -21,7 +23,7 @@ const CONFIG_SEARCH_PATHS = [
   join(homedir(), '.dotfiles/tilde.config.json'),
 ];
 
-export function ConfigDetectionStep({ onComplete }: Props) {
+export function ConfigDetectionStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
   const [foundConfig, setFoundConfig] = useState<string | null>(null);
   const [scanning, setScanning] = useState(true);
 

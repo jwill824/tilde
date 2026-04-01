@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { fromZodError } from 'zod-validation-error';
 import { TildeConfigSchema, type TildeConfig } from './schema.js';
 import { runMigrations, CURRENT_SCHEMA_VERSION, type MigrationResult } from './migrations/runner.js';
+import './migrations/v1-4.js';  // register v1→v1.4 migration
 import { atomicWriteConfig } from './writer.js';
 
 function expandTilde(p: string): string {

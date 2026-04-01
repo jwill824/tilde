@@ -3,80 +3,95 @@
  *
  * Each migration step is a pure function that transforms a raw config record
  * from version N to version N+1. Register steps in the MIGRATIONS map keyed
- * by the *source* version (e.g., key 1 = "migrate from v1 to v2").
+ * by the *source* version string (e.g., key '1' = "migrate from v1 to next").
  *
- * The runner iterates keys in ascending numeric order, applying each registered
- * step in sequence. Missing steps (no-op versions) are skipped.
+ * The runner iterates applicable versions in ascending order, applying each
+ * registered step in sequence. Missing steps (no-op versions) are skipped.
+ *
+ * Versions are compared as floating-point numbers (parseFloat).
+ * Current version: '1.4'
  */
 
 export type MigrationStep = (config: Record<string, unknown>) => Record<string, unknown>;
 
 export interface MigrationResult {
   config: Record<string, unknown>;
-  migratedFrom: number;
-  migratedTo: number;
+  migratedFrom: string;
+  migratedTo: string;
   didMigrate: boolean;
   isFutureVersion: boolean;
 }
 
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = '1.4';
 
 /**
- * Migration registry — keyed by *source* version.
- * Currently empty: v1 is the baseline. Add entries here when new schema
- * versions are introduced (e.g., MIGRATIONS.set(1, v1ToV2)).
+ * Migration registry — keyed by *source* version string.
+ * key '1' = "migrate from v1 (or earlier) to next version"
+ * Add entries when new schema versions are introduced.
  */
-export const MIGRATIONS: Map<number, MigrationStep> = new Map();
+export const MIGRATIONS: Map<string, MigrationStep> = new Map();
 
 /**
  * Run all applicable migration steps to bring `raw` up to `targetVersion`.
  *
- * - If `raw.schemaVersion` is absent, defaults to 1 (FR-020).
+ * - If `raw.schemaVersion` is absent, defaults to '1' (first version).
  * - If `raw.schemaVersion === targetVersion`, returns immediately (no mutation).
- * - If `raw.schemaVersion > targetVersion`, sets `isFutureVersion: true` (FR-018).
+ * - If `raw.schemaVersion > targetVersion`, sets `isFutureVersion: true`.
  * - On step failure, the error propagates and the config is NOT modified on disk.
  */
 export function runMigrations(
   raw: Record<string, unknown>,
-  targetVersion: number = CURRENT_SCHEMA_VERSION,
+  targetVersion: string = CURRENT_SCHEMA_VERSION,
 ): MigrationResult {
-  const fromVersion =
-    typeof raw['schemaVersion'] === 'number' ? raw['schemaVersion'] : 1;
+  const rawVersion = raw['schemaVersion'];
+  const fromVersionStr = (rawVersion !== undefined && rawVersion !== null)
+    ? String(rawVersion)
+    : '1';
 
-  if (fromVersion === targetVersion) {
+  if (fromVersionStr === targetVersion) {
     return {
       config: raw,
-      migratedFrom: fromVersion,
+      migratedFrom: fromVersionStr,
       migratedTo: targetVersion,
       didMigrate: false,
       isFutureVersion: false,
     };
   }
 
-  if (fromVersion > targetVersion) {
+  const fromFloat = parseFloat(fromVersionStr);
+  const targetFloat = parseFloat(targetVersion);
+
+  if (fromFloat > targetFloat) {
     return {
       config: raw,
-      migratedFrom: fromVersion,
+      migratedFrom: fromVersionStr,
       migratedTo: targetVersion,
       didMigrate: false,
       isFutureVersion: true,
     };
   }
 
-  // Apply migration steps in ascending order
+  // Find all applicable migration keys in ascending order
+  const applicableKeys = Array.from(MIGRATIONS.keys())
+    .map(k => ({ key: k, float: parseFloat(k) }))
+    .filter(({ float }) => float >= fromFloat && float < targetFloat)
+    .sort((a, b) => a.float - b.float);
+
   let current: Record<string, unknown> = { ...raw };
 
-  for (let v = fromVersion; v < targetVersion; v++) {
-    const step = MIGRATIONS.get(v);
+  for (const { key } of applicableKeys) {
+    const step = MIGRATIONS.get(key);
     if (step) {
       current = step(current);
     }
-    current = { ...current, schemaVersion: v + 1 };
   }
+
+  // Stamp the target version
+  current = { ...current, schemaVersion: targetVersion };
 
   return {
     config: current,
-    migratedFrom: fromVersion,
+    migratedFrom: fromVersionStr,
     migratedTo: targetVersion,
     didMigrate: true,
     isFutureVersion: false,

@@ -5,6 +5,8 @@ import SelectInput from 'ink-select-input';
 interface Props {
   onComplete: (data: { shell: 'zsh' | 'bash' | 'fish' }) => void;
   defaultShell?: 'zsh' | 'bash' | 'fish';
+  onBack?: () => void;
+  isOptional?: boolean;
 }
 
 const items = [
@@ -13,7 +15,7 @@ const items = [
   { label: 'fish', value: 'fish' },
 ];
 
-export function ShellStep({ onComplete, defaultShell = 'zsh' }: Props) {
+export function ShellStep({ onComplete, defaultShell = 'zsh', onBack: _onBack, isOptional: _isOptional }: Props) {
   return (
     <Box flexDirection="column">
       <Text bold>Which shell do you use?</Text>

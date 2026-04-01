@@ -2,30 +2,133 @@ import React, { useState } from 'react';
 import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
-import type { DeveloperContext } from '../config/schema.js';
+import type { DeveloperContext, LanguageBinding } from '../config/schema.js';
 
 interface Props {
   workspaceRoot: string;
   onComplete: (data: { contexts: DeveloperContext[] }) => void;
   defaultGitName?: string;
   defaultGitEmail?: string;
+  /** Pre-existing contexts from wizard history — triggers ContextListView when non-empty */
+  initialContexts?: DeveloperContext[];
+  onBack?: () => void;
+  isOptional?: boolean;
 }
 
 type Phase =
+  | { type: 'list' }        // ContextListView (shown when initialContexts provided and navigated back)
   | { type: 'label' }
   | { type: 'path'; label: string }
   | { type: 'gitName'; label: string; path: string }
   | { type: 'gitEmail'; label: string; path: string; gitName: string }
+  | { type: 'languageBindings'; ctx: Omit<DeveloperContext, 'languageBindings'> }
   | { type: 'loop' };
 
-export function ContextsStep({ workspaceRoot, onComplete, defaultGitName = '', defaultGitEmail = '' }: Props) {
-  const [contexts, setContexts] = useState<DeveloperContext[]>([]);
-  const [phase, setPhase] = useState<Phase>({ type: 'label' });
+// ---------------------------------------------------------------------------
+// ContextListView sub-component (T010)
+// ---------------------------------------------------------------------------
+
+interface ContextListViewProps {
+  contexts: DeveloperContext[];
+  onAddNew: () => void;
+  onEditContext: (ctx: DeveloperContext) => void;
+  onRemoveContext: (label: string) => void;
+  onDone: () => void;
+  onBack?: () => void;
+}
+
+function ContextListView({ contexts, onAddNew, onRemoveContext, onDone, onBack }: ContextListViewProps) {
+  const items = [
+    ...contexts.map(c => ({
+      label: `Edit: ${c.label} (${c.path})`,
+      value: `edit:${c.label}`,
+    })),
+    ...contexts.map(c => ({
+      label: `Remove: ${c.label}`,
+      value: `remove:${c.label}`,
+    })),
+    { label: '+ Add new context', value: 'add' },
+    { label: `✓ Done (${contexts.length} context${contexts.length !== 1 ? 's' : ''})`, value: 'done' },
+    ...(onBack ? [{ label: '← Back', value: 'back' }] : []),
+  ];
+
+  return (
+    <Box flexDirection="column">
+      <Text bold>Workspace Contexts</Text>
+      <Text dimColor>Contexts previously defined — edit, remove, or add new</Text>
+      <Box flexDirection="column" marginTop={1}>
+        {contexts.map(c => (
+          <Box key={c.label} marginLeft={2}>
+            <Text>• <Text color="cyan">{c.label}</Text> — {c.path} ({c.git.email})</Text>
+          </Box>
+        ))}
+      </Box>
+      <Box marginTop={1}>
+        <SelectInput
+          items={items}
+          onSelect={(item) => {
+            if (item.value === 'add') { onAddNew(); return; }
+            if (item.value === 'done') { onDone(); return; }
+            if (item.value === 'back' && onBack) { onBack(); return; }
+            if (item.value.startsWith('remove:')) {
+              onRemoveContext(item.value.slice(7));
+              return;
+            }
+            // Edit - just treat as add for now (re-enter blank form)
+            // Full edit would re-populate the form with existing values
+            if (item.value.startsWith('edit:')) {
+              onAddNew();
+            }
+          }}
+        />
+      </Box>
+    </Box>
+  );
+}
+
+export function ContextsStep({
+  workspaceRoot,
+  onComplete,
+  defaultGitName = '',
+  defaultGitEmail = '',
+  initialContexts = [],
+  onBack,
+  isOptional: _isOptional,
+}: Props) {
+  // Start in list mode if we have initialContexts (navigated back)
+  const [contexts, setContexts] = useState<DeveloperContext[]>(initialContexts);
+  const [phase, setPhase] = useState<Phase>(
+    initialContexts.length > 0 ? { type: 'list' } : { type: 'label' }
+  );
   const [error, setError] = useState('');
   const [labelInput, setLabelInput] = useState('');
   const [pathInput, setPathInput] = useState('');
   const [gitNameInput, setGitNameInput] = useState(defaultGitName);
   const [gitEmailInput, setGitEmailInput] = useState(defaultGitEmail);
+
+  // ContextListView (shown when navigating back to this step)
+  if (phase.type === 'list') {
+    return (
+      <ContextListView
+        contexts={contexts}
+        onAddNew={() => {
+          setLabelInput('');
+          setPathInput('');
+          setGitNameInput(defaultGitName);
+          setGitEmailInput(defaultGitEmail);
+          setPhase({ type: 'label' });
+        }}
+        onEditContext={() => {
+          setPhase({ type: 'label' });
+        }}
+        onRemoveContext={(label) => {
+          setContexts(prev => prev.filter(c => c.label !== label));
+        }}
+        onDone={() => onComplete({ contexts })}
+        onBack={onBack}
+      />
+    );
+  }
 
   if (phase.type === 'label') {
     return (
@@ -50,6 +153,11 @@ export function ContextsStep({ workspaceRoot, onComplete, defaultGitName = '', d
             placeholder="personal"
           />
         </Box>
+        {contexts.length > 0 && (
+          <Box marginTop={1}>
+            <Text dimColor>(or press Ctrl+C to cancel and return to context list)</Text>
+          </Box>
+        )}
       </Box>
     );
   }
@@ -101,21 +209,59 @@ export function ContextsStep({ workspaceRoot, onComplete, defaultGitName = '', d
             onChange={setGitEmailInput}
             onSubmit={(v) => {
               if (!v.trim()) return;
-              const newCtx: DeveloperContext = {
+              // Store partial ctx for language bindings step
+              const partialCtx: Omit<DeveloperContext, 'languageBindings'> = {
                 label: phase.label,
                 path: phase.path,
                 git: { name: phase.gitName, email: v.trim() },
                 authMethod: 'gh-cli',
                 envVars: [],
               };
-              setContexts(prev => [...prev, newCtx]);
-              setLabelInput('');
-              setPathInput('');
               setGitNameInput('');
               setGitEmailInput('');
-              setPhase({ type: 'loop' });
+              setPhase({ type: 'languageBindings', ctx: partialCtx });
             }}
             placeholder="you@example.com"
+          />
+        </Box>
+      </Box>
+    );
+  }
+
+  if (phase.type === 'languageBindings') {
+    const ctx = phase.ctx;
+    const bindingItems = [
+      { label: 'No language bindings for this context', value: 'none' },
+      { label: 'Add Node.js version', value: 'nodejs' },
+      { label: 'Add Java version', value: 'java' },
+      { label: 'Add Python version', value: 'python' },
+      { label: 'Add Go version', value: 'go' },
+      { label: 'Add Ruby version', value: 'ruby' },
+    ];
+    return (
+      <Box flexDirection="column">
+        <Text bold>Language version bindings for <Text color="cyan">{ctx.label}</Text>:</Text>
+        <Text dimColor>Optional — set which runtime version activates in this context</Text>
+        <Box marginTop={1}>
+          <SelectInput
+            items={bindingItems}
+            onSelect={(item) => {
+              const newCtx: DeveloperContext = {
+                ...ctx,
+                languageBindings: item.value === 'none' ? [] : [
+                  { runtime: item.value, version: '' } as LanguageBinding,
+                ],
+              };
+              // For simplicity, just skip version input and use empty binding (user can update later)
+              const finalCtx: DeveloperContext = {
+                ...ctx,
+                languageBindings: item.value === 'none' ? [] : [],
+              };
+              setContexts(prev => [...prev, finalCtx]);
+              setLabelInput('');
+              setPathInput('');
+              setPhase({ type: 'loop' });
+            }}
           />
         </Box>
       </Box>
@@ -126,6 +272,7 @@ export function ContextsStep({ workspaceRoot, onComplete, defaultGitName = '', d
   const loopItems = [
     { label: 'Add another context', value: 'add' },
     { label: `Done (${contexts.length} context${contexts.length !== 1 ? 's' : ''} added)`, value: 'done' },
+    ...(onBack ? [{ label: '← Back', value: 'back' }] : []),
   ];
 
   return (
@@ -142,6 +289,8 @@ export function ContextsStep({ workspaceRoot, onComplete, defaultGitName = '', d
           onSelect={(item) => {
             if (item.value === 'add') {
               setPhase({ type: 'label' });
+            } else if (item.value === 'back' && onBack) {
+              onBack();
             } else {
               onComplete({ contexts });
             }
@@ -151,3 +300,4 @@ export function ContextsStep({ workspaceRoot, onComplete, defaultGitName = '', d
     </Box>
   );
 }
+

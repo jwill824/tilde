@@ -4,11 +4,13 @@ import TextInput from 'ink-text-input';
 
 interface Props {
   onComplete: (data: { workspaceRoot: string; dotfilesRepo: string }) => void;
+  onBack?: () => void;
+  isOptional?: boolean;
 }
 
 type Field = 'workspaceRoot' | 'dotfilesRepo';
 
-export function WorkspaceStep({ onComplete }: Props) {
+export function WorkspaceStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
   const [field, setField] = useState<Field>('workspaceRoot');
   const [workspaceRoot, setWorkspaceRoot] = useState('~/Developer');
   const [dotfilesRepo, setDotfilesRepo] = useState('');

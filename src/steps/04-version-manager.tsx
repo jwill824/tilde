@@ -4,12 +4,14 @@ import type { VersionManagerChoice } from '../config/schema.js';
 
 interface Props {
   onComplete: (data: { versionManagers: VersionManagerChoice[] }) => void;
+  onBack?: () => void;
+  isOptional?: boolean;
 }
 
 const OPTIONS = ['vfox'] as const;
 type VMName = typeof OPTIONS[number];
 
-export function VersionManagerStep({ onComplete }: Props) {
+export function VersionManagerStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
   const [cursor, setCursor] = useState(0);
   const [selected, setSelected] = useState<Set<VMName>>(new Set(['vfox']));
 

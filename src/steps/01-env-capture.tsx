@@ -8,6 +8,8 @@ import type { EnvironmentCaptureReport } from '../capture/scanner.js';
 
 interface Props {
   onComplete: (data: { captureReport: EnvironmentCaptureReport }) => void;
+  onBack?: () => void;
+  isOptional?: boolean;
 }
 
 type Phase =
@@ -25,7 +27,7 @@ const confirmItems = [
   { label: 'Continue', value: 'continue' },
 ];
 
-export function EnvCaptureStep({ onComplete }: Props) {
+export function EnvCaptureStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
   const [phase, setPhase] = useState<Phase>({ type: 'prompt' });
 
   useEffect(() => {
