@@ -4,7 +4,7 @@ description: Complete field-by-field reference for tilde.config.json — schema,
 ---
 
 > JSON Schema: `https://thingstead.io/tilde/config-schema/v1.json`  
-> Schema version: `1`
+> Schema version: `1.5`
 
 `tilde.config.json` is the declarative configuration file for tilde. It describes your entire developer environment so that `tilde` can reproduce it on any machine.
 
@@ -13,11 +13,11 @@ description: Complete field-by-field reference for tilde.config.json — schema,
 ```json
 {
   "$schema": "https://thingstead.io/tilde/config-schema/v1.json",
-  "version": "1",
+  "schemaVersion": "1.5",
   "os": "macos",
   "shell": "zsh",
   "packageManager": "homebrew",
-  "versionManagers": [{ "name": "vfox" }],
+  "versionManagers": [{ "name": "vfox" }, { "name": "mise" }],
   "languages": [
     { "name": "node", "version": "22.0.0", "manager": "vfox" }
   ],
@@ -30,7 +30,10 @@ description: Complete field-by-field reference for tilde.config.json — schema,
       "git": { "name": "Jane Doe", "email": "jane@example.com" },
       "github": { "username": "janedoe" },
       "authMethod": "gh-cli",
-      "envVars": []
+      "envVars": [],
+      "languageBindings": [
+        { "runtime": "nodejs", "version": "22.0.0" }
+      ]
     }
   ],
   "tools": ["ripgrep", "fzf", "bat"],
@@ -41,7 +44,10 @@ description: Complete field-by-field reference for tilde.config.json — schema,
     "osDefaults": false,
     "direnv": true
   },
-  "secretsBackend": "1password"
+  "secretsBackend": "1password",
+  "browser": { "name": "arc", "isDefault": true },
+  "editors": { "primary": "vscode", "additional": ["cursor"] },
+  "aiTools": [{ "name": "claude-code" }]
 }
 ```
 
@@ -52,7 +58,7 @@ description: Complete field-by-field reference for tilde.config.json — schema,
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `$schema` | `string` | no | JSON Schema URL for editor tooling |
-| `version` | `"1"` | **yes** | Schema version — always `"1"` |
+| `schemaVersion` | `"1.5"` | **yes** | Schema version used for automatic migrations |
 | `os` | `"macos"` | **yes** | Target OS — only `macos` supported |
 | `shell` | `"zsh" \| "bash" \| "fish"` | **yes** | Primary shell |
 | `packageManager` | `"homebrew"` | **yes** | Package manager — only `homebrew` supported |
@@ -65,6 +71,9 @@ description: Complete field-by-field reference for tilde.config.json — schema,
 | `configurations` | `ConfigurationDomains` | **yes** | Feature flags for which dotfiles to manage |
 | `accounts` | `Account[]` | no | Service account references |
 | `secretsBackend` | `"1password" \| "keychain" \| "env-only"` | **yes** | Where to store/retrieve secrets |
+| `browser` | `BrowserConfig` | no | NEW v1.5 — browser selection |
+| `editors` | `EditorsConfig` | no | NEW v1.5 — editor configuration |
+| `aiTools` | `AIToolConfig[]` | no | NEW v1.5 — AI coding tools |
 
 ---
 
@@ -76,7 +85,7 @@ description: Complete field-by-field reference for tilde.config.json — schema,
 
 | Field | Type | Values |
 |-------|------|--------|
-| `name` | `string` | `"vfox"`, `"nvm"`, `"pyenv"`, `"sdkman"` |
+| `name` | `string` | `"vfox"`, `"nvm"`, `"pyenv"`, `"sdkman"`, `"mise"` |
 
 ---
 
@@ -126,6 +135,7 @@ A context maps a filesystem path to a git identity and optional tooling configur
 | `envVars` | `EnvVarReference[]` | no | Environment variables to load in this context |
 | `vscodeProfile` | `string` | no | VS Code profile name for this context |
 | `isDefault` | `boolean` | no | Mark as the default context |
+| `languageBindings` | `LanguageBinding[]` | no | NEW v1.5 — runtime version bindings for this context |
 
 > **Validation**: Context labels must be unique across all contexts.
 
@@ -223,13 +233,66 @@ Symlinks are created from `~/.gitconfig` → `{dotfilesRepo}/git/.gitconfig`, et
 
 ---
 
+## LanguageBinding
+
+```json
+{ "runtime": "nodejs", "version": "22.0.0" }
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `runtime` | `string` | Runtime identifier (e.g. `nodejs`, `python`, `java`) |
+| `version` | `string` | Version string to pin for this context |
+
+> Written as `.nvmrc`, `.tool-versions`, or `.vfox.json` in the context's workspace directory on first tilde run.
+
+---
+
+## BrowserConfig
+
+```json
+{ "name": "arc", "isDefault": true }
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `string` | Browser identifier (e.g. `"chrome"`, `"firefox"`, `"arc"`, `"brave"`) |
+| `isDefault` | `boolean` | Set as the macOS default browser |
+
+---
+
+## EditorsConfig
+
+```json
+{ "primary": "vscode", "additional": ["cursor"] }
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `primary` | `string` | Primary editor: `"vscode"`, `"cursor"`, `"neovim"`, `"jetbrains"`, `"zed"` |
+| `additional` | `string[]` | Additional editors to install |
+
+---
+
+## AIToolConfig
+
+```json
+{ "name": "claude-code" }
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `string` | Tool identifier: `"claude-code"`, `"claude-desktop"`, `"cursor"`, `"windsurf"`, `"github-copilot-cli"` |
+
+---
+
 ## Schema Versioning
 
-Every `tilde.config.json` written by tilde includes a `schemaVersion` integer field:
+Every `tilde.config.json` written by tilde includes a `schemaVersion` string field:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": "1.5",
   ...
 }
 ```
@@ -238,7 +301,8 @@ Every `tilde.config.json` written by tilde includes a `schemaVersion` integer fi
 
 | Value | Meaning |
 |-------|---------|
-| `1` | Baseline schema — current version |
+| `1` | Baseline schema (integer, legacy format — auto-migrated) |
+| `"1.5"` | Current version — adds `browser`, `editors`, `aiTools`, `languageBindings` |
 
 ### Migration notifications
 
@@ -262,7 +326,7 @@ tilde --reconfigure
 
 **Behaviour**:
 - Loads the existing `tilde.config.json` from the path specified by `--config` (or the default location)
-- Opens the full 14-step wizard with every field pre-filled from the stored config
+- Opens the full 16-step wizard with every field pre-filled from the stored config
 - On completion, atomically overwrites the config file with the updated values
 - On early exit (Ctrl-C or Cancel), the original config file is **not modified**
 

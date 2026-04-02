@@ -20,6 +20,10 @@ script. To run it again at any time:
 tilde
 ```
 
+## Navigating the wizard
+
+At any step (except the first), use **← Back** to return to the previous step — your values are restored. Optional steps (Editor, Applications, Browser, AI Tools) show a **Skip** option.
+
 ## The setup wizard
 
 tilde's interactive wizard walks you through each configuration category in order.
@@ -87,14 +91,42 @@ Configure a secrets backend to sync credentials and tokens:
 - **Bitwarden CLI**
 - **Environment file** (plain `.env` — not recommended for shared machines)
 
-### 10. Browsers
+### 10. Editor *(optional)*
 
-Choose browsers to install via Homebrew Cask:
+Choose a primary code editor to install via Homebrew Cask:
+
+- **VS Code**
+- **Cursor (AI Editor)**
+- **Neovim**
+- **JetBrains Toolbox**
+- **Zed**
+
+### 11. Applications *(optional)*
+
+Select additional CLI tools and applications to install.
+
+### 12. Review & Export
+
+Review your complete configuration before it is written to disk. tilde writes `~/.tilde/tilde.config.json` at this step.
+
+### 13. Browser *(optional)*
+
+Choose a browser to install via Homebrew Cask. This step occurs after config export so it can be skipped without affecting your saved config:
 
 - **Google Chrome**
 - **Firefox**
 - **Arc**
 - **Brave**
+
+### 14. AI Tools *(optional)*
+
+Choose AI coding tools to install via Homebrew:
+
+- **Claude Code** (CLI)
+- **Claude Desktop** (desktop app)
+- **Cursor (AI Editor)**
+- **Windsurf**
+- **GitHub Copilot CLI**
 
 ## Expected output
 
@@ -112,12 +144,44 @@ tilde 🌿 — macOS Developer Environment Setup
   ✓  GitHub: jwill824 (SSH key added)
   ✓  Tools: docker, code, terraform
   ✓  Secrets: 1Password CLI linked
-  ✓  Browsers: Chrome, Arc
+  ✓  Editor: VS Code
+  ✓  Browser: Arc
+  ✓  AI tools: Claude Code, GitHub Copilot CLI
 
   Setup complete. Your environment is ready. 🎉
 ```
 
 Your configuration is saved to `~/.tilde/tilde.config.json`.
+
+## Updating your config
+
+After initial setup, use `tilde update <resource>` to change one part of your config without re-running the full wizard.
+
+### Examples
+
+```bash
+# Change your shell
+tilde update shell
+
+# Add or remove browsers
+tilde update browser
+
+# Add AI coding tools
+tilde update ai-tools
+
+# Edit workspace contexts or language bindings
+tilde update contexts
+```
+
+### Valid resources
+
+`shell`, `editor`, `applications`, `browser`, `ai-tools`, `contexts`, `languages`
+
+### Specifying a config path
+
+```bash
+tilde update shell --config ~/dotfiles/tilde.config.json
+```
 
 ## Troubleshooting
 
