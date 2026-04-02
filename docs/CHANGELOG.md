@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/jwill824/tilde/compare/v1.4.0...v1.5.0) (2026-04-02)
+
+
+### Features
+
+* wizard UX enhancements, tilde update command, config schema v1.5 ([#008](https://github.com/jwill824/tilde/issues/008)) ([#63](https://github.com/jwill824/tilde/issues/63)) ([a3f51d3](https://github.com/jwill824/tilde/commit/a3f51d393f726acf285227a3269082dcb65cc678)), closes [41-#46](https://github.com/41-/issues/46)
+
 # [1.4.0](https://github.com/jwill824/tilde/compare/v1.3.0...v1.4.0) (2026-03-31)
 
 
