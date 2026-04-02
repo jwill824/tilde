@@ -61,7 +61,7 @@ src/
 ├── index.tsx                         ← CHANGED — add `update` subcommand routing
 ├── modes/
 │   ├── wizard.tsx                    ← CHANGED — add step history stack, back/skip navigation, optional-step metadata
-│   ├── reconfigure.tsx               ← unchanged
+│   ├── reconfigure.tsx               ← CHANGED — ReconfigureMode: load existing config, pre-populate wizard, atomic overwrite on complete
 │   ├── config-first.tsx              ← CHANGED — add config auto-discovery logic
 │   └── update.tsx                    ← NEW — tilde update <resource> interactive mini-wizard
 ├── steps/
@@ -69,6 +69,8 @@ src/
 │   ├── 10-app-config.tsx             ← CHANGED — expand editor choices beyond VS Code
 │   ├── 14-browser.tsx                ← NEW — browser selection & default-setting step
 │   └── 15-ai-tools.tsx               ← NEW — AI coding assistant tools step
+├── ui/
+│   └── step-nav.tsx                  ← NEW — shared StepNav component (Back/Skip controls with keyboard shortcuts 'b'/'s')
 ├── plugins/
 │   ├── api.ts                        ← CHANGED — add BrowserPlugin and EditorPlugin interfaces
 │   └── first-party/

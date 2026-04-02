@@ -133,7 +133,7 @@ Steps 14 and 15 are inserted between `config-export` and final completion, or ma
 
 | Version | Changes |
 |---------|---------|
-| `1.3` (current) | — |
+| `1.4` (pre-spec baseline) | — |
 | `1.5` (this feature) | Add `browser`, `aiTools`; extend `editors` object; add `contexts[].languageBindings` array |
 
 **Migration rule**: Configs with `schemaVersion: '1.5'` are auto-migrated on load:
@@ -175,3 +175,44 @@ interface EditorPlugin {
   getProfileGuidance?(): string;   // optional — returns human-readable setup instructions
 }
 ```
+
+---
+
+## 7. `--reconfigure` Flag Contract
+
+### Synopsis
+
+```
+tilde --reconfigure [--config <path>]
+```
+
+### Behavior
+
+| Scenario | Outcome |
+|----------|---------|
+| Config found, valid | Wizard opens with all fields pre-populated from existing config |
+| Config found, validation errors | Invalid field list shown as warnings; wizard opens with valid partial values pre-populated |
+| Config not found (ENOENT) | Error message shown referencing the searched path; wizard NOT launched; exit code 2 |
+
+### Error Messages
+
+**Config not found:**
+```
+Reconfigure Error
+Config file not found at <path>.
+Run `tilde` (without --reconfigure) to create your initial configuration.
+```
+
+**Config has validation errors (non-blocking):**
+```
+⚠ Config has invalid fields — wizard will use defaults for these:
+  • <field.path>: <issue message>
+  • ...
+```
+(Wizard then opens below with remaining valid fields.)
+
+### Implementation
+
+- `ReconfigureMode` (`src/modes/reconfigure.tsx`) handles the three scenarios above.
+- On wizard completion, `atomicWriteConfig(configPath, content)` overwrites the original file.
+- The `--reconfigure` flag is parsed in `src/index.tsx` and routes to `ReconfigureMode` before any other mode is entered.

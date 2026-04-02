@@ -151,6 +151,9 @@
 - [X] T037 Run `npm test` — fix any regressions introduced by the `src/modes/wizard.tsx` StepHistory refactor in T007–T009; confirm all pre-existing unit, integration, and contract tests pass
 - [X] T038 Validate `quickstart.md` scenarios manually — run each documented user flow (back nav, `tilde update shell`, browser step, AI tools step, language bindings) against a local build to confirm the quickstart accurately reflects delivered behavior
 - [X] T039 Write `tests/integration/context-switching.test.ts` — integration tests for language version activation on context switch (required by constitution Dev Workflow §362): (1) cd to personal context (Node 22 binding) → `.nvmrc` contains `22`; (2) cd to work context (Java 21 + Node 18 bindings) → `.tool-versions` contains correct entries; (3) context with no bindings activates cleanly with no version files written; (4) version files are overwritten idempotently when context is re-activated with different binding values; (5) context with a binding whose version is not installed → installation guidance prompt is displayed and activation does not block; use `tmp` directories and real `fs` writes (no mocks for file I/O); assert each activation completes in ≤ 5 seconds (SC-006)
+- [X] T040 Extract `src/ui/step-nav.tsx` — shared `StepNav` component rendering Back ('b') and Skip ('s') keyboard-shortcut controls; used by all wizard step components that receive `onBack`/`isOptional` props; eliminates duplicated navigation bar rendering across the 16-step component tree
+- [X] T091 Create `src/modes/reconfigure.tsx` — `ReconfigureMode` component wired to `--reconfigure` flag in `src/index.tsx`; phases: `loading` (calls `loadConfig(configPath)`) → `wizard` (passes loaded config as `initialConfig`) → `saving` (calls `atomicWriteConfig`) → `done`; ENOENT path → `error` phase with actionable message; validation failure path → `field-errors` phase showing invalid fields as warnings then opening wizard with partial values; update `src/index.tsx` to parse `--reconfigure` boolean and route to `ReconfigureMode` before other mode logic
+- [X] T092 Write `tests/unit/reconfigure.test.ts` and `tests/integration/reconfigure.test.ts` — unit tests (T091): (1) valid config pre-populates `initialConfig` on Wizard mock (verified via `mock.calls[0][0].initialConfig`); (2) wizard completion triggers `atomicWriteConfig` with correct path and schema version; (3) ENOENT → error rendered, wizard NOT launched; (4) validation error → `field-errors` phase renders without blocking; integration tests: write real temp config, run `ReconfigureMode`, assert overwrite; use `vi.resetModules()` + `vi.doMock()` pattern for isolation
 
 ---
 
@@ -265,5 +268,5 @@ After Phase 2 is complete:
 | 7: US5 Editors | T023–T025 | US5 | T024 |
 | 8: US6 AI Tools | T026–T028 | US6 | — |
 | 9: US7 Lang Versions | T029–T032 | US7 | — |
-| 10: Polish | T033–T038 | — | T033–T036 |
-| **Total** | **38 tasks** | **7 stories** | **8 parallel tasks** |
+| 10: Polish | T033–T039, T040, T091–T092 | — | T033–T036 |
+| **Total** | **41 tasks** | **8 stories** | **8 parallel tasks** |

@@ -2,7 +2,7 @@
 
 **Feature Branch**: `008-wizard-ux-enhancements`  
 **Created**: 2026-04-01  
-**Status**: Draft  
+**Status**: Implemented  
 **Related Issues**: #49, #50, #51, #53, #59, #11, #9, #27, #47
 
 ## Clarifications
@@ -116,6 +116,23 @@ A developer setting up their machine uses one or more AI coding assistants as es
 
 ---
 
+### User Story 8 - Reconfigure Existing Setup (Priority: P2)
+
+A developer who ran the wizard weeks ago wants to re-run it against their existing config — perhaps to change their shell, add contexts, or onboard to a new machine where the config already exists. Running `tilde --reconfigure` loads the existing config, pre-populates all wizard steps with the current values, and overwrites the config on completion. If the config file cannot be found (ENOENT), an actionable error is shown and the wizard is never launched. If the config has validation issues, partial values are extracted and surfaced as warnings before the wizard opens.
+
+**Why this priority**: Without `--reconfigure`, changing any value in a wizard-generated config requires either manually editing JSON (error-prone) or running the full unguided wizard from scratch (loses existing values). This closes the day-two reconfiguration loop.
+
+**Independent Test**: Run `tilde --reconfigure` with an existing valid config → wizard opens with all fields pre-populated. Complete the wizard → the same config file is overwritten with the updated values. Run with a missing config path → clear ENOENT error is displayed, wizard is not launched.
+
+**Acceptance Scenarios**:
+
+1. **Given** a valid `tilde.config.json` exists at the resolved config path, **When** the user runs `tilde --reconfigure`, **Then** the wizard opens with all existing field values pre-populated.
+2. **Given** the wizard completes after a `--reconfigure` session, **When** the config is saved, **Then** the original config file at the same path is atomically overwritten with the updated values.
+3. **Given** `tilde --reconfigure` is run and no config file exists at the resolved path, **When** the command starts, **Then** a clear error message is shown (referencing the searched path) and the wizard is NOT launched.
+4. **Given** `tilde --reconfigure` is run and the config file has validation errors, **When** the command starts, **Then** the invalid fields are listed as warnings and the wizard opens with the remaining valid fields pre-populated; the user is not blocked.
+
+---
+
 ### User Story 7 - Language Version Scoping Per Workspace Context (Priority: P4)
 
 A developer who switches between a personal project (using Node 22) and a work project (using Java 21) wants tilde to automatically activate the correct language runtime when they enter each workspace context. When a context is activated, the appropriate language version is set without any manual intervention.
@@ -163,6 +180,10 @@ A developer who switches between a personal project (using Node 22) and a work p
 - **FR-014**: When a configured language version is not installed, tilde MUST prompt the user to install it or provide clear installation guidance.
 - **FR-015**: When a user navigates back to the workspace context step, the wizard MUST display a list of all previously defined contexts with options to edit or remove each; no context data MUST be lost on back-navigation.
 
+- **FR-016**: Running `tilde --reconfigure` with a discoverable config MUST load the existing config, pre-populate all wizard steps with current values, and atomically overwrite the original config file on wizard completion.
+- **FR-017**: Running `tilde --reconfigure` when no config file is discoverable MUST display a clear error message referencing the searched path and MUST NOT launch the wizard.
+- **FR-018**: Running `tilde --reconfigure` when the config file has validation errors MUST display the invalid field list as warnings and open the wizard with the remaining valid fields pre-populated; the user MUST NOT be blocked from proceeding.
+
 ### Key Entities
 
 - **Wizard Step**: A single interactive screen in the setup flow; has a type (required/optional), position, input values, and navigation state (visited, skipped, completed).
@@ -170,6 +191,7 @@ A developer who switches between a personal project (using Node 22) and a work p
 - **Language Binding**: An association between a workspace context and a specific language runtime and version (e.g., Node 22, Java 21, Python 3.12).
 - **Configuration Resource**: A named top-level section of the config that can be independently targeted for updates (shell, editor, applications, browser, AI tools, contexts).
 - **AIToolPlugin**: A plugin implementing the `ai-tool` category. Each supported AI coding tool (Claude Code, Claude Desktop, Cursor, etc.) MUST be registered as an `AIToolPlugin` instance; the AI tools wizard step renders the plugin registry dynamically rather than embedding tool definitions as literals. Cursor appears in both the editor and AI tools plugin registries as separate entries labeled by context ("Cursor — editor" vs "Cursor — AI coding assistant").
+- **ReconfigureMode**: A mode invoked by `--reconfigure` that loads an existing `TildeConfig`, passes it as `initialConfig` to the Wizard, and atomically overwrites the original config path on completion. Handles ENOENT (clear error, no wizard launch) and validation failures (warnings + partial values, wizard still opens).
 
 ## Success Criteria *(mandatory)*
 
@@ -182,6 +204,7 @@ A developer who switches between a personal project (using Node 22) and a work p
 - **SC-005**: The wizard AI coding assistant step surfaces all tools installable via the active package manager; tools with multiple variants appear as separate labeled entries.
 - **SC-006**: Language version switching upon context activation completes in under 5 seconds for any configured runtime.
 - **SC-007**: 90% of users completing the wizard report no required restarts due to navigation limitations (measured via post-install feedback or error log analysis).
+- **SC-008**: `tilde --reconfigure` with a valid config pre-populates 100% of wizard fields correctly; the overwritten config contains only the user's updated values with no data loss from fields not visited.
 
 ## Assumptions
 
