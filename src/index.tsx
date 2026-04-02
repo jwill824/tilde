@@ -11,7 +11,7 @@ import { App } from './app.js';
 import { loadConfig } from './config/reader.js';
 import { pluginRegistry } from './plugins/registry.js';
 import { run } from './utils/exec.js';
-import { discoverConfig, getDiscoveryPaths, formatNoConfigError } from './utils/config-discovery.js';
+import { discoverConfig, formatNoConfigError } from './utils/config-discovery.js';
 import type { PluginCategory, AccountConnectorPlugin } from './plugins/api.js';
 
 export function readPackageVersion(): string {

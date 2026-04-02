@@ -246,12 +246,6 @@ export function ContextsStep({
           <SelectInput
             items={bindingItems}
             onSelect={(item) => {
-              const newCtx: DeveloperContext = {
-                ...ctx,
-                languageBindings: item.value === 'none' ? [] : [
-                  { runtime: item.value, version: '' } as LanguageBinding,
-                ],
-              };
               // For simplicity, just skip version input and use empty binding (user can update later)
               const finalCtx: DeveloperContext = {
                 ...ctx,

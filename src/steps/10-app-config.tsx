@@ -40,7 +40,7 @@ export function AppConfigStep({ onComplete, onBack, isOptional, onSkip }: Props)
     direnv: true,
   });
   const [primaryEditor, setPrimaryEditor] = useState<string | undefined>();
-  const [additionalEditors, setAdditionalEditors] = useState<string[]>([]);
+  const [additionalEditors] = useState<string[]>([]);
 
   useInput((input, key) => {
     if (phase === 'domains') {

@@ -1,7 +1,6 @@
 /**
  * Neovim EditorPlugin implementation (T024).
  */
-import { access } from 'node:fs/promises';
 import type { EditorPlugin } from '../../api.js';
 import { installFormula } from '../../../utils/package-manager.js';
 

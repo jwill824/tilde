@@ -45,7 +45,7 @@ export function BrowserStep({ onComplete, onBack, isOptional, onSkip }: Props) {
   const [phase, setPhase] = useState<Phase>('detecting');
   const [browsers, setBrowsers] = useState<BrowserEntry[]>([]);
   const [cursor, setCursor] = useState(0);
-  const [defaultBrowser, setDefaultBrowser] = useState<string | null>(null);
+  const [, setDefaultBrowser] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [skippedInstalls, setSkippedInstalls] = useState<string[]>([]);
 
@@ -59,7 +59,7 @@ export function BrowserStep({ onComplete, onBack, isOptional, onSkip }: Props) {
             await access(b.appPath);
             installed = true;
           } catch {
-            installed = false;
+            // installed remains false
           }
           return { ...b, installed, selected: installed };
         })
