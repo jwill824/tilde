@@ -19,7 +19,10 @@
       "authMethod": "gh-cli"
     }
   ],
-  "tools": ["ripgrep", "fd"],
+  "tools": [
+    "ripgrep",
+    "fd"
+  ],
   "configurations": {
     "git": true,
     "vscode": false,
@@ -27,5 +30,6 @@
     "osDefaults": false,
     "direnv": true
   },
-  "secretsBackend": "1password"
+  "secretsBackend": "1password",
+  "schemaVersion": "1.5"
 }

@@ -6,6 +6,8 @@ import type { DeveloperContext } from '../config/schema.js';
 interface Props {
   contexts: DeveloperContext[];
   onComplete: (data: { contexts: DeveloperContext[] }) => void;
+  onBack?: () => void;
+  isOptional?: boolean;
 }
 
 type AuthMethod = 'gh-cli' | 'https' | 'ssh';
@@ -16,7 +18,7 @@ const AUTH_OPTIONS = [
   { label: 'SSH (key-based)', value: 'ssh' },
 ];
 
-export function GitAuthStep({ contexts, onComplete }: Props) {
+export function GitAuthStep({ contexts, onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
   const [idx, setIdx] = useState(0);
   const [updatedContexts, setUpdatedContexts] = useState<DeveloperContext[]>([...contexts]);
 

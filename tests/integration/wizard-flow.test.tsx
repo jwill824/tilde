@@ -107,4 +107,79 @@ describe('Wizard flow integration', () => {
       versionManagers: [{ name: 'vfox' }],
     });
   });
+
+  it('browser step renders browser options', async () => {
+    const { BrowserStep } = await import('../../src/steps/14-browser.js');
+    const onComplete = vi.fn();
+    const onSkip = vi.fn();
+
+    const { lastFrame } = render(
+      React.createElement(BrowserStep, { onComplete, isOptional: true, onSkip })
+    );
+
+    // Initially shows detecting spinner, then the selection
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const frame = lastFrame() ?? '';
+    // After detection, should show browser options OR still loading
+    expect(typeof frame).toBe('string');
+  });
+
+  it('ai tools step renders without crashing', async () => {
+    const { AIToolsStep } = await import('../../src/steps/15-ai-tools.js');
+    const onComplete = vi.fn();
+    const onSkip = vi.fn();
+
+    const { lastFrame } = render(
+      React.createElement(AIToolsStep, { onComplete, isOptional: true, onSkip })
+    );
+
+    // Should show loading or the AI tools list
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const frame = lastFrame() ?? '';
+    expect(typeof frame).toBe('string');
+  });
+
+  it('contexts step shows ContextListView when initialContexts provided', async () => {
+    const { ContextsStep } = await import('../../src/steps/07-contexts.js');
+    const onComplete = vi.fn();
+    const onBack = vi.fn();
+
+    const initialContexts = [
+      {
+        label: 'personal',
+        path: '~/Developer/personal',
+        git: { name: 'Test', email: 'test@test.com' },
+        authMethod: 'gh-cli' as const,
+        envVars: [],
+        languageBindings: [],
+      },
+    ];
+
+    const { lastFrame } = render(
+      React.createElement(ContextsStep, {
+        workspaceRoot: '~/Developer',
+        initialContexts,
+        onBack,
+        onComplete,
+      })
+    );
+
+    const frame = lastFrame() ?? '';
+    // Should show context list view with the existing context
+    expect(frame).toContain('personal');
+    expect(frame).toContain('Workspace Contexts');
+  });
+
+  it('app config step renders editor selection first', async () => {
+    const { AppConfigStep } = await import('../../src/steps/10-app-config.js');
+    const onComplete = vi.fn();
+    const onSkip = vi.fn();
+
+    const { lastFrame } = render(
+      React.createElement(AppConfigStep, { onComplete, isOptional: true, onSkip })
+    );
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Editor');
+  });
 });

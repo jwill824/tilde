@@ -3,9 +3,11 @@ import { Box, Text } from 'ink';
 
 interface Props {
   onComplete: (data: { packageManager: 'homebrew' }) => void;
+  onBack?: () => void;
+  isOptional?: boolean;
 }
 
-export function PackageManagerStep({ onComplete }: Props) {
+export function PackageManagerStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
   useEffect(() => {
     const t = setTimeout(() => onComplete({ packageManager: 'homebrew' }), 500);
     return () => clearTimeout(t);

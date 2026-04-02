@@ -5,9 +5,11 @@ import TextInput from 'ink-text-input';
 interface Props {
   onComplete: (data: { tools: string[]; configurations: { direnv: boolean } }) => void;
   defaultTools?: string;
+  onBack?: () => void;
+  isOptional?: boolean;
 }
 
-export function ToolsStep({ onComplete, defaultTools = '' }: Props) {
+export function ToolsStep({ onComplete, defaultTools = '', onBack: _onBack, isOptional: _isOptional }: Props) {
   const [toolInput, setToolInput] = useState(defaultTools);
   const direnv = true; // direnv pre-checked per FR-006
 

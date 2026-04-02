@@ -29,17 +29,16 @@ it directly — tilde validates the schema on startup.
 
 ### schemaVersion
 
-**Type**: `number` (integer)  
+**Type**: `string`  
 **Required**: Yes  
-**Valid values**: `1` (current)  
-**Default**: `1`  
-**Description**: Internal schema version. Increment when breaking changes are made to
-the config format. tilde uses this for automatic migrations.  
+**Valid values**: `"1.5"` (current)  
+**Default**: `"1.5"`  
+**Description**: Internal schema version. tilde uses this for automatic migrations from `1` (integer, previous format) to the current string-based version.  
 **Since**: `0.1.0`
 
 ```json
 {
-  "schemaVersion": 1
+  "schemaVersion": "1.5"
 }
 ```
 
@@ -111,7 +110,7 @@ Each item:
 
 | Field | Type | Valid values |
 |-------|------|-------------|
-| `name` | string | `"vfox"` \| `"nvm"` \| `"pyenv"` \| `"sdkman"` |
+| `name` | string | `"vfox"` \| `"nvm"` \| `"pyenv"` \| `"sdkman"` \| `"mise"` |
 
 **Since**: `0.1.0`
 
@@ -212,6 +211,7 @@ Each item:
 | `envVars` | array | No | Environment variable references (backend refs, not secrets) |
 | `vscodeProfile` | string | No | VS Code profile name to activate in this directory |
 | `isDefault` | boolean | No | Mark as the default context |
+| `languageBindings` | array | No | NEW v1.5 — runtime version bindings for this context. Written as `.nvmrc`, `.tool-versions`, or `.vfox.json` on context activation. |
 
 **Since**: `0.1.0`
 
@@ -315,6 +315,72 @@ Each item:
 
 ---
 
+### browser
+
+**Type**: `object`  
+**Required**: No  
+**Description**: NEW v1.5 — browser selection and installation via Homebrew Cask.  
+**Since**: `0.8.0`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Browser identifier (e.g. `"chrome"`, `"firefox"`, `"arc"`, `"brave"`) |
+| `isDefault` | boolean | Set as the macOS default browser |
+
+```json
+{
+  "browser": { "name": "arc", "isDefault": true }
+}
+```
+
+---
+
+### editors
+
+**Type**: `object`  
+**Required**: No  
+**Description**: NEW v1.5 — editor configuration. Specifies your primary editor and any additional editors to install.  
+**Since**: `0.8.0`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `primary` | string | Primary editor identifier: `"vscode"`, `"cursor"`, `"neovim"`, `"jetbrains"`, `"zed"` |
+| `additional` | array of strings | Additional editors to install |
+
+```json
+{
+  "editors": {
+    "primary": "vscode",
+    "additional": ["cursor"]
+  }
+}
+```
+
+---
+
+### aiTools
+
+**Type**: `array` of objects  
+**Required**: No  
+**Default**: `[]`  
+**Description**: NEW v1.5 — AI coding tools to install via Homebrew. Each entry installs the named tool.  
+**Since**: `0.8.0`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Tool identifier: `"claude-code"`, `"claude-desktop"`, `"cursor"`, `"windsurf"`, `"github-copilot-cli"` |
+
+```json
+{
+  "aiTools": [
+    { "name": "claude-code" },
+    { "name": "github-copilot-cli" }
+  ]
+}
+```
+
+---
+
 ### secretsBackend
 
 **Type**: `string`  
@@ -345,12 +411,13 @@ and `accounts[].secretRef`.
 ```json
 {
   "$schema": "https://thingstead.io/tilde/config-schema/v1.json",
-  "schemaVersion": 1,
+  "schemaVersion": "1.5",
   "os": "macos",
   "shell": "zsh",
   "packageManager": "homebrew",
   "versionManagers": [
-    { "name": "vfox" }
+    { "name": "vfox" },
+    { "name": "mise" }
   ],
   "languages": [
     { "name": "nodejs", "version": "20", "manager": "vfox" },
@@ -365,7 +432,10 @@ and `accounts[].secretRef`.
       "git": { "name": "Jane Doe", "email": "jane@example.com" },
       "github": { "username": "janedoe" },
       "authMethod": "ssh",
-      "isDefault": true
+      "isDefault": true,
+      "languageBindings": [
+        { "runtime": "nodejs", "version": "22.0.0" }
+      ]
     }
   ],
   "tools": ["docker", "terraform"],
@@ -379,6 +449,15 @@ and `accounts[].secretRef`.
   "accounts": [
     { "service": "npm", "identifier": "janedoe", "secretRef": "NPM_TOKEN" }
   ],
-  "secretsBackend": "1password"
+  "secretsBackend": "1password",
+  "browser": { "name": "arc", "isDefault": true },
+  "editors": {
+    "primary": "vscode",
+    "additional": ["cursor"]
+  },
+  "aiTools": [
+    { "name": "claude-code" },
+    { "name": "github-copilot-cli" }
+  ]
 }
 ```

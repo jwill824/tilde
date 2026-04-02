@@ -1,7 +1,7 @@
 # tilde Configuration Format
 
 > JSON Schema: `https://thingstead.io/tilde/config-schema/v1.json`  
-> Schema version: `1`
+> Schema version: `1.5`
 
 `tilde.config.json` is the declarative configuration file for tilde. It describes your entire developer environment so that `tilde` can reproduce it on any machine.
 
@@ -14,7 +14,7 @@ The following complete example shows every field with inline explanations. (Stan
 ```json
 {
   "$schema": "https://thingstead.io/tilde/config-schema/v1.json", // enables editor autocomplete and validation
-  "schemaVersion": 1,          // version of the config file format — always 1 for now
+  "schemaVersion": "1.5",      // schema version — "1.5" adds browser, editors, aiTools, languageBindings
   "version": "1",              // tilde configuration format revision — always "1"
   "os": "macos",               // target OS — only macOS is currently supported
   "shell": "zsh",              // your primary shell: "zsh", "bash", or "fish"
@@ -56,7 +56,10 @@ The following complete example shows every field with inline explanations. (Stan
       "authMethod": "gh-cli",                 // how will you authenticate to GitHub in this context? — "gh-cli", "https", or "ssh"
       "envVars": [],                          // environment variables to load when you're working in this context (use your secrets backend references — not raw tokens)
       "vscodeProfile": "personal",            // which VS Code profile should be active in this context? (optional)
-      "isDefault": true                       // is this the context tilde should use when you're not inside any named workspace path? (optional)
+      "isDefault": true,                      // is this the context tilde should use when you're not inside any named workspace path? (optional)
+      "languageBindings": [                   // NEW v1.5: runtime version bindings for this context
+        { "runtime": "nodejs", "version": "22.0.0" }
+      ]
     },
     {
       "label": "work",
@@ -84,7 +87,7 @@ The following complete example shows every field with inline explanations. (Stan
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `$schema` | string | no | JSON Schema URL for editor tooling (autocomplete, inline validation) |
-| `schemaVersion` | number | **yes** | Version of the config file format — always `1` for current tilde |
+| `schemaVersion` | string | **yes** | Schema version — current value is `"1.5"`. tilde uses this for automatic migrations from v1. |
 | `version` | `"1"` | **yes** | tilde configuration format revision — always `"1"` |
 | `os` | `"macos"` | **yes** | Target OS — only macOS is currently supported |
 | `shell` | one of `"zsh"`, `"bash"`, `"fish"` | **yes** | Your primary shell |
@@ -98,6 +101,9 @@ The following complete example shows every field with inline explanations. (Stan
 | `configurations` | ConfigurationDomains | **yes** | Feature flags for which dotfiles and integrations tilde manages |
 | `accounts` | list of Account | no | Service account references |
 | `secretsBackend` | one of `"1password"`, `"keychain"`, `"env-only"` | **yes** | Where should tilde store and retrieve your secrets? |
+| `browser` | BrowserConfig | no | **NEW v1.5** — browser selection and default configuration |
+| `editors` | EditorsConfig | no | **NEW v1.5** — editor configuration (primary + additional editors) |
+| `aiTools` | list of AIToolConfig | no | **NEW v1.5** — AI coding tools to install and configure |
 
 ---
 
@@ -159,6 +165,7 @@ A context maps a filesystem path to a git identity and optional tooling configur
 | `envVars` | list of EnvVarReference | no | Environment variables to load when you're working in this context (use your secrets backend references — not raw tokens) |
 | `vscodeProfile` | string | no | Which VS Code profile should be active in this context? |
 | `isDefault` | boolean | no | Is this the context tilde should use when you're not inside any named workspace path? |
+| `languageBindings` | list of LanguageBinding | no | **NEW v1.5** — runtime version bindings for this context. Written as version files (`.nvmrc`, `.vfox.json`, `.tool-versions`) on first tilde run. |
 
 > **Validation**: Context labels must be unique across all contexts.
 
@@ -258,11 +265,11 @@ Symlinks are created from `~/.gitconfig` → `{dotfilesRepo}/git/.gitconfig`, et
 
 ## Schema Versioning and Migration
 
-Every `tilde.config.json` written by tilde includes a `schemaVersion` integer field:
+Every `tilde.config.json` written by tilde includes a `schemaVersion` string field:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": "1.5",
   ...
 }
 ```
@@ -273,11 +280,12 @@ The `schemaVersion` field records the version of the config file format. tilde r
 
 | Value | Meaning |
 |-------|---------|
-| `1` | Inaugural schema — current version |
+| `"1.5"` | Current version — adds browser, editors, aiTools, languageBindings |
+| `1` | Legacy integer — auto-migrated to `"1.5"` on first load |
 
-### v1: Inaugural schema
+### v1 → v1.5 migration
 
-v1 is the first schema version. No prior versions exist. Any config already at `schemaVersion: 1` requires no migration — tilde will load and use it as-is.
+Configs with `schemaVersion: 1` (integer) are automatically migrated to `"1.5"` on first load. The migration adds default empty values for the new optional fields and rewrites the config atomically.
 
 ### How the migration runner works
 

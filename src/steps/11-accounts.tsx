@@ -6,6 +6,9 @@ import type { DeveloperContext } from '../config/schema.js';
 interface Props {
   contexts: DeveloperContext[];
   onComplete: (data: { contexts: DeveloperContext[] }) => void;
+  onBack?: () => void;
+  isOptional?: boolean;
+  onSkip?: () => void;
 }
 
 /** Auto-advances when there are no gh-cli contexts. */
@@ -16,7 +19,7 @@ function AutoSkip({ contexts, onComplete }: { contexts: DeveloperContext[]; onCo
   return <Box><Text dimColor>No gh-cli contexts — skipping account setup.</Text></Box>;
 }
 
-export function AccountsStep({ contexts, onComplete }: Props) {
+export function AccountsStep({ contexts, onComplete, onBack: _onBack, isOptional: _isOptional, onSkip: _onSkip }: Props) {
   const ghCliContexts = contexts.filter(c => c.authMethod === 'gh-cli');
   const [idx, setIdx] = useState(0);
   const [updatedContexts, setUpdatedContexts] = useState<DeveloperContext[]>([...contexts]);

@@ -7,11 +7,13 @@ import { writeConfig } from '../config/writer.js';
 interface Props {
   config: TildeConfig;
   onComplete: () => void;
+  onBack?: () => void;
+  isOptional?: boolean;
 }
 
 type Status = 'confirm' | 'writing' | 'done' | 'error';
 
-export function ConfigExportStep({ config, onComplete }: Props) {
+export function ConfigExportStep({ config, onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
   const [status, setStatus] = useState<Status>('confirm');
   const [error, setError] = useState('');
   const [outputPath, setOutputPath] = useState('');

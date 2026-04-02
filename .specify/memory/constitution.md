@@ -1,47 +1,32 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 2.1.1 → 2.2.0
-MINOR bump: new principle guidance (splash screen under IV; community plugin registry under
-VIII), new wizard step (browser selection, step 11), new Technology Constraints sections
-(Install Methods, Browsers), expanded Entry Modes (URL config loading detail, --reconfigure
-fork with pre-population contract, Config Schema & Migration subsection), and
-implementation-pending flags across Platforms & Shells, Version Managers, Service Accounts,
-and Configurations Managed. Fixed longstanding duplicate step numbering in Setup Wizard
-Flow. Corrected "seven" to "eight" Core Principles in Development Workflow and Governance.
+Version change: 2.2.0 → 2.3.0
+MINOR bump (spec 008-wizard-ux-enhancements): Browser Selection step moved from step 11
+to step 15 (optional, post-config-export); AI Coding Tools added as new step 16 (optional);
+mise added to Version Managers; AIToolPlugin added to Principle VIII plugin categories;
+auto-discovery confirmation requirement added to Principle IV guidance.
+
+Rationale for wizard step repositioning (C1/C2 resolution):
+  Browser selection and AI coding tools are optional "enhancements" that do not affect the
+  core bootstrap environment. Placing them after config-export (steps 15–16) ensures:
+  (a) the essential machine setup (shell, package manager, contexts, secrets) is complete and
+  saved before optional tooling steps run, and (b) users who skip these steps still have a
+  fully functional tilde config. A step that is optional and non-blocking to bootstrap SHOULD
+  appear after the config-export checkpoint, not before it.
 
 Modified principles:
-  - IV. Interactive & Ink-First UX — added splash screen startup behaviour: MUST
-    dynamically display OS, architecture, shell, and tilde version before wizard begins;
-    graceful fallback to raw values if friendly name mapping is unknown; CI/--yes skips
-    splash entirely
-  - VIII. Extensibility & Plugin Architecture — added community plugin registry definition:
-    plugins are npm packages following the tilde-plugin-* naming convention, wizard-
-    discoverable, and installed via the active package manager
-
-Added sections:
-  - Technology Constraints: Install Methods — lists all supported install pathways
-    (npm install -g, npx, pnpm add -g, yarn global add, future brew install)
-  - Technology Constraints: Browsers — new category (Chrome, Firefox, Arc, Brave,
-    Safari, Edge); referenced by Browser Selection wizard step
-  - Technology Constraints: Config Schema & Migration — schema versioning requirements,
-    forward migration contract, and failure recovery behavior
+  - IV. Interactive & Ink-First UX — added explicit auto-discovery confirmation requirement:
+    tilde MUST display the resolved config path and a summary of applied settings and require
+    user confirmation before proceeding when a config is found via auto-discovery
+  - VIII. Extensibility & Plugin Architecture — added AIToolPlugin to the enumerated list of
+    plugin categories (ai-tool category)
 
 Modified sections:
-  - Setup Wizard Flow — fixed duplicate step numbering (was 1,2,3,2,3,4…→ now 1–15);
-    added --reconfigure fork description to step 1; added Browser Selection as step 11
-    (after Additional tools); renumbered App configurations → 12, Account connections → 13,
-    Secrets backend → 14, Config export → 15
-  - Entry Modes — URL loading behaviour note added below table (fetch → validate →
-    summary → confirm before apply); --reconfigure row added; --yes/--ci flagged
-    ⚠ implementation pending
-  - Platforms & Shells — fish and bash on macOS flagged ⚠ implementation pending
-  - Version Managers — sdkman flagged ⚠ implementation pending
-  - Service Accounts — AWS flagged ⚠ implementation pending
-  - Configurations Managed — OS defaults (defaults write) and direnv flagged
-    ⚠ implementation pending
-  - Development Workflow — "seven" corrected to "eight" Core Principles
-  - Governance — "seven" corrected to "eight" Core Principles
+  - Setup Wizard Flow — Browser Selection moved from step 11 to step 15 (optional);
+    App configurations renumbered to step 11, Account connections → 12,
+    Secrets backend → 13, Config export → 14; AI Coding Tools added as step 16 (optional)
+  - Version Managers — mise added (polyglot; .tool-versions format; compatible with asdf)
 
 Removed sections: None
 
@@ -164,8 +149,9 @@ implemented initially.
 ### VIII. Extensibility & Plugin Architecture
 
 Every tool integration category in tilde MUST be implemented as a plugin: secrets backends,
-package managers, version managers, account connectors, OS defaults mechanisms, and editor
-profile managers are all extension points, not hard-coded modules. The tilde core MUST provide:
+package managers, version managers, account connectors, OS defaults mechanisms, editor
+profile managers, browser integrations, and AI coding tool integrations are all extension
+points, not hard-coded modules. The tilde core MUST provide:
 a stable plugin API contract, a plugin registry (first-party and community), and a mechanism
 for users to install and activate plugins from within the wizard. First-party plugins ship with
 tilde (e.g., Homebrew, 1Password, gh CLI). Community plugins MUST be installable via a
@@ -244,14 +230,17 @@ reference choices made in earlier steps:
    names their contexts (e.g., `personal`, `work`, `client`) with directory mappings
 9. **Git authentication method** — user selects per context: HTTPS, SSH, or `gh` CLI
 10. **Additional tools** — user selects further CLI tools and apps via the package manager
-11. **Browser selection** — user chooses a preferred browser (see Browsers); selected browser
-    is installed via the active package manager if not already present; user may optionally
-    set the chosen browser as the system default
-12. **App configurations** — user enables/customises config domains (VS Code, Git, aliases,
+11. **App configurations** — user enables/customises config domains (VS Code, Git, aliases,
     hooks, shell profiles, OS defaults)
-13. **Account connections** — user connects service accounts (GitHub, Claude, AWS, etc.)
-14. **Secrets backend** — user selects how secrets are stored and referenced
-15. **Config export** — tilde writes `tilde.config.json` to the dotfiles repo
+12. **Account connections** — user connects service accounts (GitHub, Claude, AWS, etc.)
+13. **Secrets backend** — user selects how secrets are stored and referenced
+14. **Config export** — tilde writes `tilde.config.json` to the dotfiles repo
+15. **Browser selection** *(optional)* — user chooses preferred browsers (see Browsers);
+    selected browsers are installed via the active package manager if not already present;
+    user may optionally set one as the system default; step may be skipped
+16. **AI coding tools** *(optional)* — user selects AI coding assistants and CLI tools
+    installable via the active package manager (e.g., Claude Code, Claude Desktop, Cursor,
+    GitHub Copilot CLI); installation status shown per tool; step may be skipped
 
 ### Platforms & Shells
 
@@ -292,6 +281,7 @@ already present. Setting the chosen browser as system default is opt-in.
 ### Version Managers (user selects zero or more)
 
 - **vfox** — polyglot; single manager for multiple ecosystems
+- **mise** — polyglot; multi-language version manager using `.tool-versions` format; compatible with asdf tooling ecosystem
 - **sdkman** — JVM ecosystem (Java, Kotlin, Scala, Gradle, etc.) ⚠ implementation pending
 - **nvm** — Node.js
 - **pyenv** — Python
@@ -393,4 +383,4 @@ tilde project. Amendments require:
 All PRs and reviews MUST verify compliance with the eight Core Principles. Exceptions require
 explicit written justification recorded in the plan's Complexity Tracking table.
 
-**Version**: 2.2.0 | **Ratified**: 2026-03-27 | **Last Amended**: 2026-03-28
+**Version**: 2.3.0 | **Ratified**: 2026-03-27 | **Last Amended**: 2026-04-01

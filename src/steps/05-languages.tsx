@@ -13,6 +13,8 @@ const MANAGER_LANGUAGES: Record<string, string[]> = {
 interface Props {
   versionManagers: VersionManagerChoice[];
   onComplete: (data: { languages: LanguageChoice[] }) => void;
+  onBack?: () => void;
+  isOptional?: boolean;
 }
 
 interface LanguageEntry {
@@ -29,7 +31,7 @@ function AutoAdvanceEmpty({ onComplete }: { onComplete: () => void }) {
   return <Box><Text dimColor>No version managers selected, skipping languages.</Text></Box>;
 }
 
-export function LanguagesStep({ versionManagers, onComplete }: Props) {
+export function LanguagesStep({ versionManagers, onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
   const allLanguages: LanguageEntry[] = versionManagers.flatMap(vm =>
     (MANAGER_LANGUAGES[vm.name] ?? []).map(lang => ({
       name: lang,

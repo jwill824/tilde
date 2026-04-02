@@ -18,7 +18,10 @@ export type PluginCategory =
   | 'secrets-backend'
   | 'account-connector'
   | 'env-loader'
-  | 'version-manager';
+  | 'version-manager'
+  | 'browser'
+  | 'editor'
+  | 'ai-tool';
 
 export interface TildePlugin {
   readonly id: string;
@@ -85,4 +88,53 @@ export interface VersionManagerPlugin extends TildePlugin {
   useVersion(language: string, version: string): Promise<void>;
   listInstalled(language: string): Promise<string[]>;
   generateShellHook(shell: 'zsh' | 'bash' | 'fish'): string;
+}
+
+// ---------------------------------------------------------------------------
+// New plugin categories (v1.5): browser, editor, and ai-tool
+// ---------------------------------------------------------------------------
+
+export interface BrowserPlugin {
+  readonly category: 'browser';
+  readonly id: string;          // e.g., "chrome", "arc"
+  readonly label: string;       // e.g., "Google Chrome", "Arc"
+  readonly appPath: string;     // e.g., "/Applications/Arc.app"
+  readonly brewCask?: string;   // e.g., "arc" — undefined if not Homebrew-installable
+
+  /** Returns true if the browser .app bundle exists on disk */
+  detectInstalled(): Promise<boolean>;
+  /** Install via Homebrew cask */
+  install(): Promise<void>;
+  /** Invoke `defaultbrowser <id>` — triggers macOS system confirmation dialog */
+  setAsDefault(): Promise<void>;
+}
+
+export interface EditorPlugin {
+  readonly category: 'editor';
+  readonly id: string;         // e.g., "neovim", "cursor", "webstorm"
+  readonly label: string;      // e.g., "Neovim", "Cursor", "WebStorm"
+  readonly brewCask?: string;  // e.g., "neovim", "cursor"
+
+  /** Returns true if the editor .app or binary exists on disk */
+  detectInstalled(): Promise<boolean>;
+  /** Install via Homebrew (cask or formula) */
+  install(): Promise<void>;
+  /** Optional: apply dotfiles/settings profile */
+  applyProfile?(): Promise<void>;
+  /** Optional: return human-readable setup instructions */
+  getProfileGuidance?(): string;
+}
+
+export interface AIToolPlugin {
+  readonly category: 'ai-tool';
+  readonly name: string;           // e.g., "claude-desktop"
+  readonly label: string;          // e.g., "Claude Desktop"
+  readonly variant: string;        // e.g., "desktop-app" | "cli-tool" | "editor-extension"
+  readonly brewId: string;         // Homebrew formula or cask name
+  readonly brewType: 'formula' | 'cask';
+
+  /** Returns true if the tool is currently installed */
+  detectInstalled(): Promise<boolean>;
+  /** Install via Homebrew (formula or cask) */
+  install(): Promise<void>;
 }

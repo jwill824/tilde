@@ -19,6 +19,12 @@ const GitHubAccountSchema = z.object({
   username: z.string().min(1),
 });
 
+// New in v1.5: language version binding per context
+const LanguageBindingSchema = z.object({
+  runtime: z.string().min(1),  // e.g., "nodejs", "java", "python"
+  version: z.string().min(1),  // e.g., "22.0.0", "21.0.3"
+});
+
 const DeveloperContextSchema = z.object({
   label: z.string().min(1),
   path: z.string().min(1),
@@ -28,6 +34,7 @@ const DeveloperContextSchema = z.object({
   envVars: z.array(EnvVarReferenceSchema).optional().default([]),
   vscodeProfile: z.string().optional(),
   isDefault: z.boolean().optional(),
+  languageBindings: z.array(LanguageBindingSchema).optional().default([]),  // NEW v1.5
 });
 
 const VersionManagerChoiceSchema = z.object({
@@ -48,10 +55,31 @@ const ConfigurationDomainsSchema = z.object({
   direnv: z.boolean(),
 });
 
+// New in v1.5: browser configuration
+const BrowserConfigSchema = z.object({
+  selected: z.array(z.string()).default([]),  // e.g., ["chrome", "firefox"]
+  default: z.string().nullable().default(null),  // e.g., "chrome"
+});
+
+// New in v1.5: editors configuration (replaces implicit VS Code)
+const EditorsConfigSchema = z.object({
+  primary: z.string().min(1),    // e.g., "vscode", "cursor", "neovim"
+  additional: z.array(z.string()).default([]),  // e.g., ["webstorm"]
+});
+
+// New in v1.5: AI tool entry
+const AIToolConfigSchema = z.object({
+  name: z.string().min(1),    // e.g., "claude-desktop"
+  label: z.string().min(1),   // e.g., "Claude Desktop"
+  variant: z.string().min(1), // e.g., "desktop-app" | "cli-tool" | "editor-extension"
+});
+
 const TildeConfigSchema = z.object({
   $schema: z.string().default('https://thingstead.io/tilde/config-schema/v1.json'),
   version: z.literal('1').default('1'),
-  schemaVersion: z.number().int().min(1).default(1),
+  schemaVersion: z.union([z.string(), z.number()])
+    .transform(v => String(v))
+    .default('1.5'),
   os: z.literal('macos').default('macos'),
   shell: z.enum(['zsh', 'bash', 'fish']),
   packageManager: z.literal('homebrew').default('homebrew'),
@@ -71,6 +99,10 @@ const TildeConfigSchema = z.object({
     secretRef: z.string().optional(),
   })).optional().default([]),
   secretsBackend: z.enum(['1password', 'keychain', 'env-only']),
+  // New in v1.5
+  browser: BrowserConfigSchema.optional().default({ selected: [], default: null }),
+  editors: EditorsConfigSchema.optional(),
+  aiTools: z.array(AIToolConfigSchema).optional().default([]),
 }).superRefine((config, ctx) => {
   // Validate context label uniqueness
   const labels = config.contexts.map(c => c.label);
@@ -99,9 +131,13 @@ const TildeConfigSchema = z.object({
   });
 });
 
-export { TildeConfigSchema, DeveloperContextSchema };
+export { TildeConfigSchema, DeveloperContextSchema, BrowserConfigSchema, EditorsConfigSchema, AIToolConfigSchema, LanguageBindingSchema };
 export type TildeConfig = z.infer<typeof TildeConfigSchema>;
 export type DeveloperContext = z.infer<typeof DeveloperContextSchema>;
 export type VersionManagerChoice = z.infer<typeof VersionManagerChoiceSchema>;
 export type LanguageChoice = z.infer<typeof LanguageChoiceSchema>;
 export type ConfigurationDomains = z.infer<typeof ConfigurationDomainsSchema>;
+export type BrowserConfig = z.infer<typeof BrowserConfigSchema>;
+export type EditorsConfig = z.infer<typeof EditorsConfigSchema>;
+export type AIToolConfig = z.infer<typeof AIToolConfigSchema>;
+export type LanguageBinding = z.infer<typeof LanguageBindingSchema>;

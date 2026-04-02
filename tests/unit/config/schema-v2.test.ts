@@ -32,43 +32,51 @@ const MINIMAL_CONFIG = {
 };
 
 describe('schemaVersion field — round-trip', () => {
-  it('valid config with schemaVersion: 1 passes Zod validation', () => {
+  it('valid config with schemaVersion: "1.5" passes Zod validation', () => {
+    const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, schemaVersion: '1.5' });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.schemaVersion).toBe('1.5');
+    }
+  });
+
+  it('valid config with schemaVersion: 1 (integer) is coerced to string "1"', () => {
     const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, schemaVersion: 1 });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.schemaVersion).toBe(1);
+      expect(result.data.schemaVersion).toBe('1');
     }
   });
 
-  it('config without schemaVersion field defaults to 1 (.default(1) backward compat)', () => {
+  it('config without schemaVersion field defaults to "1.5"', () => {
     const result = TildeConfigSchema.safeParse(MINIMAL_CONFIG);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.schemaVersion).toBe(1);
+      expect(result.data.schemaVersion).toBe('1.5');
     }
   });
 
-  it('config with schemaVersion: 0 fails validation (min(1))', () => {
-    const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, schemaVersion: 0 });
-    expect(result.success).toBe(false);
+  it('config with schemaVersion: "1.5" (unknown future version) parses successfully', () => {
+    // Schema accepts any string — version validation is the migration runner's job
+    const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, schemaVersion: '1.5' });
+    expect(result.success).toBe(true);
   });
 
-  it('config with schemaVersion: 1.5 fails validation (.int())', () => {
-    const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, schemaVersion: 1.5 });
-    expect(result.success).toBe(false);
-  });
-
-  it('JSON.stringify of a parsed config always includes "schemaVersion": 1 in the output', () => {
+  it('JSON.stringify of a parsed config includes schemaVersion as a string', () => {
     const result = TildeConfigSchema.safeParse(MINIMAL_CONFIG);
     expect(result.success).toBe(true);
     if (result.success) {
       const json = JSON.stringify(result.data);
       const parsed = JSON.parse(json) as Record<string, unknown>;
-      expect(parsed['schemaVersion']).toBe(1);
+      expect(typeof parsed['schemaVersion']).toBe('string');
     }
   });
 
-  it('CURRENT_SCHEMA_VERSION matches schemaVersion default in schema', () => {
+  it('CURRENT_SCHEMA_VERSION is "1.5"', () => {
+    expect(CURRENT_SCHEMA_VERSION).toBe('1.5');
+  });
+
+  it('config default schemaVersion matches CURRENT_SCHEMA_VERSION', () => {
     const result = TildeConfigSchema.safeParse(MINIMAL_CONFIG);
     expect(result.success).toBe(true);
     if (result.success) {
