@@ -14,7 +14,7 @@ The following complete example shows every field with inline explanations. (Stan
 ```json
 {
   "$schema": "https://thingstead.io/tilde/config-schema/v1.json", // enables editor autocomplete and validation
-  "schemaVersion: '1.5' with browser/editor/ai support
+  "schemaVersion": "1.5",      // schema version — "1.5" adds browser, editors, aiTools, languageBindings
   "version": "1",              // tilde configuration format revision — always "1"
   "os": "macos",               // target OS — only macOS is currently supported
   "shell": "zsh",              // your primary shell: "zsh", "bash", or "fish"
@@ -87,7 +87,7 @@ The following complete example shows every field with inline explanations. (Stan
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `$schema` | string | no | JSON Schema URL for editor tooling (autocomplete, inline validation) |
-| `schemaVersion` | number | **yes** | Version of the config file format — always `1` for current tilde |
+| `schemaVersion` | string | **yes** | Schema version — current value is `"1.5"`. tilde uses this for automatic migrations from v1. |
 | `version` | `"1"` | **yes** | tilde configuration format revision — always `"1"` |
 | `os` | `"macos"` | **yes** | Target OS — only macOS is currently supported |
 | `shell` | one of `"zsh"`, `"bash"`, `"fish"` | **yes** | Your primary shell |
@@ -265,11 +265,11 @@ Symlinks are created from `~/.gitconfig` → `{dotfilesRepo}/git/.gitconfig`, et
 
 ## Schema Versioning and Migration
 
-Every `tilde.config.json` written by tilde includes a `schemaVersion` integer field:
+Every `tilde.config.json` written by tilde includes a `schemaVersion` string field:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": "1.5",
   ...
 }
 ```
@@ -280,11 +280,12 @@ The `schemaVersion` field records the version of the config file format. tilde r
 
 | Value | Meaning |
 |-------|---------|
-| `1` | Inaugural schema — current version |
+| `"1.5"` | Current version — adds browser, editors, aiTools, languageBindings |
+| `1` | Legacy integer — auto-migrated to `"1.5"` on first load |
 
-### v1: Inaugural schema
+### v1 → v1.5 migration
 
-v1 is the first schema version. No prior versions exist. Any config already at `schemaVersion: 1` requires no migration — tilde will load and use it as-is.
+Configs with `schemaVersion: 1` (integer) are automatically migrated to `"1.5"` on first load. The migration adds default empty values for the new optional fields and rewrites the config atomically.
 
 ### How the migration runner works
 
