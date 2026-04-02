@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
-import type { DeveloperContext, LanguageBinding } from '../config/schema.js';
+import type { DeveloperContext } from '../config/schema.js';
 
 interface Props {
   workspaceRoot: string;
