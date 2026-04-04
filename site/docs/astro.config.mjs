@@ -4,8 +4,8 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://thingstead.io',
-	base: '/tilde/docs/',
+	site: 'https://tilde.thingstead.io',
+	base: '/docs/',
 	integrations: [
 		starlight({
 			title: 'tilde',
