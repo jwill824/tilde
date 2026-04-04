@@ -1,0 +1,151 @@
+# Runs once to initialise kit submodules and create symlinks.
+# After the first successful run, this workflow is effectively a no-op.
+name: Bootstrap speckit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".gitmodules"
+  workflow_dispatch: {}
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Fetch speckit-core submodule
+        run: |
+          if [ ! -d .speckit ]; then
+            git clone --depth=1 --branch main \
+              https://github.com/jwill824/speckit-core.git .speckit
+          else
+            git -C .speckit fetch --depth=1 origin main
+            git -C .speckit reset --hard origin/main
+          fi
+
+      - name: Create speckit symlinks
+        run: |
+          mkdir -p .specify/memory specs
+          for link_pair in \
+            ".specify/templates:../.speckit/.specify/templates" \
+            ".specify/scripts:../.speckit/.specify/scripts"; do
+            link="${link_pair%%:*}"
+            target="${link_pair##*:}"
+            if [ ! -e "$link" ] && [ ! -L "$link" ]; then
+              mkdir -p "$(dirname "$link")"
+              ln -s "$target" "$link"
+              echo "Linked $link → $target"
+            fi
+          done
+
+      - name: Create memory stubs
+        run: |
+          if [ ! -f .specify/memory/constitution.md ]; then
+            cp .speckit/.specify/templates/constitution-template.md .specify/memory/constitution.md
+          fi
+          if [ ! -f .specify/memory/stack.md ]; then
+            cp .speckit/.specify/templates/stack-template.md .specify/memory/stack.md
+          fi
+          if [ ! -f .specify/memory/issues-backlog.md ]; then
+            printf '%s\n' \
+              "# GitHub Issues Backlog" \
+              "<!-- Auto-updated by /speckit.specify via issue-triage agent -->" \
+              "<!-- last_refreshed: never -->" \
+              "" \
+              "| Issue | Title | Status | Linked Spec |" \
+              "|-------|-------|--------|-------------|" \
+              > .specify/memory/issues-backlog.md
+          fi
+
+
+
+      - name: Fetch copilot-kit submodule
+        run: |
+          if [ ! -d .copilot ]; then
+            git clone --depth=1 --branch main \
+              https://github.com/jwill824/copilot-kit.git .copilot
+          else
+            git -C .copilot fetch --depth=1 origin main
+            git -C .copilot reset --hard origin/main
+          fi
+
+      - name: Create copilot symlinks
+        run: |
+          mkdir -p .github
+
+          # agents: real directory with individual file symlinks so repo-specific
+          # agents can be added alongside copilot-kit agents without touching the submodule.
+          mkdir -p .github/agents
+          for src in .copilot/.github/agents/*; do
+            fname="$(basename "$src")"
+            # Skip speckit.* agents if speckit-core (.speckit/) is not present —
+            # those agents reference .specify/templates/ which won't exist.
+            if [[ "$fname" == speckit.* ]] && [ ! -d .speckit ]; then
+              echo "Skipping speckit agent $fname (speckit-core not bootstrapped)"
+              continue
+            fi
+            link=".github/agents/$fname"
+            if [ ! -e "$link" ] && [ ! -L "$link" ]; then
+              ln -s "../../.copilot/.github/agents/$fname" "$link"
+              echo "Linked $link → ../../.copilot/.github/agents/$fname"
+            fi
+          done
+
+          # prompts, skills, hooks: directory symlinks
+          for link_pair in \
+            ".github/prompts:../.copilot/.github/prompts" \
+            ".github/skills:../.copilot/.github/skills" \
+            ".github/hooks:../.copilot/.github/hooks"; do
+            link="${link_pair%%:*}"
+            target="${link_pair##*:}"
+            if [ ! -e "$link" ] && [ ! -L "$link" ]; then
+              mkdir -p "$(dirname "$link")"
+              ln -s "$target" "$link"
+              echo "Linked $link → $target"
+            fi
+          done
+
+      - name: Create copilot-instructions stub
+        run: |
+          if [ ! -f .github/copilot-instructions.md ]; then
+            printf '%s\n' \
+              "# Copilot Instructions" \
+              "" \
+              "<!-- TODO: customize for your project. Run /speckit.constitution first. -->" \
+              "" \
+              "This project uses spec-driven development via speckit-core + copilot-kit." \
+              "" \
+              "## Spec-Kit Workflow" \
+              "" \
+              "\`/speckit.specify\` → \`/speckit.clarify\` → \`/speckit.plan\` → \`/speckit.tasks\` → \`/speckit.implement\` → \`/speckit.analyze\`" \
+              > .github/copilot-instructions.md
+          fi
+
+
+      - name: Create docs scaffold
+        run: |
+          if [ -f README.md ]; then
+            rm README.md
+            echo "Removed auto-init root README.md"
+          fi
+          BADGE='[![spec-kit powered](https://img.shields.io/badge/spec--kit-powered-blueviolet)](https://github.com/github/spec-kit)'
+          if [ -f docs/README.md ] && ! grep -q "spec--kit-powered" docs/README.md; then
+            awk -v badge="$BADGE" 'NR==1{print; print ""; print badge; next}1' docs/README.md > docs/README.md.tmp
+            mv docs/README.md.tmp docs/README.md
+            echo "Added spec-kit badge to docs/README.md"
+          fi
+
+      - name: Commit symlinks and stubs
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "chore: initialise kit submodules and symlinks"
+          git push
