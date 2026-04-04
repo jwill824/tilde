@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -142,10 +143,17 @@ jobs:
             echo "Added spec-kit badge to docs/README.md"
           fi
 
-      - name: Commit symlinks and stubs
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet || git commit -m "chore: initialise kit submodules and symlinks"
-          git push
+      - name: Open bootstrap PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/bootstrap-speckit
+          title: "chore: initialise kit submodules and symlinks"
+          commit-message: "chore: initialise kit submodules and symlinks"
+          body: |
+            Automated PR from the speckit-bootstrap workflow.
+
+            Adds submodule references, symlinks, and memory stubs for speckit-core and copilot-kit.
+            Safe to merge immediately — this is a one-time idempotent scaffold.
+          labels: "chore"
+          delete-branch: true
