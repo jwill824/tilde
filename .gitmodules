@@ -1,0 +1,8 @@
+[submodule ".speckit"]
+  path = .speckit
+  url = https://github.com/jwill824/speckit-core.git
+  branch = main
+[submodule ".copilot"]
+  path = .copilot
+  url = https://github.com/jwill824/copilot-kit.git
+  branch = main
