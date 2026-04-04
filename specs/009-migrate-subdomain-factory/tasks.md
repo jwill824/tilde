@@ -19,7 +19,7 @@
 tilde repo deploy can target the new `thingstead-tilde` project. This phase is the hard
 prerequisite for all subsequent phases.
 
-- [ ] T001 [US3] Add `tilde` entry to `repos.json` in the github-repo-factory repo following the thingstead entry pattern: include `cloudflare_pages_projects` entry for `thingstead-tilde` with `custom_domain: "tilde.thingstead.io"` and `production_branch: "main"`, a CNAME DNS record for `tilde.thingstead.io` → `thingstead-tilde.pages.dev` in the `thingstead.io` zone, `speckit_enabled: true`, `copilot_enabled: true`, and `git_hooks` with lefthook pre-commit and commit-msg hooks (cross-repo PR in github-repo-factory)
+- [x] T001 [US3] Add `tilde` entry to `repos.json` in the github-repo-factory repo following the thingstead entry pattern: include `cloudflare_pages_projects` entry for `thingstead-tilde` with `custom_domain: "tilde.thingstead.io"` and `production_branch: "main"`, a CNAME DNS record for `tilde.thingstead.io` → `thingstead-tilde.pages.dev` in the `thingstead.io` zone, `speckit_enabled: true`, `copilot_enabled: true`, and `git_hooks` with lefthook pre-commit and commit-msg hooks (cross-repo PR in github-repo-factory)
 
 ---
 
@@ -46,10 +46,10 @@ and the install script URL is correct. The legacy install URL redirects correctl
 
 ### Implementation for User Story 1
 
-- [ ] T003 [P] [US1] Update `site/docs/astro.config.mjs`: set `site` to `https://tilde.thingstead.io` and `base` to `/docs/` (currently `https://thingstead.io` and `/tilde/docs/`)
-- [ ] T004 [P] [US1] Replace both occurrences of `https://thingstead.io/tilde/install.sh` with `https://tilde.thingstead.io/install.sh` in `site/tilde/index.html` (lines 40 and 65)
-- [ ] T005 [P] [US1] Create `site/tilde/_redirects` with the single redirect rule: `/tilde/install.sh /install.sh 301` to preserve the legacy install URL for existing users
-- [ ] T006 [P] [US1] Update the install command URL in `docs/README.md` from `https://thingstead.io/tilde/install.sh` to `https://tilde.thingstead.io/install.sh`
+- [x] T003 [P] [US1] Update `site/docs/astro.config.mjs`: set `site` to `https://tilde.thingstead.io` and `base` to `/docs/` (currently `https://thingstead.io` and `/tilde/docs/`)
+- [x] T004 [P] [US1] Replace both occurrences of `https://thingstead.io/tilde/install.sh` with `https://tilde.thingstead.io/install.sh` in `site/tilde/index.html` (lines 40 and 65)
+- [x] T005 [P] [US1] Create `site/tilde/_redirects` with the single redirect rule: `/tilde/install.sh /install.sh 301` to preserve the legacy install URL for existing users
+- [x] T006 [P] [US1] Update the install command URL in `docs/README.md` from `https://thingstead.io/tilde/install.sh` to `https://tilde.thingstead.io/install.sh`
 
 **Checkpoint**: At this point, site content, config, redirect, and README are correct.
 Pending deploy workflow update (Phase 4) to ship.
@@ -66,9 +66,9 @@ Pending deploy workflow update (Phase 4) to ship.
 
 ### Implementation for User Story 2
 
-- [ ] T007 [US2] Update `.github/workflows/deploy-site.yml` job name from `Build & Deploy (thingstead.io)` to `Build & Deploy (tilde.thingstead.io)`
-- [ ] T008 [US2] Update `.github/workflows/deploy-site.yml` assemble step: replace the three lines that write to `dist/tilde/` with `mkdir -p dist/docs`, `cp -r site/tilde/. dist/`, and `cp -r site/docs/dist/. dist/docs/` so the landing page is at root and docs are at `dist/docs/`
-- [ ] T009 [US2] Update `.github/workflows/deploy-site.yml` deploy command: change `--project-name=thingstead` to `--project-name=thingstead-tilde` in the `wrangler-action` step
+- [x] T007 [US2] Update `.github/workflows/deploy-site.yml` job name from `Build & Deploy (thingstead.io)` to `Build & Deploy (tilde.thingstead.io)`
+- [x] T008 [US2] Update `.github/workflows/deploy-site.yml` assemble step: replace the three lines that write to `dist/tilde/` with `mkdir -p dist/docs`, `cp -r site/tilde/. dist/`, and `cp -r site/docs/dist/. dist/docs/` so the landing page is at root and docs are at `dist/docs/`
+- [x] T009 [US2] Update `.github/workflows/deploy-site.yml` deploy command: change `--project-name=thingstead` to `--project-name=thingstead-tilde` in the `wrangler-action` step
 
 **Checkpoint**: All tilde repo changes for US1 and US2 are complete. Merge this branch to
 trigger the first deploy to `thingstead-tilde`.
@@ -87,9 +87,9 @@ a deprecation notice linking to github-repo-factory.
 
 ### Implementation for User Story 4
 
-- [ ] T010 [P] [US4] Remove the `terraform/cloudflare/` directory from the tilde repo (deletes `main.tf`, `outputs.tf`, `variables.tf`, `.terraform.lock.hcl`, and the `.terraform/` provider cache)
-- [ ] T011 [P] [US4] Remove the `terraform/github/` directory from the tilde repo (deletes `main.tf`, `outputs.tf`, `variables.tf`, `.terraform.lock.hcl`, and the `.terraform/` provider cache)
-- [ ] T012 [US4] Add a Terraform deprecation notice to `docs/README.md`: note that infrastructure is no longer managed by standalone Terraform in this repo, that it is now managed by github-repo-factory, and reference the migration sequence from `specs/009-migrate-subdomain-factory/quickstart.md`
+- [x] T010 [P] [US4] Remove the `terraform/cloudflare/` directory from the tilde repo (deletes `main.tf`, `outputs.tf`, `variables.tf`, `.terraform.lock.hcl`, and the `.terraform/` provider cache)
+- [x] T011 [P] [US4] Remove the `terraform/github/` directory from the tilde repo (deletes `main.tf`, `outputs.tf`, `variables.tf`, `.terraform.lock.hcl`, and the `.terraform/` provider cache)
+- [x] T012 [US4] Add a Terraform deprecation notice to `docs/README.md`: note that infrastructure is no longer managed by standalone Terraform in this repo, that it is now managed by github-repo-factory, and reference the migration sequence from `specs/009-migrate-subdomain-factory/quickstart.md`
 
 **Checkpoint**: Terraform directories removed. README deprecation notice in place.
 
@@ -105,7 +105,7 @@ follow-up issue for workspace decommissioning (US5).
 - [ ] T015 [P] Verify `curl -fsSL https://tilde.thingstead.io/install.sh` downloads the install script with `Content-Type: text/plain; charset=utf-8`
 - [ ] T016 [P] Verify `curl -I https://tilde.thingstead.io/tilde/install.sh` returns `HTTP 301` with `Location: /install.sh` (legacy redirect working)
 - [ ] T017 [P] Verify `https://thingstead.io` (main thingstead site) is fully accessible and unaffected by the migration (regression check)
-- [ ] T018 [US5] Create a GitHub issue in the tilde repo to track workspace decommissioning: title "Follow-up: Decommission tilde-cloudflare and tilde-github Terraform Cloud workspaces", noting the prerequisite cross-team `thingstead` Pages project transfer and referencing quickstart.md Step 4
+- [x] T018 [US5] Create a GitHub issue in the tilde repo to track workspace decommissioning: title "Follow-up: Decommission tilde-cloudflare and tilde-github Terraform Cloud workspaces", noting the prerequisite cross-team `thingstead` Pages project transfer and referencing quickstart.md Step 4
 
 ---
 
