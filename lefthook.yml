@@ -1,0 +1,18 @@
+# Lefthook configuration — git hooks managed by github-repo-factory.
+# Hooks auto-skip in CI (CI=true env var).
+# Install locally: pnpm lefthook install  (or npx lefthook install)
+
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: "*.{js,ts,mjs,cjs,astro,jsx,tsx}"
+      run: npx eslint {staged_files}
+
+commit-msg:
+  commands:
+    conventional:
+      run: |
+        msg=$(cat {1})
+        echo "$msg" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?(!)?: .{1,100}" \
+          || (echo "❌ Commit must follow Conventional Commits: type(scope): description" && exit 1)
