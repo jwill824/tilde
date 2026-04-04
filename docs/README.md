@@ -1,4 +1,6 @@
 <div align="center">
+
+[![spec-kit powered](https://img.shields.io/badge/spec--kit-powered-blueviolet)](https://github.com/github/spec-kit)
   <img src="banner.svg" alt="tilde — developer environment bootstrap" width="560"/>
 
   [![CI](https://github.com/jwill824/tilde/actions/workflows/ci.yml/badge.svg)](https://github.com/jwill824/tilde/actions/workflows/ci.yml)
