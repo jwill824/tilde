@@ -17,7 +17,7 @@
 ## Install
 
 ```bash
-curl -fsSL https://thingstead.io/tilde/install.sh | bash
+curl -fsSL https://tilde.thingstead.io/install.sh | bash
 ```
 
 Or run without installing:
@@ -42,9 +42,22 @@ npx @jwill824/tilde
 
 ## Full documentation →
 
-**[thingstead.io/tilde/docs](https://thingstead.io/tilde/docs)**
+**[tilde.thingstead.io/docs](https://tilde.thingstead.io/docs)**
 
 Installation guide · Getting started · Configuration reference · Plugin API
+
+---
+
+## Infrastructure
+
+> **⚠️ Terraform Deprecated in this repo**
+>
+> Infrastructure (GitHub repo settings, Cloudflare Pages, DNS) is now managed by
+> [github-repo-factory](https://github.com/jwill824/github-repo-factory). The
+> standalone `terraform/` directory has been removed from this repo.
+>
+> See `specs/009-migrate-subdomain-factory/quickstart.md` for the migration sequence
+> and follow-up workspace decommissioning steps.
 
 ---
 

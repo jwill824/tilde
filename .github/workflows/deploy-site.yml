@@ -15,7 +15,7 @@ on:
 
 jobs:
   build:
-    name: Build & Deploy (thingstead.io)
+    name: Build & Deploy (tilde.thingstead.io)
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || '' }}
     permissions:
@@ -42,9 +42,9 @@ jobs:
 
       - name: Assemble site output
         run: |
-          mkdir -p dist/tilde/docs
-          cp -r site/tilde/. dist/tilde/
-          cp -r site/docs/dist/. dist/tilde/docs/
+          mkdir -p dist/docs
+          cp -r site/tilde/. dist/
+          cp -r site/docs/dist/. dist/docs/
 
       - name: Deploy to Cloudflare Pages
         if: github.ref == 'refs/heads/main'
@@ -52,5 +52,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=thingstead
+          command: pages deploy dist --project-name=thingstead-tilde
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
