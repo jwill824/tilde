@@ -305,7 +305,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             isOptional={false}
             initialValues={initialValues}
             onComplete={(data) => advance(
-              { languages: data.languages },
+              { languages: data.languages, _entries: data._entries, _currentIdx: data._currentIdx } as Partial<TildeConfig>,
               `Languages: ${data.languages.length === 0 ? 'none' : data.languages.map(l => `${l.name}@${l.version}`).join(', ')}`
             )}
           />
