@@ -11,6 +11,8 @@ interface Props {
   defaultGitEmail?: string;
   /** Pre-existing contexts from wizard history — triggers list view when non-empty */
   initialContexts?: DeveloperContext[];
+  /** Languages detected by env-capture scan — shown as suggestions in lang-gate */
+  detectedLanguages?: Array<{ name: string; version: string }>;
   onBack?: () => void;
   isOptional?: boolean;
   initialValues?: Record<string, unknown>;
@@ -182,6 +184,7 @@ export function ContextsStep({
   defaultGitName = '',
   defaultGitEmail = '',
   initialContexts = [],
+  detectedLanguages = [],
   onBack,
   isOptional: _isOptional,
   initialValues = {},
@@ -445,6 +448,8 @@ export function ContextsStep({
 
   // ── lang-gate ──────────────────────────────────────────────────────────────
   if (phase === 'lang-gate') {
+    const alreadyAdded = new Set(form.langBindings.map(lb => lb.runtime));
+    const suggestions = detectedLanguages.filter(dl => !alreadyAdded.has(dl.name));
     const langItems = [
       { label: '+ Add language versions for this context', value: 'add' },
       { label: '→ Done (skip language bindings)', value: 'skip' },
@@ -453,6 +458,16 @@ export function ContextsStep({
     return (
       <Box flexDirection="column">
         <Text bold>Language versions for <Text color="cyan">{form.label}</Text>:</Text>
+        {suggestions.length > 0 && (
+          <Box flexDirection="column" marginBottom={1}>
+            <Text dimColor>Detected on this machine:</Text>
+            {suggestions.map(dl => (
+              <Box key={dl.name} marginLeft={2}>
+                <Text dimColor>• {LANGUAGE_CATALOG[dl.name]?.label ?? dl.name} {dl.version}</Text>
+              </Box>
+            ))}
+          </Box>
+        )}
         {form.langBindings.length > 0 && (
           <Box flexDirection="column" marginBottom={1}>
             {form.langBindings.map(lb => (

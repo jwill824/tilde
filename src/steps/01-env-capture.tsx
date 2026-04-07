@@ -73,7 +73,7 @@ export function EnvCaptureStep({ onComplete, onBack, isOptional: _isOptional }: 
                 setPhase({ type: 'scanning' });
               } else {
                 onComplete({
-                  captureReport: { dotfiles: [], brewPackages: [], rcFiles: {}, skippedFiles: [] },
+                  captureReport: { dotfiles: [], brewPackages: [], rcFiles: {}, skippedFiles: [], detectedLanguages: [], detectedVersionManagers: [] },
                 });
               }
             }}
@@ -103,6 +103,12 @@ export function EnvCaptureStep({ onComplete, onBack, isOptional: _isOptional }: 
           <Text color="green">✓ Found {report.brewPackages.length} packages (brew)</Text>
           <Text color="green">✓ Found {report.dotfiles.length} dotfiles</Text>
           <Text color="green">✓ Found {rcEntryCount} rc entries</Text>
+          {report.detectedLanguages.length > 0 && (
+            <Text color="green">✓ Languages: {report.detectedLanguages.map(l => `${l.name} ${l.version}`).join(', ')}</Text>
+          )}
+          {report.detectedVersionManagers.length > 0 && (
+            <Text color="green">✓ Version managers: {report.detectedVersionManagers.map(v => v.name).join(', ')}</Text>
+          )}
           {skippedCount > 0 && (
             <Text color="yellow">⚠ Skipped {skippedCount} files (secrets excluded)</Text>
           )}

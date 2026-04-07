@@ -252,7 +252,8 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
                 rcFiles['.bash_profile'] !== undefined ? 'bash' : undefined;
               advance(
                 detectedShell ? { shell: detectedShell } : {},
-                `Environment scan: ${data.captureReport.dotfiles.length} dotfiles, ${data.captureReport.brewPackages.length} brew packages`
+                `Environment scan: ${data.captureReport.dotfiles.length} dotfiles, ${data.captureReport.brewPackages.length} brew packages` +
+                (data.captureReport.detectedLanguages.length > 0 ? `, ${data.captureReport.detectedLanguages.length} languages detected` : '')
               );
             }}
           />
@@ -296,6 +297,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             defaultGitName={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').name : undefined}
             defaultGitEmail={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').email : undefined}
             initialContexts={canGoBack ? (config.contexts ?? []) : []}
+            detectedLanguages={captureReport?.detectedLanguages}
             onBack={onBack}
             isOptional={false}
             initialValues={initialValues}
