@@ -83,6 +83,7 @@ export function BrowserStep({ onComplete, onBack, isOptional, onSkip, initialVal
       if (input === ' ') {
         setBrowsers(prev => prev.map((b, i) => i === cursor ? { ...b, selected: !b.selected } : b));
       }
+      if (key.return) { handleConfirmBrowsers().catch(() => {}); return; }
       if (input === 'b' && onBack) { onBack(); return; }
       if (input === 's' && isOptional && onSkip) { onSkip(); return; }
     }
@@ -211,19 +212,10 @@ export function BrowserStep({ onComplete, onBack, isOptional, onSkip, initialVal
           </Box>
         ))}
       </Box>
-      <Box marginTop={1}>
-        <SelectInput
-          items={[
-            { label: 'Confirm selection', value: 'confirm' },
-            ...(onBack ? [{ label: '← Back', value: 'back' }] : []),
-            ...(isOptional && onSkip ? [{ label: '→ Skip', value: 'skip' }] : []),
-          ]}
-          onSelect={(item) => {
-            if (item.value === 'confirm') { handleConfirmBrowsers().catch(() => {}); }
-            if (item.value === 'back' && onBack) { onBack(); }
-            if (item.value === 'skip' && onSkip) { onSkip(); }
-          }}
-        />
+      <Box marginTop={1} gap={2}>
+        <Text dimColor>↑↓ + Space to toggle, Enter to confirm</Text>
+        {onBack && <Text dimColor>← Back (b)</Text>}
+        {isOptional && onSkip && <Text dimColor>→ Skip (s)</Text>}
       </Box>
     </Box>
   );
