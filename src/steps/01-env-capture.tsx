@@ -54,7 +54,7 @@ export function EnvCaptureStep({ onComplete, onBack, isOptional: _isOptional }: 
     doScan().catch(() => {
       // On scan failure, return empty report
       onComplete({
-        captureReport: { dotfiles: [], brewPackages: [], rcFiles: {}, skippedFiles: [] },
+        captureReport: { dotfiles: [], brewPackages: [], rcFiles: {}, skippedFiles: [], detectedLanguages: [], detectedVersionManagers: [] },
       });
     });
   }, [phase.type]);

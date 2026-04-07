@@ -16,6 +16,8 @@ interface Props {
   onBack?: () => void;
   isOptional?: boolean;
   initialValues?: Record<string, unknown>;
+  /** Direct workspace root override (used by config-first and update modes) */
+  workspaceRoot?: string;
 }
 
 type AuthMethod = 'gh-cli' | 'https' | 'ssh';
@@ -188,9 +190,10 @@ export function ContextsStep({
   onBack,
   isOptional: _isOptional,
   initialValues = {},
+  workspaceRoot: workspaceRootProp,
 }: Props) {
   const [workspaceRoot, setWorkspaceRoot] = useState(
-    () => (initialValues.workspaceRoot as string) ?? '~/Developer'
+    () => workspaceRootProp ?? (initialValues.workspaceRoot as string) ?? '~/Developer'
   );
   const [contexts, setContexts] = useState<DeveloperContext[]>(initialContexts);
   const [phase, setPhase] = useState<Phase>(
