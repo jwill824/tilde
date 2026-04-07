@@ -240,6 +240,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
         {currentStep === 0 && (
           <ConfigDetectionStep
             onBack={onBack}
+            onExit={onExit}
             isOptional={false}
             onComplete={(data) => advance(
               {},

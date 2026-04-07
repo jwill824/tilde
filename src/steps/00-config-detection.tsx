@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
 import SelectInput from 'ink-select-input';
 import { access } from 'node:fs/promises';
-import { join } from 'node:path';
-import { homedir } from 'node:os';
+import { getDiscoveryPaths } from '../utils/config-discovery.js';
 
 interface ConfigDetectionResult {
   mode: 'wizard' | 'config-first';
@@ -12,24 +11,21 @@ interface ConfigDetectionResult {
 
 interface Props {
   onComplete: (result: ConfigDetectionResult) => void;
+  onExit?: () => void;
   onBack?: () => void;
   isOptional?: boolean;
 }
 
-const CONFIG_SEARCH_PATHS = [
-  './tilde.config.json',
-  join(homedir(), 'Developer/personal/dotfiles/tilde.config.json'),
-  join(homedir(), 'Developer/dotfiles/tilde.config.json'),
-  join(homedir(), '.dotfiles/tilde.config.json'),
-];
-
-export function ConfigDetectionStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
+export function ConfigDetectionStep({ onComplete, onExit, onBack: _onBack, isOptional: _isOptional }: Props) {
   const [foundConfig, setFoundConfig] = useState<string | null>(null);
   const [scanning, setScanning] = useState(true);
+  const [paths, setPaths] = useState<string[]>([]);
 
   useEffect(() => {
     async function scan() {
-      for (const p of CONFIG_SEARCH_PATHS) {
+      const discoveryPaths = await getDiscoveryPaths();
+      setPaths(discoveryPaths);
+      for (const p of discoveryPaths) {
         try {
           await access(p);
           setFoundConfig(p);
@@ -38,7 +34,6 @@ export function ConfigDetectionStep({ onComplete, onBack: _onBack, isOptional: _
         } catch { /* continue */ }
       }
       setScanning(false);
-      onComplete({ mode: 'wizard' });
     }
     scan();
   }, []);
@@ -52,9 +47,30 @@ export function ConfigDetectionStep({ onComplete, onBack: _onBack, isOptional: _
   }
 
   if (!foundConfig) {
+    const noConfigItems = [
+      { label: 'Yes — run setup wizard', value: 'yes' },
+      { label: 'No — exit', value: 'no' },
+    ];
+
     return (
-      <Box>
-        <Text dimColor>No existing config found. Starting fresh wizard.</Text>
+      <Box flexDirection="column">
+        <Text>No existing config found.</Text>
+        <Text dimColor>Searched: {paths.join(', ')}</Text>
+        <Box marginTop={1}>
+          <Text>Create a new tilde config?</Text>
+        </Box>
+        <Box marginTop={1}>
+          <SelectInput
+            items={noConfigItems}
+            onSelect={(item) => {
+              if (item.value === 'yes') {
+                onComplete({ mode: 'wizard' });
+              } else {
+                onExit?.();
+              }
+            }}
+          />
+        </Box>
       </Box>
     );
   }
