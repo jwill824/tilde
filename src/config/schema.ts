@@ -21,8 +21,9 @@ const GitHubAccountSchema = z.object({
 
 // New in v1.5: language version binding per context
 const LanguageBindingSchema = z.object({
-  runtime: z.string().min(1),  // e.g., "nodejs", "java", "python"
-  version: z.string().min(1),  // e.g., "22.0.0", "21.0.3"
+  runtime: z.string().min(1),   // e.g., "node", "java", "python"
+  version: z.string().min(1),   // e.g., "22 (LTS)", "21.0.3"
+  manager: z.string().optional(), // e.g., "nvm", "sdkman", "vfox"
 });
 
 const DeveloperContextSchema = z.object({

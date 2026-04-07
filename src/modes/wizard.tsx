@@ -10,7 +10,6 @@ import { parseGitconfig } from '../capture/parser.js';
 import { ShellStep } from '../steps/02-shell.js';
 import { PackageManagerStep } from '../steps/03-package-manager.js';
 import { VersionManagerStep } from '../steps/04-version-manager.js';
-import { LanguagesStep } from '../steps/05-languages.js';
 import { ContextsStep } from '../steps/07-contexts.js';
 import { ToolsStep } from '../steps/09-tools.js';
 import { AppConfigStep } from '../steps/10-app-config.js';
@@ -53,7 +52,7 @@ export interface WizardState {
 }
 
 // ---------------------------------------------------------------------------
-// Step registry — all 14 canonical steps (00–13) plus new steps 14–15
+// Step registry — 12 canonical steps (languages absorbed into contexts)
 // ---------------------------------------------------------------------------
 const STEP_REGISTRY: StepDefinition[] = [
   { id: 'config-detection',  label: 'Config Detection',    required: true  }, // 0
@@ -61,14 +60,13 @@ const STEP_REGISTRY: StepDefinition[] = [
   { id: 'shell',             label: 'Shell',               required: true  }, // 2
   { id: 'package-manager',   label: 'Package Manager',     required: true  }, // 3
   { id: 'version-manager',   label: 'Version Manager',     required: true  }, // 4
-  { id: 'languages',         label: 'Languages',           required: true  }, // 5
-  { id: 'contexts',          label: 'Workspace & Contexts',required: true  }, // 6 (was 7; absorbs workspace/git-auth/accounts)
-  { id: 'tools',             label: 'Tools & Applications',required: true  }, // 7 (was 9)
-  { id: 'app-config',        label: 'Editor Configuration',required: false }, // 8 (was 10)
-  { id: 'secrets-backend',   label: 'Secrets Backend',     required: true  }, // 9 (was 12)
-  { id: 'config-export',     label: 'Config Export',       required: true  }, // 10 (was 13)
-  { id: 'browser',           label: 'Browser Selection',   required: false }, // 11 (was 14)
-  { id: 'ai-tools',          label: 'AI Coding Tools',     required: false }, // 12 (was 15)
+  { id: 'contexts',          label: 'Workspace & Contexts',required: true  }, // 5 (absorbs workspace/lang/git-auth/accounts)
+  { id: 'tools',             label: 'Tools & Applications',required: true  }, // 6
+  { id: 'app-config',        label: 'Editor Configuration',required: false }, // 7
+  { id: 'secrets-backend',   label: 'Secrets Backend',     required: true  }, // 8
+  { id: 'config-export',     label: 'Config Export',       required: true  }, // 9
+  { id: 'browser',           label: 'Browser Selection',   required: false }, // 10
+  { id: 'ai-tools',          label: 'AI Coding Tools',     required: false }, // 11
 ];
 
 const LAST_STEP = STEP_REGISTRY.length - 1; // index of final step
@@ -294,18 +292,6 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
           />
         )}
         {currentStep === 5 && (
-          <LanguagesStep
-            versionManagers={config.versionManagers ?? []}
-            onBack={onBack}
-            isOptional={false}
-            initialValues={initialValues}
-            onComplete={(data) => advance(
-              { languages: data.languages, _entries: data._entries, _currentIdx: data._currentIdx } as Partial<TildeConfig>,
-              `Languages: ${data.languages.length === 0 ? 'none' : data.languages.map(l => `${l.name}@${l.version}`).join(', ')}`
-            )}
-          />
-        )}
-        {currentStep === 6 && (
           <ContextsStep
             defaultGitName={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').name : undefined}
             defaultGitEmail={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').email : undefined}
@@ -319,7 +305,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 7 && (
+        {currentStep === 6 && (
           <ToolsStep
             defaultTools={captureReport ? captureReport.brewPackages.join(', ') : undefined}
             onBack={onBack}
@@ -334,7 +320,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 8 && (
+        {currentStep === 7 && (
           <AppConfigStep
             onBack={onBack}
             isOptional={isCurrentOptional}
@@ -347,7 +333,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 9 && (
+        {currentStep === 8 && (
           <SecretsBackendStep
             onBack={onBack}
             isOptional={false}
@@ -358,7 +344,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 10 && (
+        {currentStep === 9 && (
           <ConfigExportStep
             config={config as TildeConfig}
             onBack={onBack}
@@ -370,7 +356,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             }}
           />
         )}
-        {currentStep === 11 && (
+        {currentStep === 10 && (
           <BrowserStep
             onBack={onBack}
             isOptional={isCurrentOptional}
@@ -382,7 +368,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 12 && (
+        {currentStep === 11 && (
           <AIToolsStep
             onBack={onBack}
             isOptional={isCurrentOptional}

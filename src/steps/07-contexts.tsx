@@ -3,6 +3,7 @@ import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
 import type { DeveloperContext } from '../config/schema.js';
+import { LANGUAGE_CATALOG, LANGUAGE_KEYS } from '../data/language-versions.js';
 
 interface Props {
   onComplete: (data: { workspaceRoot: string; dotfilesRepo: string; contexts: DeveloperContext[] }) => void;
@@ -27,7 +28,19 @@ type Phase =
   | 'auth-method'      // SelectInput — no gate needed
   | 'account'          // gate + TextInput for GitHub username (conditional)
   | 'dotfiles'         // gate + TextInput for dotfiles path (optional)
-  | 'loop';            // "Add another?" SelectInput
+  | 'lang-gate'        // SelectInput — add language bindings?
+  | 'lang-select'      // SelectInput — choose a language
+  | 'lang-manager'     // SelectInput — choose version manager
+  | 'lang-version'     // SelectInput — choose version from catalog
+  | 'lang-version-manual' // GateInput for manual version entry
+  | 'lang-another'     // SelectInput — add another language?
+  | 'loop';            // "Add another context?" SelectInput
+
+interface LanguageBinding {
+  runtime: string;
+  version: string;
+  manager: string;
+}
 
 interface ContextForm {
   label: string;
@@ -37,6 +50,7 @@ interface ContextForm {
   authMethod: AuthMethod;
   account: string;
   dotfilesPath: string;
+  langBindings: LanguageBinding[];
 }
 
 const EMPTY_FORM: ContextForm = {
@@ -47,6 +61,7 @@ const EMPTY_FORM: ContextForm = {
   authMethod: 'gh-cli',
   account: '',
   dotfilesPath: '',
+  langBindings: [],
 };
 
 // ---------------------------------------------------------------------------
@@ -180,6 +195,9 @@ export function ContextsStep({
   );
   const [form, setForm] = useState<ContextForm>({ ...EMPTY_FORM, gitName: defaultGitName, gitEmail: defaultGitEmail });
   const [error, setError] = useState('');
+  // Language sub-flow transient state
+  const [currentLangKey, setCurrentLangKey] = useState('');
+  const [currentManager, setCurrentManager] = useState('');
 
   function resetForm() {
     setForm({ ...EMPTY_FORM, gitName: defaultGitName, gitEmail: defaultGitEmail });
@@ -194,7 +212,7 @@ export function ContextsStep({
       git: { name: form.gitName, email: form.gitEmail },
       authMethod: form.authMethod,
       envVars: [],
-      languageBindings: [],
+      languageBindings: form.langBindings,
       ...(needsAccount && form.account ? { github: { username: form.account } } : {}),
       ...(form.dotfilesPath ? { dotfilesPath: form.dotfilesPath } : {}),
     };
@@ -410,10 +428,10 @@ export function ContextsStep({
           placeholder={defaultDotfiles}
           onConfirm={(v) => {
             setForm(f => ({ ...f, dotfilesPath: v.trim() || defaultDotfiles }));
-            completeContext();
+            setPhase('lang-gate');
           }}
           onSkip={() => {
-            completeContext();
+            setPhase('lang-gate');
           }}
           skipLabel="Skip (use default)"
           onBack={() => {
@@ -421,6 +439,154 @@ export function ContextsStep({
             setPhase(needsAccount ? 'account' : 'auth-method');
           }}
         />
+      </Box>
+    );
+  }
+
+  // ── lang-gate ──────────────────────────────────────────────────────────────
+  if (phase === 'lang-gate') {
+    const langItems = [
+      { label: '+ Add language versions for this context', value: 'add' },
+      { label: '→ Done (skip language bindings)', value: 'skip' },
+      { label: '← Back to dotfiles', value: 'back' },
+    ];
+    return (
+      <Box flexDirection="column">
+        <Text bold>Language versions for <Text color="cyan">{form.label}</Text>:</Text>
+        {form.langBindings.length > 0 && (
+          <Box flexDirection="column" marginBottom={1}>
+            {form.langBindings.map(lb => (
+              <Box key={lb.runtime} marginLeft={2}>
+                <Text>• {LANGUAGE_CATALOG[lb.runtime]?.label ?? lb.runtime} <Text dimColor>{lb.version} via {lb.manager}</Text></Text>
+              </Box>
+            ))}
+          </Box>
+        )}
+        <Box marginTop={1}>
+          <SelectInput items={langItems} onSelect={(item) => {
+            if (item.value === 'add') { setPhase('lang-select'); }
+            else if (item.value === 'back') { setPhase('dotfiles'); }
+            else { completeContext(); }
+          }} />
+        </Box>
+      </Box>
+    );
+  }
+
+  // ── lang-select ────────────────────────────────────────────────────────────
+  if (phase === 'lang-select') {
+    const alreadyAdded = new Set(form.langBindings.map(lb => lb.runtime));
+    const langItems = LANGUAGE_KEYS
+      .filter(k => !alreadyAdded.has(k))
+      .map(k => ({ label: LANGUAGE_CATALOG[k].label, value: k }));
+    langItems.push({ label: '← Back', value: '__back__' });
+    return (
+      <Box flexDirection="column">
+        <Text bold>Select a language:</Text>
+        <Box marginTop={1}>
+          <SelectInput items={langItems} onSelect={(item) => {
+            if (item.value === '__back__') { setPhase('lang-gate'); return; }
+            setCurrentLangKey(item.value);
+            setCurrentManager('');
+            setPhase('lang-manager');
+          }} />
+        </Box>
+      </Box>
+    );
+  }
+
+  // ── lang-manager ───────────────────────────────────────────────────────────
+  if (phase === 'lang-manager') {
+    const catalog = LANGUAGE_CATALOG[currentLangKey];
+    const managerItems = (catalog?.managers ?? []).map(m => ({ label: m, value: m }));
+    managerItems.push({ label: '← Back', value: '__back__' });
+    return (
+      <Box flexDirection="column">
+        <Text bold>Version manager for <Text color="cyan">{catalog?.label ?? currentLangKey}</Text>:</Text>
+        <Box marginTop={1}>
+          <SelectInput items={managerItems} onSelect={(item) => {
+            if (item.value === '__back__') { setPhase('lang-select'); return; }
+            setCurrentManager(item.value);
+            setPhase('lang-version');
+          }} />
+        </Box>
+      </Box>
+    );
+  }
+
+  // ── lang-version ───────────────────────────────────────────────────────────
+  if (phase === 'lang-version') {
+    const catalog = LANGUAGE_CATALOG[currentLangKey];
+    const versionItems = (catalog?.versions ?? []).map(v => ({ label: v, value: v }));
+    versionItems.push({ label: 'Other — enter manually', value: '__manual__' });
+    versionItems.push({ label: '← Back', value: '__back__' });
+    return (
+      <Box flexDirection="column">
+        <Text bold>Version for <Text color="cyan">{catalog?.label ?? currentLangKey}</Text> <Text dimColor>(via {currentManager})</Text>:</Text>
+        <Box marginTop={1}>
+          <SelectInput items={versionItems} onSelect={(item) => {
+            if (item.value === '__back__') { setPhase('lang-manager'); return; }
+            if (item.value === '__manual__') { setPhase('lang-version-manual'); return; }
+            setForm(f => ({
+              ...f,
+              langBindings: [...f.langBindings, { runtime: currentLangKey, version: item.value, manager: currentManager }],
+            }));
+            setPhase('lang-another');
+          }} />
+        </Box>
+      </Box>
+    );
+  }
+
+  // ── lang-version-manual ────────────────────────────────────────────────────
+  if (phase === 'lang-version-manual') {
+    const catalog = LANGUAGE_CATALOG[currentLangKey];
+    return (
+      <Box flexDirection="column">
+        <Text bold>Enter version for <Text color="cyan">{catalog?.label ?? currentLangKey}</Text>:</Text>
+        <GateInput
+          prompt="Version"
+          hint={`e.g. ${catalog?.versions[0] ?? '1.0.0'}`}
+          currentValue=""
+          placeholder={catalog?.versions[0] ?? '1.0.0'}
+          onConfirm={(v) => {
+            const ver = v.trim();
+            if (!ver) return;
+            setForm(f => ({
+              ...f,
+              langBindings: [...f.langBindings, { runtime: currentLangKey, version: ver, manager: currentManager }],
+            }));
+            setPhase('lang-another');
+          }}
+          onBack={() => setPhase('lang-version')}
+        />
+      </Box>
+    );
+  }
+
+  // ── lang-another ───────────────────────────────────────────────────────────
+  if (phase === 'lang-another') {
+    const hasMore = form.langBindings.length < LANGUAGE_KEYS.length;
+    const anotherItems = [
+      ...(hasMore ? [{ label: '+ Add another language', value: 'add' }] : []),
+      { label: '→ Done with languages', value: 'done' },
+      { label: '← Back to language list', value: 'back' },
+    ];
+    return (
+      <Box flexDirection="column">
+        <Text bold>Language bindings for <Text color="cyan">{form.label}</Text>:</Text>
+        {form.langBindings.map(lb => (
+          <Box key={lb.runtime} marginLeft={2}>
+            <Text>• {LANGUAGE_CATALOG[lb.runtime]?.label ?? lb.runtime} <Text dimColor>{lb.version} via {lb.manager}</Text></Text>
+          </Box>
+        ))}
+        <Box marginTop={1}>
+          <SelectInput items={anotherItems} onSelect={(item) => {
+            if (item.value === 'add') { setPhase('lang-select'); }
+            else if (item.value === 'back') { setPhase('lang-select'); }
+            else { completeContext(); }
+          }} />
+        </Box>
       </Box>
     );
   }
