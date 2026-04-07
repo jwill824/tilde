@@ -219,3 +219,35 @@ describe('Wizard navigation state machine', () => {
     });
   });
 });
+
+// T050: getNextStep() logic tree unit tests
+import { getNextStep } from '../../src/modes/wizard.js';
+
+describe('getNextStep()', () => {
+  it('defaults to step+1 for unhandled steps', () => {
+    expect(getNextStep(0, {})).toBe(1);
+    expect(getNextStep(1, {})).toBe(2);
+    expect(getNextStep(9, {})).toBe(10);
+  });
+
+  it('step 6 (tools) → skips step 7 (app-config) when no editor tool selected', () => {
+    expect(getNextStep(6, { tools: [] })).toBe(8);
+    expect(getNextStep(6, { tools: ['slack', 'spotify'] })).toBe(8);
+  });
+
+  it('step 6 (tools) → goes to step 7 (app-config) when editor tool present', () => {
+    expect(getNextStep(6, { tools: ['cursor'] })).toBe(7);
+    expect(getNextStep(6, { tools: ['vscode'] })).toBe(7);
+    expect(getNextStep(6, { tools: ['neovim', 'slack'] })).toBe(7);
+  });
+
+  it('step 6: editor matching is case-insensitive', () => {
+    expect(getNextStep(6, { tools: ['Cursor'] })).toBe(7);
+    expect(getNextStep(6, { tools: ['VSCODE'] })).toBe(7);
+  });
+
+  it('step 5 (contexts) → always goes to step 6', () => {
+    expect(getNextStep(5, {})).toBe(6);
+    expect(getNextStep(5, { contexts: [] })).toBe(6);
+  });
+});
