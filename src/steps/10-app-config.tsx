@@ -8,6 +8,7 @@ interface Props {
   onBack?: () => void;
   isOptional?: boolean;
   onSkip?: () => void;
+  initialValues?: Record<string, unknown>;
 }
 
 const DOMAINS: { key: keyof ConfigurationDomains; label: string }[] = [

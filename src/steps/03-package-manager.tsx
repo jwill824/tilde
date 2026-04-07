@@ -5,6 +5,7 @@ interface Props {
   onComplete: (data: { packageManager: 'homebrew' }) => void;
   onBack?: () => void;
   isOptional?: boolean;
+  initialValues?: Record<string, unknown>;
 }
 
 export function PackageManagerStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {

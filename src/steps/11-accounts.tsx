@@ -9,6 +9,7 @@ interface Props {
   onBack?: () => void;
   isOptional?: boolean;
   onSkip?: () => void;
+  initialValues?: Record<string, unknown>;
 }
 
 /** Auto-advances when there are no gh-cli contexts. */

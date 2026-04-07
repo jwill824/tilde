@@ -8,6 +8,7 @@ interface Props {
   onComplete: (data: { contexts: DeveloperContext[] }) => void;
   onBack?: () => void;
   isOptional?: boolean;
+  initialValues?: Record<string, unknown>;
 }
 
 type AuthMethod = 'gh-cli' | 'https' | 'ssh';

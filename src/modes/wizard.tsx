@@ -191,6 +191,9 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
   const isCurrentOptional = !(STEP_REGISTRY[currentStep]?.required ?? true);
   // onBack handler — only passed when back-nav is available
   const onBack = canGoBack ? goBack : undefined;
+  // Restore values from history when navigating back to a step
+  const prevFrame = history.find(f => f.stepIndex === currentStep);
+  const initialValues: Record<string, unknown> = prevFrame?.values ?? {};
 
   return (
     <Box flexDirection="column">
@@ -263,9 +266,10 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
         )}
         {currentStep === 2 && (
           <ShellStep
-            defaultShell={config.shell ?? 'zsh'}
+            defaultShell={((initialValues.shell ?? config.shell) as 'zsh' | 'bash' | 'fish' | undefined) ?? 'zsh'}
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { shell: data.shell },
               `Shell: ${data.shell}`
@@ -276,6 +280,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
           <PackageManagerStep
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { packageManager: data.packageManager },
               `Package manager: ${data.packageManager}`
@@ -286,6 +291,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
           <VersionManagerStep
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { versionManagers: data.versionManagers },
               `Version managers: ${data.versionManagers.length === 0 ? 'none' : data.versionManagers.map(v => v.name).join(', ')}`
@@ -297,6 +303,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             versionManagers={config.versionManagers ?? []}
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { languages: data.languages },
               `Languages: ${data.languages.length === 0 ? 'none' : data.languages.map(l => `${l.name}@${l.version}`).join(', ')}`
@@ -307,6 +314,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
           <WorkspaceStep
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { workspaceRoot: data.workspaceRoot, dotfilesRepo: data.dotfilesRepo },
               `Workspace: ${data.workspaceRoot}, dotfiles: ${data.dotfilesRepo}`
@@ -332,6 +340,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             contexts={config.contexts ?? []}
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { contexts: data.contexts },
               `Git auth: ${data.contexts.map(c => `${c.label}→${c.authMethod}`).join(', ')}`
@@ -343,6 +352,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             defaultTools={captureReport ? captureReport.brewPackages.join(', ') : undefined}
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               {
                 tools: data.tools,
@@ -357,6 +367,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             onBack={onBack}
             isOptional={isCurrentOptional}
             onSkip={isCurrentOptional ? skip : undefined}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { configurations: { ...(config.configurations ?? DEFAULT_CONFIGURATIONS), ...data.configurations },
                 editors: data.editors },
@@ -370,6 +381,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             onBack={onBack}
             isOptional={isCurrentOptional}
             onSkip={isCurrentOptional ? skip : undefined}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { contexts: data.contexts },
               `Accounts configured`
@@ -380,6 +392,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
           <SecretsBackendStep
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { secretsBackend: data.secretsBackend },
               `Secrets backend: ${data.secretsBackend}`
@@ -402,6 +415,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             onBack={onBack}
             isOptional={isCurrentOptional}
             onSkip={isCurrentOptional ? skip : undefined}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { browser: data.browser },
               `Browsers: ${data.browser.selected.length === 0 ? 'none' : data.browser.selected.join(', ')}`
@@ -413,6 +427,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             onBack={onBack}
             isOptional={isCurrentOptional}
             onSkip={isCurrentOptional ? skip : undefined}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { aiTools: data.aiTools },
               `AI tools: ${data.aiTools.length === 0 ? 'none' : data.aiTools.map(t => t.label).join(', ')}`

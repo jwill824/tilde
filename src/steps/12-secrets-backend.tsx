@@ -8,6 +8,7 @@ interface Props {
   onComplete: (data: { secretsBackend: SecretsBackend }) => void;
   onBack?: () => void;
   isOptional?: boolean;
+  initialValues?: Record<string, unknown>;
 }
 
 const items = [

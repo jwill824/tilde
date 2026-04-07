@@ -6,6 +6,7 @@ interface Props {
   onComplete: (data: { versionManagers: VersionManagerChoice[] }) => void;
   onBack?: () => void;
   isOptional?: boolean;
+  initialValues?: Record<string, unknown>;
 }
 
 const OPTIONS = ['vfox'] as const;

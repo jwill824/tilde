@@ -20,6 +20,7 @@ interface Props {
   onBack?: () => void;
   isOptional?: boolean;
   onSkip?: () => void;
+  initialValues?: Record<string, unknown>;
 }
 
 interface AIToolEntry {

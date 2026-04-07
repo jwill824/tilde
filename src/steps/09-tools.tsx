@@ -7,6 +7,7 @@ interface Props {
   defaultTools?: string;
   onBack?: () => void;
   isOptional?: boolean;
+  initialValues?: Record<string, unknown>;
 }
 
 export function ToolsStep({ onComplete, defaultTools = '', onBack: _onBack, isOptional: _isOptional }: Props) {

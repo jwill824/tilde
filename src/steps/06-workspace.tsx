@@ -6,6 +6,7 @@ interface Props {
   onComplete: (data: { workspaceRoot: string; dotfilesRepo: string }) => void;
   onBack?: () => void;
   isOptional?: boolean;
+  initialValues?: Record<string, unknown>;
 }
 
 type Field = 'workspaceRoot' | 'dotfilesRepo';

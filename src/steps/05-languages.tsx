@@ -15,6 +15,7 @@ interface Props {
   onComplete: (data: { languages: LanguageChoice[] }) => void;
   onBack?: () => void;
   isOptional?: boolean;
+  initialValues?: Record<string, unknown>;
 }
 
 interface LanguageEntry {

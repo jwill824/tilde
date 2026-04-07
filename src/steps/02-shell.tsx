@@ -7,6 +7,7 @@ interface Props {
   defaultShell?: 'zsh' | 'bash' | 'fish';
   onBack?: () => void;
   isOptional?: boolean;
+  initialValues?: Record<string, unknown>;
 }
 
 const items = [
