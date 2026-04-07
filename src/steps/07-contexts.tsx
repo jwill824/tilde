@@ -131,11 +131,10 @@ interface GateInputProps {
 
 function GateInput({ prompt, hint, currentValue, placeholder, onConfirm, onBack, backLabel = '← Back (b)', skipLabel, onSkip, error }: GateInputProps) {
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(currentValue);
+  const [editValue, setEditValue] = useState('');
 
-  // Sync value state when currentValue prop changes (phase transitions may reuse same instance)
+  // Reset to gate view when the phase changes (currentValue prop changes between phases)
   useEffect(() => {
-    setValue(currentValue);
     setEditing(false);
   }, [currentValue]);
 
@@ -160,6 +159,8 @@ function GateInput({ prompt, hint, currentValue, placeholder, onConfirm, onBack,
             onSelect={(item) => {
               if (item.value === 'back' && onBack) { onBack(); return; }
               if (item.value === 'skip' && onSkip) { onSkip(); return; }
+              // Always initialize the edit buffer from the current prop value
+              setEditValue(currentValue);
               setEditing(true);
             }}
           />
@@ -174,11 +175,11 @@ function GateInput({ prompt, hint, currentValue, placeholder, onConfirm, onBack,
       {error && <Text color="red">{error}</Text>}
       <Box marginTop={1}>
         <TextInput
-          value={value}
-          onChange={setValue}
+          value={editValue}
+          onChange={setEditValue}
           onSubmit={(v) => {
             setEditing(false);
-            onConfirm(v || value);
+            onConfirm(v || editValue);
           }}
           placeholder={placeholder}
         />

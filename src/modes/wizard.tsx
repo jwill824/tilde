@@ -101,7 +101,44 @@ const LAST_STEP = STEP_REGISTRY.length - 1; // index of final step
 
 interface CompletedStep {
   id: number;
-  summary: string;
+  summary: string[];
+}
+
+/** Derive sidebar summary lines from accumulated config for a given step index. */
+function makeSummaryLines(stepIdx: number, cfg: Partial<TildeConfig>): string[] {
+  switch (stepIdx) {
+    case 0: return [];
+    case 1: return [];
+    case 2: return cfg.shell ? [cfg.shell] : [];
+    case 3: return cfg.packageManagers?.length ? [cfg.packageManagers.join(', ')] : [];
+    case 4: return cfg.versionManagers?.length
+      ? [cfg.versionManagers.map(v => v.name).join(', ')]
+      : ['none'];
+    case 5: {
+      const lines: string[] = [];
+      if (cfg.workspaceRoot) lines.push(cfg.workspaceRoot);
+      (cfg.contexts ?? []).forEach(c => lines.push(`• ${c.label}`));
+      return lines;
+    }
+    case 6: {
+      const tools = cfg.tools ?? [];
+      if (!tools.length) return [];
+      const preview = tools.slice(0, 4).join(', ');
+      return [tools.length > 4 ? `${preview}…` : preview];
+    }
+    case 7: {
+      const cfgs = cfg.configurations ?? {};
+      const active = Object.entries(cfgs).filter(([, v]) => v).map(([k]) => k);
+      return active.length ? [active.join(', ')] : [];
+    }
+    case 8: return cfg.secretsBackend ? [cfg.secretsBackend] : [];
+    case 9: return [];
+    case 10: return cfg.browser?.selected?.length ? [cfg.browser.selected.join(', ')] : [];
+    case 11: return (cfg as Record<string, unknown>).aiTools
+      ? [((cfg as Record<string, unknown>).aiTools as Array<{label: string}>).map(t => t.label).join(', ')]
+      : [];
+    default: return [];
+  }
 }
 
 interface WizardProps {
@@ -155,7 +192,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
    * (T007: goNext)
    */
   const advance = useCallback(
-    async (stepData: Partial<TildeConfig>, summary: string) => {
+    async (stepData: Partial<TildeConfig>, summary: string[]) => {
       const merged = { ...config, ...stepData };
       setConfig(merged);
       setCompletedSteps(prev => [...prev, { id: currentStep, summary }]);
@@ -184,7 +221,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
    * (T007: skip)
    */
   const skip = useCallback(async () => {
-    await advance({}, `${STEP_REGISTRY[currentStep]?.label ?? 'Step'}: skipped`);
+    await advance({}, ['skipped']);
   }, [advance, currentStep]);
 
   /**
@@ -233,9 +270,9 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
                   setCurrentStep(resumeStep + 1);
                   // Reconstruct synthetic completed steps so sidebar shows ✓ for prior steps
                   setCompletedSteps(
-                    STEP_REGISTRY.slice(0, resumeStep + 1).map((step, idx) => ({
+                    STEP_REGISTRY.slice(0, resumeStep + 1).map((_, idx) => ({
                       id: idx,
-                      summary: `${step.label}: resumed`,
+                      summary: makeSummaryLines(idx, resumeConfig),
                     }))
                   );
                   // Populate history so back-nav works from the resumed step
@@ -262,21 +299,13 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
 
             {/* ── Left: step progress sidebar ── */}
             <Box flexDirection="column" marginRight={3}>
-              {(() => {
-                const summaryMap = new Map(completedSteps.map(s => [s.id, s.summary]));
-                return STEP_REGISTRY.map((step, idx) => {
-                  const done = completedStepSet.has(idx);
-                  const active = idx === currentStep;
-                  const rawSummary = summaryMap.get(idx);
-                  // Extract just the value part after "Label: " for compact display
-                  const summaryVal = rawSummary
-                    ? rawSummary.split(': ').slice(1).join(': ')
-                    : '';
-                  const summaryDisplay = summaryVal.length > 22
-                    ? summaryVal.slice(0, 21) + '…'
-                    : summaryVal;
-                  return (
-                    <Box key={idx}>
+              {STEP_REGISTRY.map((step, idx) => {
+                const done = completedStepSet.has(idx);
+                const active = idx === currentStep;
+                const summary = completedSteps.find(s => s.id === idx)?.summary ?? [];
+                return (
+                  <Box key={idx} flexDirection="column">
+                    <Box>
                       <Text color={done ? 'green' : active ? 'cyan' : undefined} dimColor={!done && !active}>
                         {done ? '✓' : active ? '▶' : ' '}{' '}
                       </Text>
@@ -287,14 +316,16 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
                       >
                         {step.label}
                       </Text>
-                      {done && summaryDisplay && (
-                        <Text dimColor> → {summaryDisplay}</Text>
-                      )}
                       {!step.required && !done && <Text dimColor> (opt)</Text>}
                     </Box>
-                  );
-                });
-              })()}
+                    {done && summary.map((line, i) => (
+                      <Box key={i} marginLeft={2}>
+                        <Text dimColor>{line}</Text>
+                      </Box>
+                    ))}
+                  </Box>
+                );
+              })}
               <Box marginTop={1}>
                 <Text dimColor>▶ current  ✓ done  (opt) optional</Text>
               </Box>
@@ -309,7 +340,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             isOptional={false}
             onComplete={(data) => advance(
               {},
-              `Config detection: ${data.mode === 'config-first' ? `using ${data.configPath}` : 'starting fresh wizard'}`
+              []
             )}
           />
         )}
@@ -325,8 +356,12 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
                 rcFiles['.bash_profile'] !== undefined ? 'bash' : undefined;
               advance(
                 detectedShell ? { shell: detectedShell } : {},
-                `Environment scan: ${data.captureReport.dotfiles.length} dotfiles, ${data.captureReport.brewPackages.length} brew packages` +
-                (data.captureReport.detectedLanguages.length > 0 ? `, ${data.captureReport.detectedLanguages.length} languages detected` : '')
+                [
+                  `${data.captureReport.dotfiles.length} dotfiles, ${data.captureReport.brewPackages.length} brew pkgs`,
+                  ...(data.captureReport.detectedLanguages.length > 0
+                    ? [`${data.captureReport.detectedLanguages.length} languages`]
+                    : []),
+                ]
               );
             }}
           />
@@ -339,7 +374,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             initialValues={initialValues}
             onComplete={(data) => advance(
               { shell: data.shell },
-              `Shell: ${data.shell}`
+              [data.shell]
             )}
           />
         )}
@@ -350,7 +385,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             initialValues={initialValues}
             onComplete={(data) => advance(
               { packageManagers: data.packageManagers } as Partial<TildeConfig>,
-              `Package managers: ${data.packageManagers.join(', ')}`
+              [data.packageManagers.join(', ')]
             )}
           />
         )}
@@ -361,7 +396,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             initialValues={initialValues}
             onComplete={(data) => advance(
               { versionManagers: data.versionManagers },
-              `Version managers: ${data.versionManagers.length === 0 ? 'none' : data.versionManagers.map(v => v.name).join(', ')}`
+              [data.versionManagers.length === 0 ? 'none' : data.versionManagers.map(v => v.name).join(', ')]
             )}
           />
         )}
@@ -376,7 +411,10 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             initialValues={initialValues}
             onComplete={(data) => advance(
               { workspaceRoot: data.workspaceRoot, dotfilesRepo: data.dotfilesRepo, contexts: data.contexts },
-              `Workspace: ${data.workspaceRoot} | Contexts: ${data.contexts.map(c => c.label).join(', ')}`
+              [
+                data.workspaceRoot,
+                ...data.contexts.map(c => `• ${c.label}`),
+              ]
             )}
           />
         )}
@@ -391,7 +429,9 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
                 tools: data.tools,
                 configurations: { ...(config.configurations ?? DEFAULT_CONFIGURATIONS), direnv: data.configurations.direnv },
               },
-              `Tools: ${data.tools.length === 0 ? 'none' : data.tools.slice(0, 3).join(', ')}${data.tools.length > 3 ? '…' : ''}`
+              data.tools.length === 0 ? [] : [
+                data.tools.slice(0, 4).join(', ') + (data.tools.length > 4 ? '…' : ''),
+              ]
             )}
           />
         )}
@@ -404,7 +444,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             onComplete={(data) => advance(
               { configurations: { ...(config.configurations ?? DEFAULT_CONFIGURATIONS), ...data.configurations },
                 editors: data.editors },
-              `Config domains: ${Object.entries(data.configurations).filter(([, v]) => v).map(([k]) => k).join(', ') || 'none'}`
+              [Object.entries(data.configurations).filter(([, v]) => v).map(([k]) => k).join(', ') || 'none']
             )}
           />
         )}
@@ -415,7 +455,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             initialValues={initialValues}
             onComplete={(data) => advance(
               { secretsBackend: data.secretsBackend },
-              `Secrets backend: ${data.secretsBackend}`
+              [data.secretsBackend]
             )}
           />
         )}
@@ -427,7 +467,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             onComplete={() => {
               clearCheckpoint().catch(() => {});
               // Advance to step 11 (Browser) rather than terminating the wizard
-              void advance({}, 'Configuration exported');
+              void advance({}, ['exported']);
             }}
           />
         )}
@@ -439,7 +479,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             initialValues={initialValues}
             onComplete={(data) => advance(
               { browser: data.browser },
-              `Browsers: ${data.browser.selected.length === 0 ? 'none' : data.browser.selected.join(', ')}`
+              [data.browser.selected.length === 0 ? 'none' : data.browser.selected.join(', ')]
             )}
           />
         )}
@@ -451,7 +491,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             initialValues={initialValues}
             onComplete={(data) => advance(
               { aiTools: data.aiTools },
-              `AI tools: ${data.aiTools.length === 0 ? 'none' : data.aiTools.map(t => t.label).join(', ')}`
+              [data.aiTools.length === 0 ? 'none' : data.aiTools.map(t => t.label).join(', ')]
             )}
           />
         )}
