@@ -295,3 +295,186 @@ Bear shown as: `Bear (App Store — install manually)` — selecting it adds a p
 | Ink multi-select component | `ink-select-input` supports checkboxes via `isFocused` — already a dep |
 | Step count stays at 16 | Note-taking apps added as sub-section of step 09, no new step index |
 | Contract in 008 superseded | New `contracts/cli-schema.md` in this spec; old one left in place with a "superseded" note |
+
+---
+
+## Phase 2 — Revised Architecture (from Local Testing)
+
+*These phases address the US5–US9 user stories and BUG-001/BUG-002 discovered after local testing.*
+
+### Summary of Structural Changes
+
+| Change | Old | New |
+|--------|-----|-----|
+| Step 5 (Languages) | Standalone global step | Removed — absorbed into Contexts step |
+| Step 6 (Workspace) | Standalone | Merged into new Contexts step |
+| Step 7 (Contexts) | Standalone | Expanded into unified Contexts step |
+| Step 8 (Git Auth) | Standalone | Per-context sub-flow inside Contexts step |
+| Step 11 (Accounts) | Optional standalone | Per-context sub-flow inside Contexts step |
+| Step count | 16 | ~12 (+ dynamic logic-tree steps) |
+| Navigation pattern | Mixed key-binding + menu | Uniform: explicit menu items or focus-safe key intercept |
+| Package manager | Single select | Multi-select |
+| Language version input | Free text | Catalog picker (pre-defined versions) |
+| Language → version manager | Separate step | Nested menu per language, inside each context |
+| Step sequencing | Linear (always +1) | Logic-tree (next step determined by prior answers) |
+
+### Phase 2A — Fix Steps 13–15 Rendering Bug (BUG-001, P0)
+
+**Goal**: Diagnose and fix why steps 13, 14, and 15 never render in the wizard.
+
+**Investigation approach**:
+1. Check `wizard.tsx` conditional rendering for steps 13–15 — look for missing branches, off-by-one, or unreachable conditions
+2. Check if `LAST_STEP` calculation is wrong (step count vs. index mismatch)
+3. Check whether step components `13-config-export.tsx`, `14-browser.tsx`, `15-ai-tools.tsx` throw on mount (async data load failure silently skips)
+4. Add `console.error` guards inside each component to detect mount failures in dev mode
+
+**Files potentially modified**: `src/modes/wizard.tsx`, `src/steps/13-config-export.tsx`, `src/steps/14-browser.tsx`, `src/steps/15-ai-tools.tsx`
+
+### Phase 2B — Navigation Standardization (US7, BUG-002, P1)
+
+**Goal**: Every wizard step uses the same back/skip affordance. No step uses a bare key binding for back when a text input may be focused.
+
+**Design decision**: The standard back affordance is a SelectInput item labeled `← Back` (or equivalent). This is placed outside of any text input's focus context. Steps with text inputs should:
+- Show the text input for data entry
+- After entry (on Enter), show a confirmation sub-view with `← Back` and `→ Continue` as SelectInput items
+- OR use a two-panel layout: text field on top, action menu below (common Ink pattern)
+
+**Files to audit**: All 16 step components. Any that use `useInput` for 'b' back key AND also render `<TextInput>` need refactoring.
+
+**Tests modified**: Integration tests for each affected step — verify 'b' key does not insert character in text fields.
+
+### Phase 2C — Contexts Step Merger (US5, P1)
+
+**Goal**: Replace steps 6, 7, 8, 11 with a single `07-contexts.tsx` that drives a per-context nested sub-flow.
+
+**New step sub-flow per context:**
+```
+1. Context name/label input
+2. Workspace root path (default: ~/Developer on macOS; allow per-context override)
+3. Git auth method (SelectInput: gh-cli, SSH key, HTTPS, none)
+4. VCS account (text input, shown only if gh-cli or SSH selected — scoped logic)
+5. Languages (repeat: language → version manager → version → add another?)
+6. Dotfiles location (optional: path inside or alongside this context)
+```
+
+**Step registry changes:**
+- Remove indices 6 (workspace), 8 (git-auth), 11 (accounts) from registry
+- Step 7 (contexts) becomes the unified Contexts step
+- All remaining steps shift index accordingly (or use string IDs instead of numeric indices for routing)
+
+**Config schema impact**: `TildeConfig.contexts[]` must accommodate `gitAuth`, `account`, `languages[]`, `dotfilesPath` per context. Schema version bump to `"1.5"` required.
+
+**Files modified**: `src/steps/07-contexts.tsx` (major rewrite), `src/modes/wizard.tsx` (remove steps 6/8/11 from registry and rendering), `src/config/schema.ts` (schema version bump), `src/config/migrations/runner.ts` (add `'1.4' → '1.5'` migration).
+
+### Phase 2D — Remove Step 5, Language Bindings in Contexts (US6, P1)
+
+**Goal**: Step 5 (Languages) is removed from the wizard registry. Language configuration happens inside the Contexts sub-flow (Phase 2C step 5).
+
+**Language sub-menu design** (inside contexts step):
+```
+Select a language:
+❯ Node.js
+  Python
+  Go
+  Java
+  Ruby
+  (done — no more languages)
+
+Select version manager for Node.js:
+❯ nvm    (.nvmrc in workspace root)
+  vfox   (.envrc with vfox use)
+  fnm    (.node-version)
+  none   (no version pinning)
+
+Select Node.js version:
+❯ 22 (LTS)
+  20 (LTS)
+  18
+  16
+  Other (enter manually)
+```
+
+**Version catalog source**: Static catalog in `src/data/language-versions.ts` — updated periodically, not fetched at runtime (avoids network dependency during setup).
+
+**Integration patterns added to config per language+manager:**
+- `nvm` → add `.nvmrc` with version to context workspace
+- `vfox` → add `.envrc` with `vfox use <lang>@<version>`
+- `pyenv` → add `.python-version`
+- `direnv` → ensure `.envrc` is in `.gitignore` of context workspace
+
+**Files modified**: `src/modes/wizard.tsx` (remove step 5 from registry), `src/steps/05-languages.tsx` (keep file, but no longer registered — or delete), `src/steps/07-contexts.tsx` (add language sub-flow), `src/data/language-versions.ts` (new static catalog).
+
+### Phase 2E — Multiple Package Managers (US8, P2)
+
+**Goal**: Step 3 (Package Manager) changes from single-select to multi-select. Tool installation logic dispatches per package manager.
+
+**UI change**: `SelectInput` → `MultiSelect` (same pattern as version managers step 4).
+
+**Files modified**: `src/steps/03-package-manager.tsx` (multi-select UI), `src/config/schema.ts` (packageManagers: string[] instead of packageManager: string), `src/config/migrations/runner.ts` (migrate `packageManager` → `packageManagers: [value]`).
+
+### Phase 2F — Enhanced Environment Discovery (US9, P2)
+
+**Goal**: Step 1 detects more of the user's existing environment to pre-populate wizard defaults.
+
+**Detection additions to `src/steps/01-env-capture.tsx`:**
+- Language installs: `which node`, `node --version`; `which python3`, `python3 --version`; `which go`, `go version`; `which java`, `java -version`; `which ruby`, `ruby --version`
+- Version managers: `which nvm` (or `~/.nvm` exists), `which pyenv`, `which vfox`, `which rbenv`, `which fnm`
+- Dotfiles: check `~/.zshrc`, `~/.bashrc`, `~/.gitconfig`, `~/.ssh/config`, `~/.config/` exists
+- Homebrew direct installs: `brew leaves` → list of directly installed formulae/casks (separate from `brew list`)
+
+**Output shape** (added to env detection result):
+```typescript
+detectedLanguages: Array<{ name: string; version: string; versionManager?: string }>
+detectedDotfiles: string[]  // paths that exist
+brewLeaves: string[]        // direct installs (only if homebrew present)
+```
+
+**Files modified**: `src/steps/01-env-capture.tsx`, `src/utils/env-detection.ts` (new or extended), possibly `src/modes/wizard.tsx` (pass env detection results forward as initialValues to contexts step).
+
+### Phase 2G — Logic Tree Step Sequencing (US5/US9, P2)
+
+**Goal**: The wizard's step progression becomes dynamic. Instead of always advancing by +1, `advance()` computes the next step based on current config state.
+
+**Design**: Add a `getNextStep(currentStep: number, config: Partial<TildeConfig>): number` function to `wizard.tsx`. This function encodes the logic tree:
+
+```typescript
+function getNextStep(step: number, config: Partial<TildeConfig>): number {
+  switch (step) {
+    case 3: // package-manager
+      // skip version manager step if no language-capable PM selected? No — always show
+      return 4;
+    case 7: // contexts
+      // skip secrets step if no sensitive accounts configured
+      if (!config.contexts?.some(c => c.account)) return 9; // skip to tools
+      return 8; // secrets-backend
+    case 9: // tools
+      return hasEditor(config) ? 10 : 11; // skip app-config if no known editor
+    // ... etc.
+  }
+}
+```
+
+**Files modified**: `src/modes/wizard.tsx` (replace `currentStep + 1` with `getNextStep()` calls).
+
+## Updated Commit Strategy (Phase 2)
+
+8. `fix(wizard): diagnose and fix steps 13-15 rendering bug` — Phase 2A
+9. `fix(wizard): standardize back/skip navigation across all steps` — Phase 2B
+10. `refactor(contexts): merge workspace/git-auth/accounts into unified contexts step` — Phase 2C
+11. `refactor(languages): move language bindings into contexts; remove standalone step` — Phase 2D
+12. `feat(package-manager): support multiple package managers (multi-select)` — Phase 2E
+13. `feat(env-capture): detect existing languages, version managers, and dotfiles` — Phase 2F
+14. `feat(wizard): dynamic step sequencing via logic tree` — Phase 2G
+15. `chore(schema): bump schema version to 1.5 with migration` — Schema changes
+
+## Updated Open Questions / Risks
+
+| Item | Status |
+|------|--------|
+| Steps 13–15 root cause | Unknown — Phase 2A investigation required |
+| Config schema bump to 1.5 | Required for per-context gitAuth, account, languages, dotfilesPath |
+| Static version catalog staleness | Acceptable for v1 — versioned in repo, updated on major LTS releases |
+| Logic tree completeness | Start with 3–4 key decision points; expand iteratively |
+| `brew leaves` performance | ~200ms on typical machine — acceptable for step 1 |
+| Contexts step complexity | Largest UX risk — may need sub-step progress indicator within contexts flow |
+

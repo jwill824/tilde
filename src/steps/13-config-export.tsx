@@ -61,7 +61,7 @@ export function ConfigExportStep({ config, onComplete, onBack, isOptional: _isOp
       <Box borderStyle="round" borderColor="cyan" flexDirection="column" padding={1} marginTop={1}>
         <Text>OS: <Text color="cyan">{config.os}</Text></Text>
         <Text>Shell: <Text color="cyan">{config.shell ?? 'not set'}</Text></Text>
-        <Text>Package manager: <Text color="cyan">{config.packageManager ?? 'not set'}</Text></Text>
+        <Text>Package managers: <Text color="cyan">{(config.packageManagers ?? ['homebrew']).join(', ')}</Text></Text>
         <Text>Workspace: <Text color="cyan">{config.workspaceRoot ?? 'not set'}</Text></Text>
         <Text>Dotfiles repo: <Text color="cyan">{config.dotfilesRepo ?? 'not set'}</Text></Text>
         <Text>Contexts: <Text color="cyan">{config.contexts?.map(c => c.label).join(', ') ?? 'none'}</Text></Text>

@@ -68,7 +68,7 @@ describe('runMigrations()', () => {
     expect(raw).toEqual({ schemaVersion: '1', field: 'x' });
   });
 
-  it('CURRENT_SCHEMA_VERSION is "1.5"', () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe('1.5');
+  it('CURRENT_SCHEMA_VERSION is "1.6"', () => {
+    expect(CURRENT_SCHEMA_VERSION).toBe('1.6');
   });
 });

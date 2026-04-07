@@ -1,49 +1,65 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 2.2.0 → 2.3.0
-MINOR bump (spec 008-wizard-ux-enhancements): Browser Selection step moved from step 11
-to step 15 (optional, post-config-export); AI Coding Tools added as new step 16 (optional);
-mise added to Version Managers; AIToolPlugin added to Principle VIII plugin categories;
-auto-discovery confirmation requirement added to Principle IV guidance.
+Version change: 2.3.0 → 2.4.0
+MINOR bump (spec 010-wizard-flow-fixes, local testing findings):
+  - Config detection step now documents the three-path discovery search order
+    (cwd → git-root → ~/.tilde/tilde.config.json) and the auto-discovery confirmation prompt
+  - Environment capture step updated to reflect language/version-manager detection and
+    brew-leaves-based direct-install identification (replacing brew list -1)
+  - Package managers: MacPorts added for macOS (⚠ implementation pending)
+  - Version managers: rbenv (Ruby), fnm (Node.js alternative), python-venv added
+  - Wizard back-navigation requirement added to Principle IV: all steps MUST expose
+    back navigation via an explicit, focus-safe affordance — key-binding-only back is
+    prohibited on any step that contains an active text input
+  - Wizard step flow clarified: step 8 "Developer root & contexts" is a single unified step
+    encompassing workspace root, named context paths, git auth per context, VCS account per
+    context, and language version bindings per context (steps formerly split in code are
+    reunified per constitutional intent); standalone Languages step (formerly step 7) moves
+    into the Contexts step as a per-context sub-flow
+  - Wizard step sequencing: flow is now logic-tree driven; next step is computed from prior
+    answers, not always the next linear index
+  - Note-taking apps added to Additional Tools step description and Managed Tool Catalogs
+  - Schema version referenced as "1.5" (current default)
+  - Logseq added to Browsers table as a note-taking app clarification (removed — stays in
+    tools catalog, not browsers)
 
-Rationale for wizard step repositioning (C1/C2 resolution):
-  Browser selection and AI coding tools are optional "enhancements" that do not affect the
-  core bootstrap environment. Placing them after config-export (steps 15–16) ensures:
-  (a) the essential machine setup (shell, package manager, contexts, secrets) is complete and
-  saved before optional tooling steps run, and (b) users who skip these steps still have a
-  fully functional tilde config. A step that is optional and non-blocking to bootstrap SHOULD
-  appear after the config-export checkpoint, not before it.
+Rationale for context step unification:
+  Git authentication, VCS accounts, and language version bindings are all properties of
+  a developer context — not of the global environment. The constitution has always described
+  them at the context level ("user selects per context"). This amendment makes that intent
+  explicit in the wizard flow description and aligns the spec with the implemented code path
+  being delivered in spec 010 Phase 2.
 
 Modified principles:
-  - IV. Interactive & Ink-First UX — added explicit auto-discovery confirmation requirement:
-    tilde MUST display the resolved config path and a summary of applied settings and require
-    user confirmation before proceeding when a config is found via auto-discovery
-  - VIII. Extensibility & Plugin Architecture — added AIToolPlugin to the enumerated list of
-    plugin categories (ai-tool category)
+  - IV. Interactive & Ink-First UX — added back-navigation requirement: all wizard steps
+    MUST provide a focus-safe, explicit back affordance; key-binding-only back is prohibited
+    on steps with active text inputs
 
 Modified sections:
-  - Setup Wizard Flow — Browser Selection moved from step 11 to step 15 (optional);
-    App configurations renumbered to step 11, Account connections → 12,
-    Secrets backend → 13, Config export → 14; AI Coding Tools added as step 16 (optional)
-  - Version Managers — mise added (polyglot; .tool-versions format; compatible with asdf)
+  - Setup Wizard Flow — step 1 adds discovery search order; step 2 adds language/VM
+    detection and brew-leaves note; step 7 (Languages) removed as standalone, language
+    selection moved into step 8 (Contexts); step 8 clarified as unified contexts step
+    encompassing workspace, contexts, git auth, VCS accounts, and per-context language
+    bindings; step numbering updated to 15 steps total; dynamic sequencing note added
+  - Package Managers — MacPorts added for macOS (implementation pending)
+  - Version Managers — rbenv, fnm, python-venv added
+  - Setup Wizard Flow (tools step) — note-taking app catalog noted
 
 Removed sections: None
 
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md — No structural changes required; Constitution
-     Check section is dynamic (reads from constitution file at plan time).
-  ✅ .specify/templates/spec-template.md — No structural changes required.
-  ✅ .specify/templates/tasks-template.md — No structural changes required.
-  ✅ .specify/templates/checklist-template.md — No structural changes required.
-  ✅ .specify/templates/constitution-template.md — No structural changes required.
-  ✅ .specify/templates/agent-file-template.md — No structural changes required.
+  ✅ .specify/templates/plan-template.md — No structural changes required
+  ✅ .specify/templates/spec-template.md — No structural changes required
+  ✅ .specify/templates/tasks-template.md — No structural changes required
 
 Follow-up TODOs:
-  - Open GitHub issues to track all ⚠ implementation-pending items: fish shell (macOS),
-    bash shell (macOS), sdkman, AWS account connection, OS defaults (defaults write),
-    direnv / context-switching wiring, --yes/--ci non-interactive mode.
-  - Confirm original ratification date: currently recorded as 2026-03-27.
+  - Implement MacPorts support (wizard step 5, installation dispatch)
+  - Implement rbenv, fnm, python-venv in version manager step
+  - Complete spec 010 Phase 2: context step unification, nav standardization, logic trees
+  - Fix steps 13–15 rendering bug (BUG-001 in spec 010)
+  - Open GitHub issues to track: fish shell, bash shell, sdkman, AWS account connection,
+    OS defaults, direnv context-switching, --yes/--ci non-interactive mode
 -->
 
 # Tilde Constitution
@@ -116,6 +132,13 @@ is detected, tilde MUST display a summary of what will be applied and ask for co
 before proceeding. Prompt-first is the default entry path for users with no existing config.
 Fully non-interactive execution (e.g., `--yes` / `--ci`) MUST be supported as an opt-in
 escape hatch for automation contexts and MUST require a complete, valid config file.
+
+Every wizard step that is not the first MUST expose a clearly visible back-navigation
+affordance. Back navigation MUST be implemented as an explicit, focus-safe UI element (e.g.,
+a SelectInput menu item or a button rendered outside any active text input). Key-binding-only
+back (e.g., press 'b') is PROHIBITED on any step where a text input may be focused, because
+the key would be inserted into the field rather than triggering navigation. Back-navigation
+MUST restore all previously entered values for the step being returned to.
 
 ### V. Idempotent Operations
 
@@ -209,38 +232,61 @@ and offer to re-run the full wizard so the user can supply any missing values in
 
 ### Setup Wizard Flow
 
-The bootstrap wizard MUST proceed in the following top-down order, with later steps able to
-reference choices made in earlier steps:
+The bootstrap wizard proceeds in the following top-down order. Step sequencing is
+logic-tree driven: the next step is computed from prior answers (e.g., if no git-capable
+tool is selected, the git-auth sub-flow is skipped). Later steps may reference choices
+made in earlier steps.
 
-1. **Config detection** — check for `tilde.config.json`; if found, branch to config-first
-   mode (see Entry Modes); if not found, continue wizard.
-   - **`--reconfigure` fork**: when `--reconfigure` is passed, tilde loads the existing
-     `tilde.config.json` and re-enters the full wizard with every field pre-populated from
-     that file. The user may accept, change, or clear any value at any step. On completion
-     the config file is overwritten with the updated choices and the environment is re-applied.
-2. **Environment capture** — offer to scan the existing environment (`~/` dotfiles,
-   `brew list -1`, rc files, etc.) and pre-populate wizard choices with detected values;
-   user confirms, overrides, or skips each detected item
-3. **OS detection** — automatic; no prompt
-4. **Shell** — user selects from supported shells for the detected OS
-5. **Package manager** — user selects from supported managers for the detected OS
-6. **Version manager** — user selects zero or more (one per ecosystem)
-7. **Languages & versions** — user selects languages and pins versions via chosen manager
-8. **Developer root & contexts** — user defines workspace root (e.g., `~/Developer`) and
-   names their contexts (e.g., `personal`, `work`, `client`) with directory mappings
-9. **Git authentication method** — user selects per context: HTTPS, SSH, or `gh` CLI
-10. **Additional tools** — user selects further CLI tools and apps via the package manager
-11. **App configurations** — user enables/customises config domains (VS Code, Git, aliases,
-    hooks, shell profiles, OS defaults)
-12. **Account connections** — user connects service accounts (GitHub, Claude, AWS, etc.)
-13. **Secrets backend** — user selects how secrets are stored and referenced
-14. **Config export** — tilde writes `tilde.config.json` to the dotfiles repo
-15. **Browser selection** *(optional)* — user chooses preferred browsers (see Browsers);
+1. **Config detection** — search for `tilde.config.json` in priority order:
+   (a) current working directory, (b) git repo root of the current directory (if inside a
+   git repo), (c) `~/.tilde/tilde.config.json` (canonical; may be a symlink into a
+   version-controlled tilde repo). If found, display an explicit prompt: "Found config at
+   `<path>` — use it? (yes / no / specify path)". "No" exits with instructions; "specify
+   path" shows a path input. If not found, offer to create one and continue the wizard.
+   - **`--reconfigure` fork**: load the existing `tilde.config.json` and re-enter the full
+     wizard with every field pre-populated; on completion overwrite with updated choices.
+2. **Environment capture** — offer to scan the existing environment and pre-populate wizard
+   defaults: detect shell rc files and dotfiles at `~/` and standard macOS paths; detect
+   installed version managers (`nvm`, `pyenv`, `vfox`, `rbenv`, `fnm`, `mise`); detect
+   existing language installations (`node`, `python3`, `go`, `java`, `ruby`) with versions;
+   when Homebrew is present, use `brew leaves` to distinguish directly-installed formulae and
+   casks from transitive dependencies. User confirms, overrides, or skips each detected item.
+3. **OS detection** — automatic; no prompt.
+4. **Shell** — user selects from supported shells for the detected OS.
+5. **Package manager** — user selects one or more supported managers for the detected OS
+   (multiple simultaneous package managers are supported).
+6. **Version manager** — user selects zero or more (one per ecosystem); choice determines
+   the integration artifact created per language (`.nvmrc`, `.envrc`, `.python-version`, etc.).
+7. **Developer root & contexts** — unified step encompassing:
+   - **Workspace root** — user defines the root directory (default: `~/Developer` on macOS).
+   - **Named contexts** — user creates one or more contexts (e.g., `personal`, `work`,
+     `client`), each with a directory path mapped beneath the workspace root.
+   - **Per-context git authentication** — for each context, user selects: HTTPS, SSH key,
+     or `gh` CLI; context switching is handled via `~/.ssh/config` `Match` blocks or
+     `gh auth switch`.
+   - **Per-context VCS account** — user specifies the GitHub (or other VCS) username for
+     each context; account switching follows the chosen auth method.
+   - **Per-context language bindings** — for each context, user selects languages and,
+     per language, selects a version manager and a version from a curated catalog; no free-text
+     version entry is required. The version manager choice determines the integration artifact
+     written to the context's workspace directory.
+   - **Per-context dotfiles location** — optional; user may store personal dotfiles inside or
+     alongside a context directory.
+8. **Additional tools** — user selects CLI tools, apps, and note-taking applications via the
+   active package manager(s). Includes a structured catalog of note-taking apps (Obsidian,
+   Notion, Bear, Logseq); App Store-only items are shown as unavailable for automated install
+   with a post-wizard reminder.
+9. **App configurations** — user enables/customises config domains (VS Code, Git, aliases,
+   hooks, shell profiles, OS defaults).
+10. **Secrets backend** — user selects how secrets are stored and referenced.
+11. **Config export** — tilde writes `tilde.config.json` (schema version `1.5`) to the
+    dotfiles repo or the canonical `~/.tilde/` location.
+12. **Browser selection** *(optional)* — user chooses preferred browsers (see Browsers);
     selected browsers are installed via the active package manager if not already present;
-    user may optionally set one as the system default; step may be skipped
-16. **AI coding tools** *(optional)* — user selects AI coding assistants and CLI tools
+    user may optionally set one as the system default; step may be skipped.
+13. **AI coding tools** *(optional)* — user selects AI coding assistants and CLI tools
     installable via the active package manager (e.g., Claude Code, Claude Desktop, Cursor,
-    GitHub Copilot CLI); installation status shown per tool; step may be skipped
+    GitHub Copilot CLI); installation status shown per tool; step may be skipped.
 
 ### Platforms & Shells
 
@@ -268,8 +314,11 @@ already present. Setting the chosen browser as system default is opt-in.
 
 | Platform | Supported Options |
 |---|---|
-| macOS | Homebrew |
+| macOS | Homebrew, MacPorts ⚠ implementation pending |
 | Windows | winget (primary), Chocolatey |
+
+Multiple package managers may be active simultaneously. Tool installation dispatches to the
+appropriate manager per tool based on availability.
 
 ### OS Defaults Mechanisms
 
@@ -280,11 +329,14 @@ already present. Setting the chosen browser as system default is opt-in.
 
 ### Version Managers (user selects zero or more)
 
-- **vfox** — polyglot; single manager for multiple ecosystems
+- **vfox** — polyglot; single manager for multiple ecosystems; integrates via direnv `.envrc`
 - **mise** — polyglot; multi-language version manager using `.tool-versions` format; compatible with asdf tooling ecosystem
 - **sdkman** — JVM ecosystem (Java, Kotlin, Scala, Gradle, etc.) ⚠ implementation pending
-- **nvm** — Node.js
-- **pyenv** — Python
+- **nvm** — Node.js; pins version via `.nvmrc` in workspace directory
+- **fnm** — Node.js alternative (Fast Node Manager); pins version via `.node-version` ⚠ implementation pending
+- **pyenv** — Python; pins version via `.python-version`
+- **python-venv** — Python virtual environments per context/project; no global version pinning ⚠ implementation pending
+- **rbenv** — Ruby; pins version via `.ruby-version` ⚠ implementation pending
 
 ### Git Authentication Methods (user selects per context)
 
@@ -383,4 +435,4 @@ tilde project. Amendments require:
 All PRs and reviews MUST verify compliance with the eight Core Principles. Exceptions require
 explicit written justification recorded in the plan's Complexity Tracking table.
 
-**Version**: 2.3.0 | **Ratified**: 2026-03-27 | **Last Amended**: 2026-04-01
+**Version**: 2.4.0 | **Ratified**: 2026-03-27 | **Last Amended**: 2026-04-09

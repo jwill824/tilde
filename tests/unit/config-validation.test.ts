@@ -7,7 +7,7 @@ const MINIMAL_CONFIG = {
   version: '1' as const,
   os: 'macos' as const,
   shell: 'zsh' as const,
-  packageManager: 'homebrew' as const,
+  packageManagers: ['homebrew'] as const,
   versionManagers: [],
   languages: [],
   workspaceRoot: '~/Developer',

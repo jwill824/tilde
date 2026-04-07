@@ -81,10 +81,10 @@ const TildeConfigSchema = z.object({
   version: z.literal('1').default('1'),
   schemaVersion: z.union([z.string(), z.number()])
     .transform(v => String(v))
-    .default('1.5'),
+    .default('1.6'),
   os: z.literal('macos').default('macos'),
   shell: z.enum(['zsh', 'bash', 'fish']),
-  packageManager: z.literal('homebrew').default('homebrew'),
+  packageManagers: z.array(z.string()).min(1).default(['homebrew']),
   versionManagers: z.array(VersionManagerChoiceSchema).default([]),
   languages: z.array(LanguageChoiceSchema).default([]),
   workspaceRoot: z.string().min(1),

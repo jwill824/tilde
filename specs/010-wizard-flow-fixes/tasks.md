@@ -140,6 +140,110 @@ This delivers the highest-priority fix: back-navigation value restoration across
 
 **Increment 4**: Phase 6 + Phase 7 (T019–T023) — resolves #82 (note-taking apps), plus polish
 
+---
+
+## Phase 1 Complete ✅
+
+All 23 original tasks (T001–T023) are implemented and committed on branch `010-wizard-flow-fixes`. See git log for details.
+
+---
+
+## Phase 2: Local Testing Findings
+
+*Tasks below address issues discovered during local end-to-end testing of the wizard. See spec.md US5–US9 and BUG-001/BUG-002 for full requirements.*
+
+---
+
+### Phase 8: Critical Bug Fixes (P0)
+
+**Purpose**: Fix regressions that prevent the wizard from completing.
+
+- [ ] T024 Diagnose BUG-001 — steps 13, 14, 15 do not render: inspect `wizard.tsx` conditional rendering for steps 13–15; check `LAST_STEP` calculation; add temporary `console.error` in `13-config-export.tsx`, `14-browser.tsx`, `15-ai-tools.tsx` mount/useEffect to detect silent failures; check if async data load in step 14 (browser detection) or step 15 (AI tools detection) rejects silently and causes the component to never call `onComplete`; fix root cause once identified
+- [ ] T025 [P] Fix BUG-002 — back key in text inputs: audit all step components that use both `useInput` (for 'b' → back) AND `<TextInput>`; for each, refactor so the back affordance is an explicit menu item shown after the user submits the text input (Enter), not a key binding intercepted while the text field is focused; acceptable pattern: text input → submit on Enter → show `[← Back]  [→ Continue]` SelectInput; update `09-tools.tsx` select-apps phase to expose a visible back item (currently no back possible in multi-select phase)
+
+**Checkpoint**: Wizard completes all 13 steps (or 15 with optionals) without getting stuck or missing steps
+
+---
+
+### Phase 9: Navigation Standardization (US7, P1)
+
+**Purpose**: Make back/skip behave identically on every wizard step.
+
+- [ ] T026 Audit all 16 step files for navigation inconsistencies: for each step, document (a) how back is currently triggered, (b) how skip is currently triggered, (c) whether a text input is present; produce a table of steps that need refactoring (target: all steps use SelectInput-based back/skip or Ink focus-safe key intercept)
+- [ ] T027 [P] Standardize `src/steps/02-shell.tsx`: ensure back is an explicit menu item, not a key binding; skip must match the wizard's global skip affordance
+- [ ] T028 [P] Standardize `src/steps/03-package-manager.tsx`: verify multi-select + back works when focus is on a SelectInput item (not text)
+- [ ] T029 [P] Standardize `src/steps/04-version-manager.tsx`: 'b' key back — refactor to SelectInput-based back for consistency; verify no text input conflict
+- [ ] T030 [P] Standardize `src/steps/06-workspace.tsx`: text input present — apply two-phase pattern (input → confirm → back/continue)
+- [ ] T031 [P] Standardize `src/steps/11-accounts.tsx`: text input present — apply two-phase pattern
+- [ ] T032 [P] Standardize `src/steps/12-secrets-backend.tsx`: verify SelectInput-based back; no text input conflict expected
+- [ ] T033 Update `tests/integration/wizard-flow.test.tsx`: add tests that verify back navigation from each step does NOT insert characters into any text field; add tests for skip consistency across optional steps
+
+**Checkpoint**: All steps use identical navigation pattern; back from text-input steps never types into the field
+
+---
+
+### Phase 10: Contexts Step Unification (US5, P1)
+
+**Purpose**: Merge steps 6 (workspace), 8 (git-auth), 11 (accounts) into a unified per-context sub-flow inside step 7.
+
+- [ ] T034 Update `src/config/schema.ts`: add per-context fields to `ContextSchema` — `gitAuth: z.enum(['https', 'ssh', 'gh-cli']).optional()`, `account: z.string().optional()`, `dotfilesPath: z.string().optional()`; bump `schemaVersion` default to `'1.5'` (already at 1.5 — confirm no bump needed; or bump to `'1.6'` if contexts schema changes require it); add migration step if schema version bumps
+- [ ] T035 Rewrite `src/steps/07-contexts.tsx`: implement per-context sub-flow: (1) context name input, (2) workspace path input (default `~/Developer/<name>`), (3) git auth SelectInput (per context), (4) VCS account input (shown only when auth method is `gh-cli` or `ssh`), (5) dotfiles path input (optional), (6) "Add another context?" prompt; restore all sub-flow state from `initialValues` on back-navigation
+- [ ] T036 Update `src/modes/wizard.tsx`: remove steps 6 (`workspace`) and 8 (`git-auth`) and 11 (`accounts`) from `STEP_REGISTRY`; update `LAST_STEP`; update all `currentStep === N` render branches accordingly; update `advance()` handler for new step 7 data shape; pass `onBack` consistently to updated step 7
+- [ ] T037 [P] Update `tests/integration/wizard-flow.test.tsx`: add test `contexts step collects workspace + git auth + account in one pass`; add test `back-navigation from within contexts sub-flow returns to previous sub-step, not previous wizard step`; add test `second context entry works after first is complete`
+- [ ] T038 [P] Update `tests/unit/config-schema.test.ts` (or create): add tests for new per-context `gitAuth`, `account`, `dotfilesPath` fields; test migration from prior schema version
+
+**Checkpoint**: Wizard reaches contexts step; all context sub-fields collected in one step; back-navigation within sub-flow works; steps 6, 8, 11 no longer appear in registry
+
+---
+
+### Phase 11: Language Bindings Inside Contexts (US6, P1)
+
+**Purpose**: Remove standalone step 5 (Languages); add language selection as sub-flow inside the Contexts step.
+
+- [ ] T039 Create `src/data/language-versions.ts`: define static version catalog per language — `NODE_VERSIONS: string[]` (e.g., `['22 (LTS)', '20 (LTS)', '18', '16']`), `PYTHON_VERSIONS`, `GO_VERSIONS`, `JAVA_VERSIONS`, `RUBY_VERSIONS`; export as `LANGUAGE_CATALOG: Record<string, { versions: string[]; managers: string[] }>`; managers list per language (e.g., Node → `['nvm', 'fnm', 'vfox', 'none']`)
+- [ ] T040 Extend `src/steps/07-contexts.tsx`: add language sub-flow after dotfiles path: (1) SelectInput of languages from `LANGUAGE_CATALOG`; (2) per selected language: nested SelectInput of compatible version managers; (3) per language+manager: SelectInput of versions from catalog (plus "Other — enter manually" escape hatch that uses TextInput with two-phase pattern per BUG-002 fix); (4) "Add another language?" prompt; store result as `languages: Array<{ name, manager, version }>` per context
+- [ ] T041 Update `src/modes/wizard.tsx`: remove step 5 (`languages`) from `STEP_REGISTRY`; remove `currentStep === 5` render branch; update `LAST_STEP`
+- [ ] T042 [P] Update `tests/integration/wizard-flow.test.tsx`: add test `language sub-flow inside contexts produces correct per-context languages array`; add test `version manager choice for Node + nvm adds .nvmrc marker to context`; add test `selecting "Other" in version picker shows text input without back-key conflict`
+
+**Checkpoint**: Step 5 removed from registry; language bindings collected per-context inside step 7; version catalog renders correctly
+
+---
+
+### Phase 12: Multiple Package Managers (US8, P2)
+
+**Purpose**: Allow selecting Homebrew + MacPorts (or other combinations) simultaneously.
+
+- [ ] T043 Update `src/steps/03-package-manager.tsx`: convert from single-select (`SelectInput`) to multi-select (same `useInput` + checkbox pattern as step 4 version managers); update `onComplete` to pass `packageManagers: string[]` instead of `packageManager: string`
+- [ ] T044 [P] Update `src/config/schema.ts`: change `packageManager: z.string()` → `packageManagers: z.array(z.string()).min(1)`; add migration: `packageManager` (string) → `packageManagers: [packageManager]`; bump schema version if not already bumped in T034
+- [ ] T045 [P] Update `tests/unit/config-schema.test.ts`: add test for `packageManagers` array; test migration from `packageManager` string
+
+**Checkpoint**: User can select multiple package managers; config stores array; migration from old single-value config works
+
+---
+
+### Phase 13: Enhanced Environment Discovery (US9, P2)
+
+**Purpose**: Step 1 detects languages, version managers, and dotfiles; passes results as wizard `initialValues`.
+
+- [ ] T046 Extend `src/utils/env-detection.ts` (create if not exists): add `detectLanguages()` — runs `which node && node --version`, `which python3 && python3 --version`, `which go && go version`, `which java && java -version`, `which ruby && ruby --version` with 500ms timeout each; returns `Array<{ name: string; version: string }>` for each found; add `detectVersionManagers()` — checks `which nvm` (or `~/.nvm` exists), `which pyenv`, `which vfox`, `which rbenv`, `which fnm`, `which mise`; add `detectBrewLeaves()` — runs `brew leaves` if `which brew` succeeds, returns string array; add `detectDotfiles()` — checks existence of `~/.zshrc`, `~/.bashrc`, `~/.gitconfig`, `~/.ssh/config`, `~/.config/`
+- [ ] T047 Update `src/steps/01-env-capture.tsx`: import and call `detectLanguages()`, `detectVersionManagers()`, `detectBrewLeaves()`, `detectDotfiles()` during the scan phase; display results grouped by category; pass detected values through `onComplete` so `wizard.tsx` can use them as `initialValues` for the contexts step (pre-populate language entries)
+- [ ] T048 Update `src/modes/wizard.tsx`: when advancing from step 1, store `detectedLanguages` and `detectedVersionManagers` in the step 1 `StepFrame.values`; when rendering step 7 (contexts), pass these as `initialValues` suggestions so the language sub-flow can show detected languages pre-selected
+
+**Checkpoint**: Step 1 surfaces detected languages, version managers, and dotfiles; detected languages appear as suggestions in the contexts language sub-flow
+
+---
+
+### Phase 14: Logic Tree Step Sequencing (US5/US9, P2)
+
+**Purpose**: Replace linear `+1` step advancement with a function that computes next step from config state.
+
+- [ ] T049 Add `getNextStep(step: number, config: Partial<TildeConfig>): number` to `src/modes/wizard.tsx`: implement initial logic tree — after step 3 (package manager): always → step 4; after step 4 (version manager): always → step 5 (contexts, formerly 7 after renumbering); after step 5 (contexts): if no account on any context → skip to tools; else → secrets; after tools: if no known editor detected → skip app-config; default: always +1; replace all `currentStep + 1` advancement calls with `getNextStep()`
+- [ ] T050 Update `tests/unit/wizard-navigation.test.ts`: add tests for `getNextStep()` logic — "skips secrets step when no context has an account", "skips app-config when no editor tool selected", "advances normally when no skip condition met"
+
+**Checkpoint**: Wizard flow adapts to prior answers; a user with no git accounts skips the git auth sub-flow
+
+---
+
 ## Task Counts
 
 | Phase | Tasks | User Story | Issues |
@@ -151,6 +255,13 @@ This delivers the highest-priority fix: back-navigation value restoration across
 | Phase 5 | 3 | US3 (#74) | #74 |
 | Phase 6 | 2 | US4 (#82) | #82 |
 | Phase 7: Polish | 3 | — | — |
-| **Total** | **23** | | |
-
-Parallelizable tasks: 10 (T005–T012, T021–T022)
+| **Phase 1 Subtotal** | **23** ✅ | | |
+| Phase 8: Bug Fixes | 2 | BUG-001, BUG-002 | — |
+| Phase 9: Nav Standardization | 8 | US7 | — |
+| Phase 10: Contexts Unification | 5 | US5 | — |
+| Phase 11: Languages in Contexts | 4 | US6 | — |
+| Phase 12: Multi Package Manager | 3 | US8 | — |
+| Phase 13: Enhanced Env Discovery | 3 | US9 | — |
+| Phase 14: Logic Tree Sequencing | 2 | US5/US9 | — |
+| **Phase 2 Subtotal** | **27** | | |
+| **Grand Total** | **50** | | |

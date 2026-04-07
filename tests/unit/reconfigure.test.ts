@@ -24,7 +24,7 @@ const VALID_CONFIG = {
   schemaVersion: '1.5',
   os: 'macos',
   shell: 'zsh',
-  packageManager: 'homebrew',
+  packageManagers: ['homebrew'],
   versionManagers: [],
   languages: [],
   workspaceRoot: '~/Developer',
@@ -101,7 +101,7 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     // Check that Wizard was called with the loaded config as initialConfig
     expect(WizardMock).toHaveBeenCalled();
     const props = WizardMock.mock.calls[0][0];
-    expect(props.initialConfig).toMatchObject({ shell: 'zsh', packageManager: 'homebrew' });
+    expect(props.initialConfig).toMatchObject({ shell: 'zsh', packageManagers: ['homebrew'] });
     expect((props.initialConfig as { contexts: { label: string }[] }).contexts[0].label).toBe('personal');
   });
 

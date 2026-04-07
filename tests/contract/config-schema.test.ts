@@ -23,7 +23,7 @@ const MINIMAL_CONFIG: TildeConfig = {
   schemaVersion: '1.5',
   os: 'macos',
   shell: 'zsh',
-  packageManager: 'homebrew',
+  packageManagers: ['homebrew'],
   versionManagers: [],
   languages: [],
   workspaceRoot: '~/Developer',

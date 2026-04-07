@@ -275,8 +275,8 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             isOptional={false}
             initialValues={initialValues}
             onComplete={(data) => advance(
-              { packageManager: data.packageManager },
-              `Package manager: ${data.packageManager}`
+              { packageManagers: data.packageManagers } as Partial<TildeConfig>,
+              `Package managers: ${data.packageManagers.join(', ')}`
             )}
           />
         )}

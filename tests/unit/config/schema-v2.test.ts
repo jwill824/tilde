@@ -7,7 +7,7 @@ const MINIMAL_CONFIG = {
   version: '1' as const,
   os: 'macos' as const,
   shell: 'zsh' as const,
-  packageManager: 'homebrew' as const,
+  packageManagers: ['homebrew'] as const,
   versionManagers: [],
   languages: [],
   workspaceRoot: '~/Developer',
@@ -32,11 +32,11 @@ const MINIMAL_CONFIG = {
 };
 
 describe('schemaVersion field — round-trip', () => {
-  it('valid config with schemaVersion: "1.5" passes Zod validation', () => {
-    const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, schemaVersion: '1.5' });
+  it('valid config with schemaVersion: "1.6" passes Zod validation', () => {
+    const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, schemaVersion: '1.6' });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.schemaVersion).toBe('1.5');
+      expect(result.data.schemaVersion).toBe('1.6');
     }
   });
 
@@ -48,17 +48,17 @@ describe('schemaVersion field — round-trip', () => {
     }
   });
 
-  it('config without schemaVersion field defaults to "1.5"', () => {
+  it('config without schemaVersion field defaults to "1.6"', () => {
     const result = TildeConfigSchema.safeParse(MINIMAL_CONFIG);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.schemaVersion).toBe('1.5');
+      expect(result.data.schemaVersion).toBe('1.6');
     }
   });
 
-  it('config with schemaVersion: "1.5" (unknown future version) parses successfully', () => {
+  it('config with schemaVersion: "1.6" parses successfully', () => {
     // Schema accepts any string — version validation is the migration runner's job
-    const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, schemaVersion: '1.5' });
+    const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, schemaVersion: '1.6' });
     expect(result.success).toBe(true);
   });
 
@@ -72,8 +72,8 @@ describe('schemaVersion field — round-trip', () => {
     }
   });
 
-  it('CURRENT_SCHEMA_VERSION is "1.5"', () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe('1.5');
+  it('CURRENT_SCHEMA_VERSION is "1.6"', () => {
+    expect(CURRENT_SCHEMA_VERSION).toBe('1.6');
   });
 
   it('config default schemaVersion matches CURRENT_SCHEMA_VERSION', () => {

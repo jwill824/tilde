@@ -22,14 +22,24 @@ export interface MigrationResult {
   isFutureVersion: boolean;
 }
 
-export const CURRENT_SCHEMA_VERSION = '1.5';
+export const CURRENT_SCHEMA_VERSION = '1.6';
 
 /**
  * Migration registry — keyed by *source* version string.
  * key '1' = "migrate from v1 (or earlier) to next version"
  * Add entries when new schema versions are introduced.
  */
-export const MIGRATIONS: Map<string, MigrationStep> = new Map();
+export const MIGRATIONS: Map<string, MigrationStep> = new Map([
+  // v1.5 → v1.6: packageManager (string) → packageManagers (array)
+  ['1.5', (config) => {
+    const pm = config['packageManager'];
+    if (typeof pm === 'string' && !Array.isArray(config['packageManagers'])) {
+      const { packageManager: _, ...rest } = config;
+      return { ...rest, packageManagers: [pm] };
+    }
+    return config;
+  }],
+]);
 
 /**
  * Run all applicable migration steps to bring `raw` up to `targetVersion`.
