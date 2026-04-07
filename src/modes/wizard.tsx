@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Box, Text, Static, useInput } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import type { TildeConfig } from '../config/schema.js';
 import { saveCheckpoint, loadCheckpoint, clearCheckpoint } from '../state/checkpoint.js';
@@ -231,6 +231,13 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
                 if (item.value === 'resume') {
                   setConfig(resumeConfig);
                   setCurrentStep(resumeStep + 1);
+                  // Reconstruct synthetic completed steps so sidebar shows ✓ for prior steps
+                  setCompletedSteps(
+                    STEP_REGISTRY.slice(0, resumeStep + 1).map((step, idx) => ({
+                      id: idx,
+                      summary: `${step.label}: resumed`,
+                    }))
+                  );
                 } else {
                   setCurrentStep(0);
                 }
@@ -241,24 +248,36 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
         </Box>
       )}
 
-      {resumeStatus === 'ready' && (
-        <>
-      <Static items={completedSteps}>
-        {(step) => (
-          <Box key={step.id}>
-            <Text color="green">✓ </Text>
-            <Text dimColor>{step.summary}</Text>
-          </Box>
-        )}
-      </Static>
+      {resumeStatus === 'ready' && (() => {
+        const completedStepSet = new Set(completedSteps.map(s => s.id));
+        return (
+          <Box flexDirection="row" alignItems="flex-start">
 
-      <Box marginTop={completedSteps.length > 0 ? 1 : 0}>
-        <Text dimColor>Step {currentStep + 1} of {STEP_REGISTRY.length}: </Text>
-        <Text bold>{STEP_REGISTRY[currentStep]?.label}</Text>
-        {isCurrentOptional && <Text dimColor> (optional)</Text>}
-      </Box>
+            {/* ── Left: step progress sidebar ── */}
+            <Box flexDirection="column" marginRight={3}>
+              {STEP_REGISTRY.map((step, idx) => {
+                const done = completedStepSet.has(idx);
+                const active = idx === currentStep;
+                return (
+                  <Box key={idx}>
+                    <Text color={done ? 'green' : active ? 'cyan' : undefined} dimColor={!done && !active}>
+                      {done ? '✓' : active ? '▶' : ' '}{' '}
+                    </Text>
+                    <Text
+                      bold={active}
+                      color={done ? 'green' : active ? 'cyan' : undefined}
+                      dimColor={!done && !active}
+                    >
+                      {step.label}
+                    </Text>
+                    {!step.required && !done && <Text dimColor> ○</Text>}
+                  </Box>
+                );
+              })}
+            </Box>
 
-      <Box marginTop={1}>
+            {/* ── Right: active step content ── */}
+            <Box flexDirection="column" flexGrow={1}>
         {currentStep === 0 && (
           <ConfigDetectionStep
             onBack={onBack}
@@ -412,9 +431,10 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-      </Box>
-        </>
-      )}
+            </Box>
+          </Box>
+        );
+      })()}
     </Box>
   );
 }
