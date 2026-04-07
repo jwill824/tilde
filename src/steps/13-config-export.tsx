@@ -37,11 +37,6 @@ export function ConfigExportStep({ config, onComplete, onBack, isOptional: _isOp
       <Box flexDirection="column">
         <Text color="green" bold>✓ tilde.config.json written!</Text>
         <Text dimColor>{outputPath}</Text>
-        <Box marginTop={1}>
-          <Text>Setup complete. Run </Text>
-          <Text color="cyan">tilde install</Text>
-          <Text> on any machine to apply this config.</Text>
-        </Box>
       </Box>
     );
   }

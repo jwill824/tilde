@@ -71,6 +71,7 @@ export function AIToolsStep({ onComplete, onBack, isOptional, onSkip, initialVal
       if (input === ' ') {
         setTools(prev => prev.map((t, i) => i === cursorIdx ? { ...t, selected: !t.selected } : t));
       }
+      if (key.return) { handleInstall().catch(() => {}); return; }
       if (input === 'b' && onBack) { onBack(); return; }
       if (input === 's' && isOptional && onSkip) { onSkip(); return; }
     }
@@ -153,19 +154,10 @@ export function AIToolsStep({ onComplete, onBack, isOptional, onSkip, initialVal
           </Box>
         ))}
       </Box>
-      <Box marginTop={1}>
-        <SelectInput
-          items={[
-            { label: 'Confirm and install selected', value: 'confirm' },
-            ...(onBack ? [{ label: '← Back', value: 'back' }] : []),
-            ...(isOptional && onSkip ? [{ label: '→ Skip (install nothing)', value: 'skip' }] : []),
-          ]}
-          onSelect={(item) => {
-            if (item.value === 'confirm') { handleInstall().catch(() => {}); }
-            if (item.value === 'back' && onBack) { onBack(); }
-            if (item.value === 'skip' && onSkip) { onSkip(); }
-          }}
-        />
+      <Box marginTop={1} gap={2}>
+        <Text dimColor>↑↓ + Space to toggle, Enter to confirm</Text>
+        {onBack && <Text dimColor>← Back (b)</Text>}
+        {isOptional && onSkip && <Text dimColor>→ Skip (s)</Text>}
       </Box>
       {skippedInstalls.length > 0 && (
         <Box marginTop={1}>

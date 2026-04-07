@@ -17,6 +17,7 @@ import { SecretsBackendStep } from '../steps/12-secrets-backend.js';
 import { ConfigExportStep } from '../steps/13-config-export.js';
 import { BrowserStep } from '../steps/14-browser.js';
 import { AIToolsStep } from '../steps/15-ai-tools.js';
+import { ApplyStep } from '../steps/16-apply.js';
 
 const DEFAULT_CONFIGURATIONS = { git: true, vscode: false, aliases: false, osDefaults: false, direnv: true };
 
@@ -88,9 +89,10 @@ const STEP_REGISTRY: StepDefinition[] = [
   { id: 'tools',             label: 'Tools & Applications',required: true  }, // 6
   { id: 'app-config',        label: 'Editor Configuration',required: false }, // 7
   { id: 'secrets-backend',   label: 'Secrets Backend',     required: true  }, // 8
-  { id: 'config-export',     label: 'Config Export',       required: true  }, // 9
-  { id: 'browser',           label: 'Browser Selection',   required: false }, // 10
-  { id: 'ai-tools',          label: 'AI Coding Tools',     required: false }, // 11
+  { id: 'browser',           label: 'Browser Selection',   required: false }, // 9
+  { id: 'ai-tools',          label: 'AI Coding Tools',     required: false }, // 10
+  { id: 'config-export',     label: 'Config Export',       required: true  }, // 11 (was 9)
+  { id: 'apply',             label: 'Apply & Finish',      required: true  }, // 12 (new)
 ];
 
 const LAST_STEP = STEP_REGISTRY.length - 1; // index of final step
@@ -132,11 +134,12 @@ function makeSummaryLines(stepIdx: number, cfg: Partial<TildeConfig>): string[] 
       return active.length ? [active.join(', ')] : [];
     }
     case 8: return cfg.secretsBackend ? [cfg.secretsBackend] : [];
-    case 9: return [];
-    case 10: return cfg.browser?.selected?.length ? [cfg.browser.selected.join(', ')] : [];
-    case 11: return (cfg as Record<string, unknown>).aiTools
+    case 9: return cfg.browser?.selected?.length ? [cfg.browser.selected.join(', ')] : [];
+    case 10: return (cfg as Record<string, unknown>).aiTools
       ? [((cfg as Record<string, unknown>).aiTools as Array<{label: string}>).map(t => t.label).join(', ')]
       : [];
+    case 11: return [];  // config export
+    case 12: return [];  // apply
     default: return [];
   }
 }
@@ -460,18 +463,6 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
           />
         )}
         {currentStep === 9 && (
-          <ConfigExportStep
-            config={config as TildeConfig}
-            onBack={onBack}
-            isOptional={false}
-            onComplete={() => {
-              clearCheckpoint().catch(() => {});
-              // Advance to step 11 (Browser) rather than terminating the wizard
-              void advance({}, ['exported']);
-            }}
-          />
-        )}
-        {currentStep === 10 && (
           <BrowserStep
             onBack={onBack}
             isOptional={isCurrentOptional}
@@ -483,7 +474,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 11 && (
+        {currentStep === 10 && (
           <AIToolsStep
             onBack={onBack}
             isOptional={isCurrentOptional}
@@ -493,6 +484,24 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
               { aiTools: data.aiTools },
               [data.aiTools.length === 0 ? 'none' : data.aiTools.map(t => t.label).join(', ')]
             )}
+          />
+        )}
+        {currentStep === 11 && (
+          <ConfigExportStep
+            config={config as TildeConfig}
+            onBack={onBack}
+            isOptional={false}
+            onComplete={() => {
+              clearCheckpoint().catch(() => {});
+              void advance({}, ['saved']);
+            }}
+          />
+        )}
+        {currentStep === 12 && (
+          <ApplyStep
+            config={config as TildeConfig}
+            onBack={onBack}
+            onComplete={() => void advance({}, [])}
           />
         )}
             </Box>
