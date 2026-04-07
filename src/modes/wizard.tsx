@@ -253,6 +253,12 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
       </Static>
 
       <Box marginTop={completedSteps.length > 0 ? 1 : 0}>
+        <Text dimColor>Step {currentStep + 1} of {STEP_REGISTRY.length}: </Text>
+        <Text bold>{STEP_REGISTRY[currentStep]?.label}</Text>
+        {isCurrentOptional && <Text dimColor> (optional)</Text>}
+      </Box>
+
+      <Box marginTop={1}>
         {currentStep === 0 && (
           <ConfigDetectionStep
             onBack={onBack}

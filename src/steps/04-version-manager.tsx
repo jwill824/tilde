@@ -58,6 +58,7 @@ export function VersionManagerStep({ onComplete, onBack, isOptional: _isOptional
       <Box marginTop={1}>
         <Text dimColor>Selected: {selected.size === 0 ? 'none' : Array.from(selected).join(', ')}</Text>
       </Box>
+      {onBack && <Box marginTop={1}><Text dimColor>← Back (b)</Text></Box>}
     </Box>
   );
 }
