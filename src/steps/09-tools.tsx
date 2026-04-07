@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
+import SelectInput from 'ink-select-input';
 import Spinner from 'ink-spinner';
 
 interface Props {
@@ -43,9 +44,9 @@ const NOTE_TAKING_CATALOG: Omit<AppEntry, 'installed' | 'selected'>[] = [
   },
 ];
 
-type Phase = 'detecting' | 'select-apps' | 'manual-tools';
+type Phase = 'detecting' | 'select-apps' | 'manual-tools-gate' | 'manual-tools';
 
-export function ToolsStep({ onComplete, defaultTools = '', onBack: _onBack, isOptional: _isOptional, initialValues = {} }: Props) {
+export function ToolsStep({ onComplete, defaultTools = '', onBack, isOptional: _isOptional, initialValues = {} }: Props) {
   const [phase, setPhase] = useState<Phase>('detecting');
   const [apps, setApps] = useState<AppEntry[]>([]);
   const [cursor, setCursor] = useState(0);
@@ -93,11 +94,13 @@ export function ToolsStep({ onComplete, defaultTools = '', onBack: _onBack, isOp
         }
       }
       if (key.return) handleConfirmApps();
+      if (input === 'b' && onBack) { onBack(); return; }
     }
+    // In manual-tools phase a TextInput is active — back is handled via the pre-gate
   });
 
   function handleConfirmApps() {
-    setPhase('manual-tools');
+    setPhase('manual-tools-gate');
   }
 
   function handleCompleteTools(v: string) {
@@ -144,7 +147,30 @@ export function ToolsStep({ onComplete, defaultTools = '', onBack: _onBack, isOp
           ))}
         </Box>
         <Box marginTop={1}>
-          <Text dimColor>Use ↑↓ + Space to toggle, Enter to continue</Text>
+          <Text dimColor>Use ↑↓ + Space to toggle, Enter to confirm{onBack ? ', b to go back' : ''}</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  // phase === 'manual-tools-gate' — SelectInput gate before TextInput so back nav works
+  if (phase === 'manual-tools-gate') {
+    const gateItems = [
+      { label: 'Enter additional tools →', value: 'edit' },
+      { label: '← Back to app selection', value: 'back' },
+    ];
+    return (
+      <Box flexDirection="column">
+        <Text bold>Additional tools to install:</Text>
+        <Text dimColor>Comma-separated Homebrew formula/cask names (leave blank for none)</Text>
+        <Box marginTop={1}>
+          <SelectInput
+            items={gateItems}
+            onSelect={(item) => {
+              if (item.value === 'back') { setPhase('select-apps'); return; }
+              setPhase('manual-tools');
+            }}
+          />
         </Box>
       </Box>
     );

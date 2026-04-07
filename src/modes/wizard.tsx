@@ -407,7 +407,9 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             isOptional={false}
             onComplete={() => {
               clearCheckpoint().catch(() => {});
-              onComplete?.(config as TildeConfig);
+              // Advance to step 14 (Browser) rather than terminating the wizard —
+              // steps 14 and 15 are optional post-config steps that should still run.
+              void advance({}, 'Configuration exported');
             }}
           />
         )}

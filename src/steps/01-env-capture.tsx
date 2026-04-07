@@ -18,17 +18,19 @@ type Phase =
   | { type: 'summary'; report: EnvironmentCaptureReport; skippedCount: number; rcEntryCount: number }
   | { type: 'done' };
 
-const promptItems = [
-  { label: 'Yes (recommended)', value: 'yes' },
-  { label: 'No (start fresh)', value: 'no' },
-];
-
-const confirmItems = [
-  { label: 'Continue', value: 'continue' },
-];
-
-export function EnvCaptureStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
+export function EnvCaptureStep({ onComplete, onBack, isOptional: _isOptional }: Props) {
   const [phase, setPhase] = useState<Phase>({ type: 'prompt' });
+
+  const promptItems = [
+    { label: 'Yes (recommended)', value: 'yes' },
+    { label: 'No (start fresh)', value: 'no' },
+    ...(onBack ? [{ label: '← Back', value: 'back' }] : []),
+  ];
+
+  const confirmItems = [
+    { label: 'Continue', value: 'continue' },
+    ...(onBack ? [{ label: '← Back', value: 'back' }] : []),
+  ];
 
   useEffect(() => {
     if (phase.type !== 'scanning') return;
@@ -66,6 +68,7 @@ export function EnvCaptureStep({ onComplete, onBack: _onBack, isOptional: _isOpt
           <SelectInput
             items={promptItems}
             onSelect={(item) => {
+              if (item.value === 'back' && onBack) { onBack(); return; }
               if (item.value === 'yes') {
                 setPhase({ type: 'scanning' });
               } else {
@@ -107,7 +110,10 @@ export function EnvCaptureStep({ onComplete, onBack: _onBack, isOptional: _isOpt
         <Box marginTop={1}>
           <SelectInput
             items={confirmItems}
-            onSelect={() => onComplete({ captureReport: report })}
+            onSelect={(item) => {
+              if (item.value === 'back' && onBack) { onBack(); return; }
+              onComplete({ captureReport: report });
+            }}
           />
         </Box>
       </Box>

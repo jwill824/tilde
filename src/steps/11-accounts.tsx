@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
+import SelectInput from 'ink-select-input';
 import type { DeveloperContext } from '../config/schema.js';
 
 interface Props {
@@ -20,12 +21,14 @@ function AutoSkip({ contexts, onComplete }: { contexts: DeveloperContext[]; onCo
   return <Box><Text dimColor>No gh-cli contexts — skipping account setup.</Text></Box>;
 }
 
-export function AccountsStep({ contexts, onComplete, onBack: _onBack, isOptional: _isOptional, onSkip: _onSkip, initialValues = {} }: Props) {
+export function AccountsStep({ contexts, onComplete, onBack, isOptional: _isOptional, onSkip: _onSkip, initialValues = {} }: Props) {
   const ghCliContexts = contexts.filter(c => c.authMethod === 'gh-cli');
   const [idx, setIdx] = useState(0);
   const savedContexts = initialValues.contexts as DeveloperContext[] | undefined;
   const [updatedContexts, setUpdatedContexts] = useState<DeveloperContext[]>(savedContexts ?? [...contexts]);
   const [usernameInput, setUsernameInput] = useState('');
+  // Pre-gate: shown before text input so back nav doesn't conflict with typing
+  const [editing, setEditing] = useState(false);
 
   if (ghCliContexts.length === 0) {
     return <AutoSkip contexts={contexts} onComplete={onComplete} />;
@@ -37,9 +40,33 @@ export function AccountsStep({ contexts, onComplete, onBack: _onBack, isOptional
 
   const ctx = ghCliContexts[idx];
 
+  if (!editing) {
+    const gateItems = [
+      { label: `Enter username for ${ctx.label} →`, value: 'edit' },
+      ...(onBack && idx === 0 ? [{ label: '← Back', value: 'back' }] : []),
+      ...(idx > 0 ? [{ label: '← Previous account', value: 'prev' }] : []),
+    ];
+    return (
+      <Box flexDirection="column">
+        <Text bold>GitHub username for <Text color="cyan">{ctx.label}</Text>:</Text>
+        <Box marginTop={1}>
+          <SelectInput
+            items={gateItems}
+            onSelect={(item) => {
+              if (item.value === 'back' && onBack) { onBack(); return; }
+              if (item.value === 'prev') { setIdx(i => i - 1); return; }
+              setEditing(true);
+            }}
+          />
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box flexDirection="column">
       <Text bold>GitHub username for <Text color="cyan">{ctx.label}</Text>:</Text>
+      <Text dimColor>(Enter to confirm)</Text>
       <Box marginTop={1}>
         <TextInput
           value={usernameInput}
@@ -53,6 +80,7 @@ export function AccountsStep({ contexts, onComplete, onBack: _onBack, isOptional
             );
             setUpdatedContexts(updated);
             setUsernameInput('');
+            setEditing(false);
             if (idx + 1 >= ghCliContexts.length) {
               onComplete({ contexts: updated });
             } else {
