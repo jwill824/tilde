@@ -52,6 +52,30 @@ export interface WizardState {
 }
 
 // ---------------------------------------------------------------------------
+// Logic tree: determines next step given current step and accumulated config
+// ---------------------------------------------------------------------------
+
+export function getNextStep(step: number, config: Partial<TildeConfig>): number {
+  switch (step) {
+    case 5: {
+      // Contexts → skip to tools if no context has a GitHub account (no secrets needed)
+      const hasAccount = (config.contexts ?? []).some(c => c.github?.username);
+      if (!hasAccount) return 6; // → tools (skip nothing, same sequence here)
+      return 6;
+    }
+    case 6: {
+      // Tools → skip app-config if no editor tool is in the tools list
+      const EDITOR_TOOLS = ['cursor', 'vscode', 'neovim', 'vim', 'webstorm', 'zed'];
+      const hasEditor = (config.tools ?? []).some(t => EDITOR_TOOLS.includes(t.toLowerCase()));
+      if (!hasEditor) return 8; // skip app-config (step 7), go to secrets-backend (step 8)
+      return 7;
+    }
+    default:
+      return step + 1;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Step registry — 12 canonical steps (languages absorbed into contexts)
 // ---------------------------------------------------------------------------
 const STEP_REGISTRY: StepDefinition[] = [
@@ -145,7 +169,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
         // Non-fatal: continue even if checkpoint fails
       }
 
-      const nextStep = currentStep + 1;
+      const nextStep = getNextStep(currentStep, merged as Partial<TildeConfig>);
       if (nextStep > LAST_STEP) {
         onComplete?.(merged as TildeConfig);
       } else {
