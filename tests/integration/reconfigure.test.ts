@@ -43,7 +43,7 @@ const VALID_CONFIG = {
   },
   accounts: [],
   secretsBackend: '1password' as const,
-  schemaVersion: '1.5',
+  schemaVersion: '1.6',
   browser: { selected: [], default: null },
   aiTools: [],
 };

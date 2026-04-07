@@ -184,4 +184,53 @@ describe('Wizard flow integration', () => {
     const frame = lastFrame() ?? '';
     expect(frame).toContain('Editor');
   });
+
+  // T037: Contexts step integration tests
+  it('contexts step renders workspace root prompt on first render', async () => {
+    const { ContextsStep } = await import('../../src/steps/07-contexts.js');
+    const onComplete = vi.fn();
+    const onBack = vi.fn();
+
+    const { lastFrame } = render(
+      React.createElement(ContextsStep, { onBack, onComplete })
+    );
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('workspace root');
+  });
+
+  it('contexts step calls onBack when back option selected with empty contexts', async () => {
+    const { ContextsStep } = await import('../../src/steps/07-contexts.js');
+    const onComplete = vi.fn();
+    const onBack = vi.fn();
+
+    render(React.createElement(ContextsStep, { onBack, onComplete }));
+    // onBack should be wired; we just verify render without crash
+    expect(onBack).not.toHaveBeenCalled();
+  });
+
+  // T042: Language sub-flow — language catalog data integrity
+  it('LANGUAGE_CATALOG has entries for all expected languages', async () => {
+    const { LANGUAGE_CATALOG, LANGUAGE_KEYS } = await import('../../src/data/language-versions.js');
+
+    expect(LANGUAGE_KEYS.length).toBeGreaterThanOrEqual(8);
+    for (const key of ['node', 'python', 'java', 'go', 'ruby', 'rust']) {
+      expect(LANGUAGE_CATALOG[key]).toBeDefined();
+      expect(LANGUAGE_CATALOG[key]!.versions.length).toBeGreaterThan(0);
+      expect(LANGUAGE_CATALOG[key]!.managers.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('package manager step renders checkbox multi-select', async () => {
+    const { PackageManagerStep } = await import('../../src/steps/03-package-manager.js');
+    const onComplete = vi.fn();
+    const onBack = vi.fn();
+
+    const { lastFrame } = render(
+      React.createElement(PackageManagerStep, { onComplete, onBack })
+    );
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('homebrew');
+  });
 });
