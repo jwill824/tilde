@@ -262,25 +262,39 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
 
             {/* ── Left: step progress sidebar ── */}
             <Box flexDirection="column" marginRight={3}>
-              {STEP_REGISTRY.map((step, idx) => {
-                const done = completedStepSet.has(idx);
-                const active = idx === currentStep;
-                return (
-                  <Box key={idx}>
-                    <Text color={done ? 'green' : active ? 'cyan' : undefined} dimColor={!done && !active}>
-                      {done ? '✓' : active ? '▶' : ' '}{' '}
-                    </Text>
-                    <Text
-                      bold={active}
-                      color={done ? 'green' : active ? 'cyan' : undefined}
-                      dimColor={!done && !active}
-                    >
-                      {step.label}
-                    </Text>
-                    {!step.required && !done && <Text dimColor> (opt)</Text>}
-                  </Box>
-                );
-              })}
+              {(() => {
+                const summaryMap = new Map(completedSteps.map(s => [s.id, s.summary]));
+                return STEP_REGISTRY.map((step, idx) => {
+                  const done = completedStepSet.has(idx);
+                  const active = idx === currentStep;
+                  const rawSummary = summaryMap.get(idx);
+                  // Extract just the value part after "Label: " for compact display
+                  const summaryVal = rawSummary
+                    ? rawSummary.split(': ').slice(1).join(': ')
+                    : '';
+                  const summaryDisplay = summaryVal.length > 22
+                    ? summaryVal.slice(0, 21) + '…'
+                    : summaryVal;
+                  return (
+                    <Box key={idx}>
+                      <Text color={done ? 'green' : active ? 'cyan' : undefined} dimColor={!done && !active}>
+                        {done ? '✓' : active ? '▶' : ' '}{' '}
+                      </Text>
+                      <Text
+                        bold={active}
+                        color={done ? 'green' : active ? 'cyan' : undefined}
+                        dimColor={!done && !active}
+                      >
+                        {step.label}
+                      </Text>
+                      {done && summaryDisplay && (
+                        <Text dimColor> → {summaryDisplay}</Text>
+                      )}
+                      {!step.required && !done && <Text dimColor> (opt)</Text>}
+                    </Box>
+                  );
+                });
+              })()}
               <Box marginTop={1}>
                 <Text dimColor>▶ current  ✓ done  (opt) optional</Text>
               </Box>

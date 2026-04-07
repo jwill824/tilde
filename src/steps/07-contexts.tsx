@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Box, Text } from 'ink';
+import React, { useState, useEffect } from 'react';
+import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
 import type { DeveloperContext } from '../config/schema.js';
@@ -129,9 +129,20 @@ interface GateInputProps {
   error?: string;
 }
 
-function GateInput({ prompt, hint, currentValue, placeholder, onConfirm, onBack, backLabel = '← Back', skipLabel, onSkip, error }: GateInputProps) {
+function GateInput({ prompt, hint, currentValue, placeholder, onConfirm, onBack, backLabel = '← Back (b)', skipLabel, onSkip, error }: GateInputProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(currentValue);
+
+  // Sync value state when currentValue prop changes (phase transitions may reuse same instance)
+  useEffect(() => {
+    setValue(currentValue);
+    setEditing(false);
+  }, [currentValue]);
+
+  // Allow 'b' to go back when in gate (non-editing) mode
+  useInput((input) => {
+    if (input === 'b' && onBack && !editing) onBack();
+  }, { isActive: !!onBack });
 
   if (!editing) {
     const items = [
