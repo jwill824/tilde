@@ -270,7 +270,7 @@ export async function main() {
 
     if (!resolvedForCmd) {
       // T013: config-required error — do NOT launch wizard
-      process.stderr.write(formatNoConfigError(subcommand) + '\n');
+      process.stderr.write((await formatNoConfigError(subcommand)) + '\n');
       process.exit(2);
     }
 
