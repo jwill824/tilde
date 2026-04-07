@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
 import SelectInput from 'ink-select-input';
+import TextInput from 'ink-text-input';
 import { access } from 'node:fs/promises';
 import { getDiscoveryPaths } from '../utils/config-discovery.js';
 
@@ -16,10 +17,14 @@ interface Props {
   isOptional?: boolean;
 }
 
+type Phase = 'scanning' | 'no-config-menu' | 'enter-path' | 'found-config';
+
 export function ConfigDetectionStep({ onComplete, onExit, onBack: _onBack, isOptional: _isOptional }: Props) {
   const [foundConfig, setFoundConfig] = useState<string | null>(null);
-  const [scanning, setScanning] = useState(true);
   const [paths, setPaths] = useState<string[]>([]);
+  const [phase, setPhase] = useState<Phase>('scanning');
+  const [customPath, setCustomPath] = useState('');
+  const [pathError, setPathError] = useState('');
 
   useEffect(() => {
     async function scan() {
@@ -29,16 +34,16 @@ export function ConfigDetectionStep({ onComplete, onExit, onBack: _onBack, isOpt
         try {
           await access(p);
           setFoundConfig(p);
-          setScanning(false);
+          setPhase('found-config');
           return;
         } catch { /* continue */ }
       }
-      setScanning(false);
+      setPhase('no-config-menu');
     }
     scan();
   }, []);
 
-  if (scanning) {
+  if (phase === 'scanning') {
     return (
       <Box>
         <Text dimColor>Scanning for existing tilde.config.json...</Text>
@@ -46,9 +51,10 @@ export function ConfigDetectionStep({ onComplete, onExit, onBack: _onBack, isOpt
     );
   }
 
-  if (!foundConfig) {
+  if (phase === 'no-config-menu') {
     const noConfigItems = [
       { label: 'Yes — run setup wizard', value: 'yes' },
+      { label: 'Load existing config from a custom path', value: 'browse' },
       { label: 'No — exit', value: 'no' },
     ];
 
@@ -65,6 +71,8 @@ export function ConfigDetectionStep({ onComplete, onExit, onBack: _onBack, isOpt
             onSelect={(item) => {
               if (item.value === 'yes') {
                 onComplete({ mode: 'wizard' });
+              } else if (item.value === 'browse') {
+                setPhase('enter-path');
               } else {
                 onExit?.();
               }
@@ -75,6 +83,34 @@ export function ConfigDetectionStep({ onComplete, onExit, onBack: _onBack, isOpt
     );
   }
 
+  if (phase === 'enter-path') {
+    return (
+      <Box flexDirection="column">
+        <Text bold>Enter path to existing tilde.config.json:</Text>
+        {pathError && <Text color="red">{pathError}</Text>}
+        <Box marginTop={1}>
+          <TextInput
+            value={customPath}
+            onChange={setCustomPath}
+            placeholder="/path/to/tilde.config.json"
+            onSubmit={async (val) => {
+              const p = val.trim();
+              if (!p) { setPathError('Path cannot be empty'); return; }
+              try {
+                await access(p);
+                onComplete({ mode: 'config-first', configPath: p });
+              } catch {
+                setPathError(`Cannot access: ${p}`);
+              }
+            }}
+          />
+        </Box>
+        <Text dimColor>Press Enter to confirm, or leave blank and Enter to go back</Text>
+      </Box>
+    );
+  }
+
+  // phase === 'found-config'
   const items = [
     { label: `Use existing config (${foundConfig})`, value: 'config-first' },
     { label: 'Start fresh wizard', value: 'wizard' },
@@ -89,7 +125,7 @@ export function ConfigDetectionStep({ onComplete, onExit, onBack: _onBack, isOpt
           items={items}
           onSelect={(item) => {
             if (item.value === 'config-first') {
-              onComplete({ mode: 'config-first', configPath: foundConfig });
+              onComplete({ mode: 'config-first', configPath: foundConfig! });
             } else {
               onComplete({ mode: 'wizard' });
             }
@@ -99,3 +135,4 @@ export function ConfigDetectionStep({ onComplete, onExit, onBack: _onBack, isOpt
     </Box>
   );
 }
+
