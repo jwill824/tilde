@@ -7,7 +7,7 @@ updates:
     labels:
       - "dependencies"
 
-  - package-ecosystem: "gitsubmodules"
+  - package-ecosystem: "gitsubmodule"
     directory: "/"
     schedule:
       interval: "weekly"
