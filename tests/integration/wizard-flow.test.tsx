@@ -41,17 +41,19 @@ describe('Wizard flow integration', () => {
     expect(lastFrame()).toContain('tilde');
   });
 
-  it('wizard step 0 (config detection) auto-advances when no config found', async () => {
+  it('wizard step 0 (config detection) shows create prompt when no config found', async () => {
     const { ConfigDetectionStep } = await import('../../src/steps/00-config-detection.js');
     const onComplete = vi.fn();
-    
-    render(React.createElement(ConfigDetectionStep, { onComplete }));
+    const onExit = vi.fn();
+
+    const { lastFrame } = render(React.createElement(ConfigDetectionStep, { onComplete, onExit }));
 
     // Wait for async config scan
     await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Should have called onComplete with wizard mode
-    expect(onComplete).toHaveBeenCalledWith({ mode: 'wizard' });
+
+    // Should NOT have auto-advanced — should show a prompt
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(lastFrame()).toContain('Create a new tilde config');
   });
 
   it('shell step renders options and calls onComplete on selection', async () => {

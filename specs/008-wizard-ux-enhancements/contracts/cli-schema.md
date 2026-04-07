@@ -71,6 +71,8 @@ Or specify a path: tilde update shell --config ~/dotfiles/tilde.config.json
 
 ## 2. Config-Dependent Command Error Behavior
 
+> ⚠️ This section is superseded by [010-wizard-flow-fixes/contracts/cli-schema.md](../../010-wizard-flow-fixes/contracts/cli-schema.md) for config discovery paths.
+
 All config-dependent commands (`tilde install`, `tilde update`) follow the same discovery and error contract.
 
 ### Config Discovery Order
