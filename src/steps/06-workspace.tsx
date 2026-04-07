@@ -11,10 +11,10 @@ interface Props {
 
 type Field = 'workspaceRoot' | 'dotfilesRepo';
 
-export function WorkspaceStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
+export function WorkspaceStep({ onComplete, onBack: _onBack, isOptional: _isOptional, initialValues = {} }: Props) {
   const [field, setField] = useState<Field>('workspaceRoot');
-  const [workspaceRoot, setWorkspaceRoot] = useState('~/Developer');
-  const [dotfilesRepo, setDotfilesRepo] = useState('');
+  const [workspaceRoot, setWorkspaceRoot] = useState(() => (initialValues.workspaceRoot as string) ?? '~/Developer');
+  const [dotfilesRepo, setDotfilesRepo] = useState(() => (initialValues.dotfilesRepo as string) ?? '');
   const [error, setError] = useState('');
 
   const validatePath = (p: string): boolean =>

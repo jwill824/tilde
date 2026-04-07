@@ -17,7 +17,8 @@ const items = [
   { label: 'Environment variables only (no secrets manager)', value: 'env-only' },
 ];
 
-export function SecretsBackendStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
+export function SecretsBackendStep({ onComplete, onBack: _onBack, isOptional: _isOptional, initialValues = {} }: Props) {
+  const initialIndex = Math.max(0, items.findIndex(item => item.value === (initialValues.secretsBackend as string)));
   return (
     <Box flexDirection="column">
       <Text bold>Secrets backend:</Text>
@@ -25,6 +26,7 @@ export function SecretsBackendStep({ onComplete, onBack: _onBack, isOptional: _i
       <Box marginTop={1}>
         <SelectInput
           items={items}
+          initialIndex={initialIndex}
           onSelect={(item) => onComplete({ secretsBackend: item.value as SecretsBackend })}
         />
       </Box>

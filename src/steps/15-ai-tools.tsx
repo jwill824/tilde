@@ -31,7 +31,7 @@ interface AIToolEntry {
 
 type Phase = 'loading' | 'select' | 'installing' | 'done' | 'error';
 
-export function AIToolsStep({ onComplete, onBack, isOptional, onSkip }: Props) {
+export function AIToolsStep({ onComplete, onBack, isOptional, onSkip, initialValues = {} }: Props) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [tools, setTools] = useState<AIToolEntry[]>([]);
   const [cursorIdx, setCursorIdx] = useState(0);
@@ -39,20 +39,25 @@ export function AIToolsStep({ onComplete, onBack, isOptional, onSkip }: Props) {
   const [skippedInstalls, setSkippedInstalls] = useState<string[]>([]);
 
   useEffect(() => {
+    const savedNames = (initialValues.aiTools as Array<{ name: string }> | undefined)?.map(t => t.name);
     async function loadTools() {
       try {
         const entries: AIToolEntry[] = await Promise.all(
           AI_TOOL_PLUGINS.map(async (plugin) => ({
             plugin,
             installed: await plugin.detectInstalled().catch(() => false),
-            selected: false,
+            selected: savedNames ? savedNames.includes(plugin.name) : false,
           }))
         );
         setTools(entries);
         setPhase('select');
       } catch (err) {
         setErrorMsg((err as Error).message);
-        setTools(AI_TOOL_PLUGINS.map(plugin => ({ plugin, installed: false, selected: false })));
+        setTools(AI_TOOL_PLUGINS.map(plugin => ({
+          plugin,
+          installed: false,
+          selected: savedNames ? savedNames.includes(plugin.name) : false,
+        })));
         setPhase('select');
       }
     }

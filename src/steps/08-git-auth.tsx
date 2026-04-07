@@ -19,9 +19,10 @@ const AUTH_OPTIONS = [
   { label: 'SSH (key-based)', value: 'ssh' },
 ];
 
-export function GitAuthStep({ contexts, onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
+export function GitAuthStep({ contexts, onComplete, onBack, isOptional: _isOptional, initialValues = {} }: Props) {
   const [idx, setIdx] = useState(0);
-  const [updatedContexts, setUpdatedContexts] = useState<DeveloperContext[]>([...contexts]);
+  const savedContexts = initialValues.contexts as DeveloperContext[] | undefined;
+  const [updatedContexts, setUpdatedContexts] = useState<DeveloperContext[]>(savedContexts ?? [...contexts]);
 
   if (idx >= contexts.length) {
     return (
@@ -32,6 +33,7 @@ export function GitAuthStep({ contexts, onComplete, onBack: _onBack, isOptional:
   }
 
   const ctx = contexts[idx];
+  const savedAuthIdx = AUTH_OPTIONS.findIndex(o => o.value === updatedContexts[idx]?.authMethod);
 
   return (
     <Box flexDirection="column">
@@ -39,9 +41,13 @@ export function GitAuthStep({ contexts, onComplete, onBack: _onBack, isOptional:
       <Text dimColor>How will you authenticate with remote git repositories?</Text>
       <Box marginTop={1}>
         <SelectInput
-          items={AUTH_OPTIONS}
-          initialIndex={0}
+          items={[
+            ...AUTH_OPTIONS,
+            ...(onBack && idx === 0 ? [{ label: '← Back', value: '__back__' }] : []),
+          ]}
+          initialIndex={savedAuthIdx >= 0 ? savedAuthIdx : 0}
           onSelect={(item) => {
+            if (item.value === '__back__' && onBack) { onBack(); return; }
             const updated = updatedContexts.map((c, i) =>
               i === idx ? { ...c, authMethod: item.value as AuthMethod } : c
             );

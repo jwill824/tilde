@@ -20,10 +20,11 @@ function AutoSkip({ contexts, onComplete }: { contexts: DeveloperContext[]; onCo
   return <Box><Text dimColor>No gh-cli contexts — skipping account setup.</Text></Box>;
 }
 
-export function AccountsStep({ contexts, onComplete, onBack: _onBack, isOptional: _isOptional, onSkip: _onSkip }: Props) {
+export function AccountsStep({ contexts, onComplete, onBack: _onBack, isOptional: _isOptional, onSkip: _onSkip, initialValues = {} }: Props) {
   const ghCliContexts = contexts.filter(c => c.authMethod === 'gh-cli');
   const [idx, setIdx] = useState(0);
-  const [updatedContexts, setUpdatedContexts] = useState<DeveloperContext[]>([...contexts]);
+  const savedContexts = initialValues.contexts as DeveloperContext[] | undefined;
+  const [updatedContexts, setUpdatedContexts] = useState<DeveloperContext[]>(savedContexts ?? [...contexts]);
   const [usernameInput, setUsernameInput] = useState('');
 
   if (ghCliContexts.length === 0) {

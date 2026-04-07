@@ -10,8 +10,12 @@ interface Props {
   initialValues?: Record<string, unknown>;
 }
 
-export function ToolsStep({ onComplete, defaultTools = '', onBack: _onBack, isOptional: _isOptional }: Props) {
-  const [toolInput, setToolInput] = useState(defaultTools);
+export function ToolsStep({ onComplete, defaultTools = '', onBack: _onBack, isOptional: _isOptional, initialValues = {} }: Props) {
+  const [toolInput, setToolInput] = useState(() => {
+    const saved = initialValues.tools as string[] | undefined;
+    if (saved) return saved.filter(t => t !== 'direnv').join(', ');
+    return defaultTools;
+  });
   const direnv = true; // direnv pre-checked per FR-006
 
   return (

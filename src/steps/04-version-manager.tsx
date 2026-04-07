@@ -12,9 +12,12 @@ interface Props {
 const OPTIONS = ['vfox'] as const;
 type VMName = typeof OPTIONS[number];
 
-export function VersionManagerStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
+export function VersionManagerStep({ onComplete, onBack, isOptional: _isOptional, initialValues = {} }: Props) {
   const [cursor, setCursor] = useState(0);
-  const [selected, setSelected] = useState<Set<VMName>>(new Set(['vfox']));
+  const [selected, setSelected] = useState<Set<VMName>>(() => {
+    const saved = initialValues.versionManagers as Array<{ name: VMName }> | undefined;
+    return saved?.length ? new Set(saved.map(vm => vm.name)) : new Set(['vfox']);
+  });
 
   useInput((input, key) => {
     if (key.upArrow) setCursor(c => Math.max(0, c - 1));
@@ -28,6 +31,7 @@ export function VersionManagerStep({ onComplete, onBack: _onBack, isOptional: _i
         return next;
       });
     }
+    if (input === 'b' && onBack) { onBack(); return; }
     if (key.return) {
       onComplete({
         versionManagers: Array.from(selected).map(name => ({ name })),

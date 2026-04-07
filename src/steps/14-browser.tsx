@@ -42,7 +42,7 @@ const KNOWN_BROWSERS: Omit<BrowserEntry, 'installed' | 'selected'>[] = [
 
 type Phase = 'detecting' | 'select-browsers' | 'set-default' | 'installing' | 'done' | 'error';
 
-export function BrowserStep({ onComplete, onBack, isOptional, onSkip }: Props) {
+export function BrowserStep({ onComplete, onBack, isOptional, onSkip, initialValues = {} }: Props) {
   const [phase, setPhase] = useState<Phase>('detecting');
   const [browsers, setBrowsers] = useState<BrowserEntry[]>([]);
   const [cursor, setCursor] = useState(0);
@@ -51,6 +51,7 @@ export function BrowserStep({ onComplete, onBack, isOptional, onSkip }: Props) {
   const [skippedInstalls, setSkippedInstalls] = useState<string[]>([]);
 
   useEffect(() => {
+    const savedIds = (initialValues.browser as { selected?: string[] } | undefined)?.selected;
     async function detectBrowsers() {
       const { access } = await import('node:fs/promises');
       const entries: BrowserEntry[] = await Promise.all(
@@ -62,7 +63,8 @@ export function BrowserStep({ onComplete, onBack, isOptional, onSkip }: Props) {
           } catch {
             // installed remains false
           }
-          return { ...b, installed, selected: installed };
+          const selected = savedIds ? savedIds.includes(b.id) : installed;
+          return { ...b, installed, selected };
         })
       );
       setBrowsers(entries);
