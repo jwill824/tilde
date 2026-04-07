@@ -5,6 +5,14 @@
 **Status**: Draft  
 **GitHub Issues**: #67, #66, #74, #82  
 
+## Clarifications
+
+### Session 2026-04-07
+
+- Q: When a user responds "no" to the config discovery prompt, what should tilde do? → A: Exit with a clear instruction — display "Run `tilde install --config <path>` to proceed" and terminate without launching the wizard.
+- Q: When a language version is left blank in the wizard, how should it appear in the saved config? → A: Omit the key entirely — no null, no empty string; absence signals "unbound".
+- Q: What locations should tilde search when discovering a config without `--config`? → A: In order — (1) current working directory, (2) git repo root of cwd, (3) `~/.tilde/tilde.config.json`. The canonical location (`~/.tilde/`) may be a symlink into a user's version-controlled tilde config repo; if no config exists anywhere, it is also the default creation target.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Fluid Wizard Navigation (Priority: P1)
@@ -54,7 +62,7 @@ A developer runs `tilde` or `tilde install` without passing `--config`, and a `t
 
 1. **Given** a valid config file exists in the current directory, **When** a user runs a config-dependent command without `--config`, **Then** tilde detects the file and prompts: "Found `tilde.config.json` — use this config? (yes/no/specify path)".
 2. **Given** the user responds "yes" to the discovery prompt, **When** tilde proceeds, **Then** it behaves identically to having passed `--config <discovered-path>`.
-3. **Given** the user responds "no" to the discovery prompt, **When** tilde proceeds, **Then** it either launches the wizard or exits with a clear instruction to pass `--config` explicitly.
+3. **Given** the user responds "no" to the discovery prompt, **When** tilde proceeds, **Then** it exits and displays: "Run `tilde install --config <path>` to proceed" — the wizard is never launched from this path.
 4. **Given** multiple discoverable config files exist, **When** tilde runs, **Then** it lists each candidate and lets the user select one.
 5. **Given** no config file is discoverable, **When** tilde runs without `--config`, **Then** the behavior from spec 008 US2 applies: clear error with guidance.
 
@@ -95,10 +103,10 @@ A developer setting up a new machine with tilde wants to include their note-taki
 - **FR-003**: The wizard MUST complete step transitions without visible lag, flicker, or duplicate rendering.
 - **FR-004**: When a user navigates back and then forward without making changes, the wizard MUST NOT re-prompt for information already provided.
 - **FR-005**: The language version binding step MUST display an independent version input for each language selected in the workspace context — with no cap on the number of languages.
-- **FR-006**: The wizard MUST accept partial language version input (some languages left unbound) without treating it as an error.
+- **FR-006**: The wizard MUST accept partial language version input; languages left blank MUST have their version key omitted entirely from the saved config (no null, no empty string).
 - **FR-007**: When a user navigates back through the language version step and returns, the wizard MUST restore all previously entered version values.
-- **FR-008**: When a config-dependent command is run without `--config`, tilde MUST check discoverable locations (current directory, standard config paths) for an existing config file before launching the wizard or returning an error.
-- **FR-009**: When a discoverable config is found, tilde MUST prompt the user to confirm use of that file, offering at minimum: use it, skip it, or specify a different path.
+- **FR-008**: When a config-dependent command is run without `--config`, tilde MUST search the following locations in order before launching the wizard or returning an error: (1) current working directory, (2) git repo root of the current directory, (3) `~/.tilde/tilde.config.json`. The `~/.tilde/tilde.config.json` path MAY be a symlink to a file inside a user's version-controlled config repository.
+- **FR-009**: When a discoverable config is found, tilde MUST prompt the user to confirm use of that file, offering: use it, skip it (exits with instruction to pass `--config <path>` explicitly), or specify a different path.
 - **FR-010**: When multiple discoverable config files exist, tilde MUST present all candidates and allow the user to select one.
 - **FR-011**: When no discoverable config is found and `--config` is absent, the behavior defined in spec 008 FR for US2 MUST be preserved (clear error with actionable guidance).
 - **FR-012**: The wizard applications step MUST include note-taking apps as selectable options, including at minimum: Obsidian, Notion, and Bear.
@@ -118,7 +126,7 @@ A developer setting up a new machine with tilde wants to include their note-taki
 ## Assumptions
 
 - Spec 008 is the baseline: back-navigation and config-required behavior were implemented there. This spec addresses regressions (#67, #66) and extends behavior (#74, #82) on top of that foundation.
-- "Discoverable config locations" includes at minimum: current working directory and `~/.tilde/tilde.config.json`. Additional standard paths may be defined during planning.
+- "Discoverable config locations" are searched in priority order: (1) current working directory, (2) git repo root of cwd, (3) `~/.tilde/tilde.config.json`. The canonical location (`~/.tilde/`) supports symlinks — the expected pattern is that users maintain a versioned tilde config repository and symlink `~/.tilde/tilde.config.json` into it. Users without a versioned config default to `~/.tilde/tilde.config.json` as a plain file.
 - Note-taking apps are assumed to be installable via Homebrew Cask where available (Obsidian, Notion). Apps without a Homebrew formula (e.g., Bear via App Store only) should be shown as unavailable for package manager installation.
 - The language version step regression (#66) is isolated to the rendering of multi-language selections — the underlying config data model for multiple language bindings is assumed to already support it.
 - Windows support and Linux support remain out of scope for this spec. All wizard behavior targets macOS.
