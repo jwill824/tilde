@@ -35,6 +35,7 @@ const DeveloperContextSchema = z.object({
   vscodeProfile: z.string().optional(),
   isDefault: z.boolean().optional(),
   languageBindings: z.array(LanguageBindingSchema).optional().default([]),  // NEW v1.5
+  dotfilesPath: z.string().optional(),  // NEW v1.6: per-context dotfiles location
 });
 
 const VersionManagerChoiceSchema = z.object({

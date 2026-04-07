@@ -11,12 +11,9 @@ import { ShellStep } from '../steps/02-shell.js';
 import { PackageManagerStep } from '../steps/03-package-manager.js';
 import { VersionManagerStep } from '../steps/04-version-manager.js';
 import { LanguagesStep } from '../steps/05-languages.js';
-import { WorkspaceStep } from '../steps/06-workspace.js';
 import { ContextsStep } from '../steps/07-contexts.js';
-import { GitAuthStep } from '../steps/08-git-auth.js';
 import { ToolsStep } from '../steps/09-tools.js';
 import { AppConfigStep } from '../steps/10-app-config.js';
-import { AccountsStep } from '../steps/11-accounts.js';
 import { SecretsBackendStep } from '../steps/12-secrets-backend.js';
 import { ConfigExportStep } from '../steps/13-config-export.js';
 import { BrowserStep } from '../steps/14-browser.js';
@@ -65,16 +62,13 @@ const STEP_REGISTRY: StepDefinition[] = [
   { id: 'package-manager',   label: 'Package Manager',     required: true  }, // 3
   { id: 'version-manager',   label: 'Version Manager',     required: true  }, // 4
   { id: 'languages',         label: 'Languages',           required: true  }, // 5
-  { id: 'workspace',         label: 'Workspace Directory', required: true  }, // 6
-  { id: 'contexts',          label: 'Workspace Contexts',  required: true  }, // 7
-  { id: 'git-auth',          label: 'Git Authentication',  required: true  }, // 8
-  { id: 'tools',             label: 'Tools & Applications',required: true  }, // 9
-  { id: 'app-config',        label: 'Editor Configuration',required: false }, // 10  ← optional
-  { id: 'accounts',          label: 'Accounts',            required: false }, // 11  ← optional
-  { id: 'secrets-backend',   label: 'Secrets Backend',     required: true  }, // 12
-  { id: 'config-export',     label: 'Config Export',       required: true  }, // 13
-  { id: 'browser',           label: 'Browser Selection',   required: false }, // 14  ← new optional
-  { id: 'ai-tools',          label: 'AI Coding Tools',     required: false }, // 15  ← new optional
+  { id: 'contexts',          label: 'Workspace & Contexts',required: true  }, // 6 (was 7; absorbs workspace/git-auth/accounts)
+  { id: 'tools',             label: 'Tools & Applications',required: true  }, // 7 (was 9)
+  { id: 'app-config',        label: 'Editor Configuration',required: false }, // 8 (was 10)
+  { id: 'secrets-backend',   label: 'Secrets Backend',     required: true  }, // 9 (was 12)
+  { id: 'config-export',     label: 'Config Export',       required: true  }, // 10 (was 13)
+  { id: 'browser',           label: 'Browser Selection',   required: false }, // 11 (was 14)
+  { id: 'ai-tools',          label: 'AI Coding Tools',     required: false }, // 12 (was 15)
 ];
 
 const LAST_STEP = STEP_REGISTRY.length - 1; // index of final step
@@ -312,43 +306,20 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
           />
         )}
         {currentStep === 6 && (
-          <WorkspaceStep
-            onBack={onBack}
-            isOptional={false}
-            initialValues={initialValues}
-            onComplete={(data) => advance(
-              { workspaceRoot: data.workspaceRoot, dotfilesRepo: data.dotfilesRepo },
-              `Workspace: ${data.workspaceRoot}, dotfiles: ${data.dotfilesRepo}`
-            )}
-          />
-        )}
-        {currentStep === 7 && (
           <ContextsStep
-            workspaceRoot={config.workspaceRoot ?? '~/Developer'}
             defaultGitName={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').name : undefined}
             defaultGitEmail={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').email : undefined}
             initialContexts={canGoBack ? (config.contexts ?? []) : []}
             onBack={onBack}
             isOptional={false}
-            onComplete={(data) => advance(
-              { contexts: data.contexts },
-              `Contexts: ${data.contexts.map(c => c.label).join(', ')}`
-            )}
-          />
-        )}
-        {currentStep === 8 && (
-          <GitAuthStep
-            contexts={config.contexts ?? []}
-            onBack={onBack}
-            isOptional={false}
             initialValues={initialValues}
             onComplete={(data) => advance(
-              { contexts: data.contexts },
-              `Git auth: ${data.contexts.map(c => `${c.label}→${c.authMethod}`).join(', ')}`
+              { workspaceRoot: data.workspaceRoot, dotfilesRepo: data.dotfilesRepo, contexts: data.contexts },
+              `Workspace: ${data.workspaceRoot} | Contexts: ${data.contexts.map(c => c.label).join(', ')}`
             )}
           />
         )}
-        {currentStep === 9 && (
+        {currentStep === 7 && (
           <ToolsStep
             defaultTools={captureReport ? captureReport.brewPackages.join(', ') : undefined}
             onBack={onBack}
@@ -363,7 +334,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 10 && (
+        {currentStep === 8 && (
           <AppConfigStep
             onBack={onBack}
             isOptional={isCurrentOptional}
@@ -376,20 +347,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 11 && (
-          <AccountsStep
-            contexts={config.contexts ?? []}
-            onBack={onBack}
-            isOptional={isCurrentOptional}
-            onSkip={isCurrentOptional ? skip : undefined}
-            initialValues={initialValues}
-            onComplete={(data) => advance(
-              { contexts: data.contexts },
-              `Accounts configured`
-            )}
-          />
-        )}
-        {currentStep === 12 && (
+        {currentStep === 9 && (
           <SecretsBackendStep
             onBack={onBack}
             isOptional={false}
@@ -400,20 +358,19 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 13 && (
+        {currentStep === 10 && (
           <ConfigExportStep
             config={config as TildeConfig}
             onBack={onBack}
             isOptional={false}
             onComplete={() => {
               clearCheckpoint().catch(() => {});
-              // Advance to step 14 (Browser) rather than terminating the wizard —
-              // steps 14 and 15 are optional post-config steps that should still run.
+              // Advance to step 11 (Browser) rather than terminating the wizard
               void advance({}, 'Configuration exported');
             }}
           />
         )}
-        {currentStep === 14 && (
+        {currentStep === 11 && (
           <BrowserStep
             onBack={onBack}
             isOptional={isCurrentOptional}
@@ -425,7 +382,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 15 && (
+        {currentStep === 12 && (
           <AIToolsStep
             onBack={onBack}
             isOptional={isCurrentOptional}
