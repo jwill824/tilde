@@ -238,6 +238,13 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
                       summary: `${step.label}: resumed`,
                     }))
                   );
+                  // Populate history so back-nav works from the resumed step
+                  setHistory(
+                    STEP_REGISTRY.slice(0, resumeStep + 1).map((_, idx) => ({
+                      stepIndex: idx,
+                      values: {},  // per-step values not stored in checkpoint; steps fall back to config
+                    }))
+                  );
                 } else {
                   setCurrentStep(0);
                 }
@@ -270,10 +277,13 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
                     >
                       {step.label}
                     </Text>
-                    {!step.required && !done && <Text dimColor> ○</Text>}
+                    {!step.required && !done && <Text dimColor> (opt)</Text>}
                   </Box>
                 );
               })}
+              <Box marginTop={1}>
+                <Text dimColor>▶ current  ✓ done  (opt) optional</Text>
+              </Box>
             </Box>
 
             {/* ── Right: active step content ── */}
