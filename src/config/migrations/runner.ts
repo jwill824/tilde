@@ -34,7 +34,9 @@ export const MIGRATIONS: Map<string, MigrationStep> = new Map([
   ['1.5', (config) => {
     const pm = config['packageManager'];
     if (typeof pm === 'string' && !Array.isArray(config['packageManagers'])) {
-      const { packageManager: _, ...rest } = config;
+      const rest = Object.fromEntries(
+        Object.entries(config).filter(([k]) => k !== 'packageManager')
+      );
       return { ...rest, packageManagers: [pm] };
     }
     return config;

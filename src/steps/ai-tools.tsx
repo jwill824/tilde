@@ -10,7 +10,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import Spinner from 'ink-spinner';
-import SelectInput from 'ink-select-input';
 import type { AIToolConfig } from '../config/schema.js';
 import type { AIToolPlugin } from '../plugins/api.js';
 import { AI_TOOL_PLUGINS } from '../plugins/first-party/ai-tools/index.js';

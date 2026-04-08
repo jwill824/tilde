@@ -59,9 +59,7 @@ export interface WizardState {
 export function getNextStep(step: number, config: Partial<TildeConfig>): number {
   switch (step) {
     case 5: {
-      // Contexts → skip to tools if no context has a GitHub account (no secrets needed)
-      const hasAccount = (config.contexts ?? []).some(c => c.github?.username);
-      if (!hasAccount) return 6; // → tools (skip nothing, same sequence here)
+      // Contexts → always proceed to tools (step 6); no skip logic needed here
       return 6;
     }
     case 6: {
@@ -163,6 +161,8 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
 
   // Navigation history stack (T007)
   const [history, setHistory] = useState<StepFrame[]>([]);
+  // Last popped frame when navigating back — used to restore initialValues
+  const [poppedFrame, setPoppedFrame] = useState<StepFrame | null>(null);
 
   // Checkpoint/resume state
   const [resumeStatus, setResumeStatus] = useState<'loading' | 'prompt' | 'ready'>('loading');
@@ -199,6 +199,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
       const merged = { ...config, ...stepData };
       setConfig(merged);
       setCompletedSteps(prev => [...prev, { id: currentStep, summary }]);
+      setPoppedFrame(null); // clear any back-nav restore frame on forward advance
 
       // Push current step onto history
       setHistory(prev => [...prev, { stepIndex: currentStep, values: stepData as Record<string, unknown> }]);
@@ -234,9 +235,10 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
   const goBack = useCallback(() => {
     if (history.length === 0) return;
     const newHistory = history.slice(0, -1);
-    const prevFrame = history[history.length - 1];
+    const popped = history[history.length - 1];
     setHistory(newHistory);
-    setCurrentStep(prevFrame.stepIndex);
+    setCurrentStep(popped.stepIndex);
+    setPoppedFrame(popped); // preserve values so the returned-to step can restore them
     // Also remove the last completed step entry
     setCompletedSteps(prev => prev.slice(0, -1));
   }, [history]);
@@ -247,8 +249,11 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
   const isCurrentOptional = !(STEP_REGISTRY[currentStep]?.required ?? true);
   // onBack handler — only passed when back-nav is available
   const onBack = canGoBack ? goBack : undefined;
-  // Restore values from history when navigating back to a step
-  const prevFrame = history.find(f => f.stepIndex === currentStep);
+  // Restore values when navigating back: prefer the just-popped frame (goBack),
+  // fall back to an earlier frame for the same step (resume/multi-back scenarios)
+  const prevFrame = poppedFrame?.stepIndex === currentStep
+    ? poppedFrame
+    : history.find(f => f.stepIndex === currentStep);
   const initialValues: Record<string, unknown> = prevFrame?.values ?? {};
 
   return (
@@ -341,7 +346,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             onBack={onBack}
             onExit={onExit}
             isOptional={false}
-            onComplete={(data) => advance(
+            onComplete={(_data) => advance(
               {},
               []
             )}

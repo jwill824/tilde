@@ -42,7 +42,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('wizard step 0 (config detection) shows create prompt when no config found', async () => {
-    const { ConfigDetectionStep } = await import('../../src/steps/00-config-detection.js');
+    const { ConfigDetectionStep } = await import('../../src/steps/config-detection.js');
     const onComplete = vi.fn();
     const onExit = vi.fn();
 
@@ -57,7 +57,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('shell step renders options and calls onComplete on selection', async () => {
-    const { ShellStep } = await import('../../src/steps/02-shell.js');
+    const { ShellStep } = await import('../../src/steps/shell.js');
     const onComplete = vi.fn();
     
     const { lastFrame, stdin } = render(
@@ -74,7 +74,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('secrets backend step renders options', async () => {
-    const { SecretsBackendStep } = await import('../../src/steps/12-secrets-backend.js');
+    const { SecretsBackendStep } = await import('../../src/steps/secrets-backend.js');
     const onComplete = vi.fn();
     
     const { lastFrame } = render(
@@ -86,7 +86,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('version manager step allows multi-select with space', async () => {
-    const { VersionManagerStep } = await import('../../src/steps/04-version-manager.js');
+    const { VersionManagerStep } = await import('../../src/steps/version-manager.js');
     const onComplete = vi.fn();
     
     const { stdin, lastFrame } = render(
@@ -111,7 +111,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('browser step renders browser options', async () => {
-    const { BrowserStep } = await import('../../src/steps/14-browser.js');
+    const { BrowserStep } = await import('../../src/steps/browser.js');
     const onComplete = vi.fn();
     const onSkip = vi.fn();
 
@@ -127,7 +127,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('ai tools step renders without crashing', async () => {
-    const { AIToolsStep } = await import('../../src/steps/15-ai-tools.js');
+    const { AIToolsStep } = await import('../../src/steps/ai-tools.js');
     const onComplete = vi.fn();
     const onSkip = vi.fn();
 
@@ -142,7 +142,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('contexts step shows ContextListView when initialContexts provided', async () => {
-    const { ContextsStep } = await import('../../src/steps/07-contexts.js');
+    const { ContextsStep } = await import('../../src/steps/contexts.js');
     const onComplete = vi.fn();
     const onBack = vi.fn();
 
@@ -173,7 +173,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('app config step renders editor selection first', async () => {
-    const { AppConfigStep } = await import('../../src/steps/10-app-config.js');
+    const { AppConfigStep } = await import('../../src/steps/app-config.js');
     const onComplete = vi.fn();
     const onSkip = vi.fn();
 
@@ -187,7 +187,7 @@ describe('Wizard flow integration', () => {
 
   // T037: Contexts step integration tests
   it('contexts step renders workspace root prompt on first render', async () => {
-    const { ContextsStep } = await import('../../src/steps/07-contexts.js');
+    const { ContextsStep } = await import('../../src/steps/contexts.js');
     const onComplete = vi.fn();
     const onBack = vi.fn();
 
@@ -200,7 +200,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('contexts step calls onBack when back option selected with empty contexts', async () => {
-    const { ContextsStep } = await import('../../src/steps/07-contexts.js');
+    const { ContextsStep } = await import('../../src/steps/contexts.js');
     const onComplete = vi.fn();
     const onBack = vi.fn();
 
@@ -222,7 +222,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('package manager step renders checkbox multi-select', async () => {
-    const { PackageManagerStep } = await import('../../src/steps/03-package-manager.js');
+    const { PackageManagerStep } = await import('../../src/steps/package-manager.js');
     const onComplete = vi.fn();
     const onBack = vi.fn();
 
