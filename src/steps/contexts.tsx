@@ -241,7 +241,7 @@ export function ContextsStep({
 
   function finishWizard(finalContexts: DeveloperContext[]) {
     const primary = finalContexts[0];
-    const dotfilesRepo = primary?.dotfilesPath || `${workspaceRoot}/personal/dotfiles`;
+    const dotfilesRepo = primary?.dotfilesPath || `${workspaceRoot}/dotfiles`;
     onComplete({ workspaceRoot, dotfilesRepo, contexts: finalContexts });
   }
 
@@ -434,7 +434,7 @@ export function ContextsStep({
 
   // ── dotfiles ───────────────────────────────────────────────────────────────
   if (phase === 'dotfiles') {
-    const defaultDotfiles = `${form.path}/dotfiles`;
+    const defaultDotfiles = `${workspaceRoot}/dotfiles`;
     const isFirst = contexts.length === 0;
     return (
       <Box flexDirection="column">
