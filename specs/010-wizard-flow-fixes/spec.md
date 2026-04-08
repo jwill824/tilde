@@ -2,7 +2,7 @@
 
 **Feature Branch**: `010-wizard-flow-fixes`  
 **Created**: 2026-04-07  
-**Status**: Revised — Phase 2 in progress (see US5–US9 and bugs below)  
+**Status**: Analyzed  
 **GitHub Issues**: #67, #66, #74, #82  
 
 ## Clarifications
