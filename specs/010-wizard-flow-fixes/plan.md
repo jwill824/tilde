@@ -53,9 +53,9 @@ src/
 ├── utils/
 │   └── config-discovery.ts    # UPDATE: discovery paths + git root search
 ├── steps/
-│   ├── 00-config-detection.tsx  # UPDATE: use shared discovery util, "no" → exit
-│   ├── 05-languages.tsx         # FIX: accept initialValues, restore on back-nav
-│   └── 09-tools.tsx             # EXTEND: add note-taking app catalog
+│   ├── config-detection.tsx  # UPDATE: use shared discovery util, "no" → exit
+│   ├── languages.tsx         # FIX: accept initialValues, restore on back-nav
+│   └── tools.tsx             # EXTEND: add note-taking app catalog
 ├── modes/
 │   ├── wizard.tsx               # FIX: pass initialValues to all steps on back-nav; wire onBack consistently
 │   └── config-first.tsx         # REFERENCE ONLY — not modified
@@ -79,13 +79,13 @@ tests/
 
 ### R2: Language Step Sequential Traversal
 
-**Finding**: `src/steps/05-languages.tsx` maintains `currentIdx: number` via `useState(0)`. On back-navigation from step 6 → 5, the wizard re-renders step 5 from scratch, resetting `currentIdx` to 0 and losing all entered versions. The fix is: (a) pass `initialValues.entries` (the full `LanguageEntry[]` array) as an `initialValues` prop; (b) initialize `entries` state from `initialValues` instead of from `allLanguages`; (c) initialize `currentIdx` to `initialValues.currentIdx ?? 0`. The blank-omit logic (`.filter(e => e.version.trim())`) already works correctly and should not change.
+**Finding**: `src/steps/languages.tsx` maintains `currentIdx: number` via `useState(0)`. On back-navigation from step 6 → 5, the wizard re-renders step 5 from scratch, resetting `currentIdx` to 0 and losing all entered versions. The fix is: (a) pass `initialValues.entries` (the full `LanguageEntry[]` array) as an `initialValues` prop; (b) initialize `entries` state from `initialValues` instead of from `allLanguages`; (c) initialize `currentIdx` to `initialValues.currentIdx ?? 0`. The blank-omit logic (`.filter(e => e.version.trim())`) already works correctly and should not change.
 
 ### R3: Config Discovery Path Changes
 
 **Finding**: Three inconsistencies exist in the codebase:
 1. `src/utils/config-discovery.ts` `getDiscoveryPaths()` returns `[cwd, ~/.config/tilde/, ~/tilde.config.json]` — the `~/.config/tilde/` and `~/tilde.config.json` paths are wrong per the clarification.
-2. `src/steps/00-config-detection.tsx` has its own **hardcoded** paths (`./tilde.config.json`, `~/Developer/personal/dotfiles/tilde.config.json`, etc.) — entirely inconsistent and never using the shared utility.
+2. `src/steps/config-detection.tsx` has its own **hardcoded** paths (`./tilde.config.json`, `~/Developer/personal/dotfiles/tilde.config.json`, etc.) — entirely inconsistent and never using the shared utility.
 3. The prior contract in `specs/008-wizard-ux-enhancements/contracts/cli-schema.md` documented the old paths. That contract must be superseded here.
 
 **Fix**: Update `getDiscoveryPaths()` to:
@@ -99,13 +99,13 @@ tests/
 
 **Finding**: In `src/index.tsx` lines 309-327, when `discoverConfig()` finds a config and no `--config` was given, tilde silently enters `config-first` mode. The user sees no prompt. Per US3, the tool must ask: "Found config at `<path>` — use it? yes / no / specify path". When the user says no: print `Run tilde install --config <path>` and exit code 0 (not an error — user made an explicit choice). When "specify path": show a text input.
 
-**Approach**: Add a new step component `src/steps/00-config-detection.tsx` handles both the wizard-initial config check AND the "auto-discovered" prompt. However, since the auto-discovery prompt fires **before** the wizard renders (it's in `index.tsx`), the cleanest approach is a lightweight `render()` + early exit pattern in `main()`: render a `ConfigDiscoveryPrompt` component (new: `src/modes/config-discovery-prompt.tsx`), then exit with the user's choice.
+**Approach**: Add a new step component `src/steps/config-detection.tsx` handles both the wizard-initial config check AND the "auto-discovered" prompt. However, since the auto-discovery prompt fires **before** the wizard renders (it's in `index.tsx`), the cleanest approach is a lightweight `render()` + early exit pattern in `main()`: render a `ConfigDiscoveryPrompt` component (new: `src/modes/config-discovery-prompt.tsx`), then exit with the user's choice.
 
 ### R5: Note-Taking Apps — Catalog Approach
 
-**Finding**: `src/steps/09-tools.tsx` is a free-text input step. Looking at browser step pattern (step 14 / `BrowserPlugin`), steps with a fixed catalog of known apps use `SelectInput` with a predefined items list. For note-taking apps, the catalog is small (Obsidian, Notion, Bear, Logseq). Bear is App Store only — no `brewCask`. Obsidian and Notion both have Homebrew casks. Logseq has a cask but is less common.
+**Finding**: `src/steps/tools.tsx` is a free-text input step. Looking at browser step pattern (step 14 / `BrowserPlugin`), steps with a fixed catalog of known apps use `SelectInput` with a predefined items list. For note-taking apps, the catalog is small (Obsidian, Notion, Bear, Logseq). Bear is App Store only — no `brewCask`. Obsidian and Notion both have Homebrew casks. Logseq has a cask but is less common.
 
-**Approach**: Add a new sub-section inside `09-tools.tsx` (or a new step 16 if it's cleaner) that presents a multi-select of note-taking apps. Each item shows availability (Homebrew cask available / App Store only). When "App Store only" apps are selected, tilde shows a post-install note rather than running brew install. This matches the pattern from the browser step.
+**Approach**: Add a new sub-section inside `tools.tsx` (or a new step 16 if it's cleaner) that presents a multi-select of note-taking apps. Each item shows availability (Homebrew cask available / App Store only). When "App Store only" apps are selected, tilde shows a post-install note rather than running brew install. This matches the pattern from the browser step.
 
 **Simpler alternative chosen**: Extend step 09 with a note-taking sub-section using `ink-select-input` — no new wizard step needed, no registry change needed, consistent with how tools step already works.
 
@@ -123,7 +123,7 @@ No schema change needed. `StepFrame.values: Record<string, unknown>` already exi
 | `09-tools` | `noteApps: string[]` (selected note-taking app cask names or identifiers) |
 | All input steps | `<field>: <value>` (already existing pattern) |
 
-**`LanguageEntry` type** (already in `05-languages.tsx`):
+**`LanguageEntry` type** (already in `languages.tsx`):
 ```typescript
 interface LanguageEntry {
   name: string;
@@ -207,7 +207,7 @@ const initialValues = frameForStep?.values ?? {};
 ### Note-Taking App Catalog
 
 ```typescript
-// In src/steps/09-tools.tsx (or new src/data/note-apps.ts):
+// In src/steps/tools.tsx (or new src/data/note-apps.ts):
 export const NOTE_TAKING_APPS = [
   { id: 'obsidian',  label: 'Obsidian',  brewCask: 'obsidian',  available: 'homebrew' },
   { id: 'notion',    label: 'Notion',    brewCask: 'notion',    available: 'homebrew' },
@@ -224,7 +224,7 @@ Bear shown as: `Bear (App Store — install manually)` — selecting it adds a p
 
 **Files modified:**
 - `src/utils/config-discovery.ts` — update `getDiscoveryPaths()` (add git root, fix `~/.tilde/` path)
-- `src/steps/00-config-detection.tsx` — replace hardcoded paths with `getDiscoveryPaths()`, fix "no" response to exit with instruction
+- `src/steps/config-detection.tsx` — replace hardcoded paths with `getDiscoveryPaths()`, fix "no" response to exit with instruction
 - `src/index.tsx` — add interactive discovery prompt when config is auto-found without `--config`
 - `specs/010-wizard-flow-fixes/contracts/cli-schema.md` — new contract (supersedes 008)
 
@@ -243,17 +243,17 @@ Bear shown as: `Bear (App Store — install manually)` — selecting it adds a p
 **Steps requiring `initialValues` addition:**
 | Step file | Fields to restore |
 |-----------|-----------------|
-| `02-shell.tsx` | `shell` |
-| `03-package-manager.tsx` | `packageManager` |
-| `04-version-manager.tsx` | `versionManagers` |
-| `05-languages.tsx` | `entries`, `currentIdx` |
-| `06-workspace.tsx` | `workspaceDir` |
-| `07-contexts.tsx` | `contexts` |
-| `08-git-auth.tsx` | `gitAuth` |
-| `09-tools.tsx` | `tools`, `noteApps` |
-| `10-app-config.tsx` | `editorConfig` |
-| `11-accounts.tsx` | `accounts` |
-| `12-secrets-backend.tsx` | `secretsBackend` |
+| `shell.tsx` | `shell` |
+| `package-manager.tsx` | `packageManager` |
+| `version-manager.tsx` | `versionManagers` |
+| `languages.tsx` | `entries`, `currentIdx` |
+| `workspace.tsx` | `workspaceDir` |
+| `contexts.tsx` | `contexts` |
+| `git-auth.tsx` | `gitAuth` |
+| `tools.tsx` | `tools`, `noteApps` |
+| `app-config.tsx` | `editorConfig` |
+| `accounts.tsx` | `accounts` |
+| `secrets-backend.tsx` | `secretsBackend` |
 
 **Tests modified:**
 - `tests/unit/wizard-navigation.test.ts` — add test: `goBack()` restores values to `initialValues` at T-1
@@ -262,7 +262,7 @@ Bear shown as: `Bear (App Store — install manually)` — selecting it adds a p
 ### Phase 1C — Language Binding State Fix (US2, FR-006)
 
 **Files modified:**
-- `src/steps/05-languages.tsx` — accept `initialValues.entries` and `initialValues.currentIdx`; init `entries` from `initialValues` (not from fresh `allLanguages` derivation); init `currentIdx` from `initialValues.currentIdx ?? 0`
+- `src/steps/languages.tsx` — accept `initialValues.entries` and `initialValues.currentIdx`; init `entries` from `initialValues` (not from fresh `allLanguages` derivation); init `currentIdx` from `initialValues.currentIdx ?? 0`
 
 **Tests modified:**
 - `tests/unit/language-bindings.test.ts` — add: "navigating back from step 6 to step 5 restores all previously entered language versions"
@@ -270,7 +270,7 @@ Bear shown as: `Bear (App Store — install manually)` — selecting it adds a p
 ### Phase 1D — Note-Taking Apps (US4, FR-012)
 
 **Files modified:**
-- `src/steps/09-tools.tsx` — add note-taking multi-select sub-section; add `NOTE_TAKING_APPS` catalog; handle App Store-only apps with post-note
+- `src/steps/tools.tsx` — add note-taking multi-select sub-section; add `NOTE_TAKING_APPS` catalog; handle App Store-only apps with post-note
 
 **Tests modified:**
 - `tests/unit/wizard-navigation.test.ts` — add: "note-taking apps stored in StepFrame values"
@@ -325,10 +325,10 @@ Bear shown as: `Bear (App Store — install manually)` — selecting it adds a p
 **Investigation approach**:
 1. Check `wizard.tsx` conditional rendering for steps 13–15 — look for missing branches, off-by-one, or unreachable conditions
 2. Check if `LAST_STEP` calculation is wrong (step count vs. index mismatch)
-3. Check whether step components `13-config-export.tsx`, `14-browser.tsx`, `15-ai-tools.tsx` throw on mount (async data load failure silently skips)
+3. Check whether step components `config-export.tsx`, `browser.tsx`, `ai-tools.tsx` throw on mount (async data load failure silently skips)
 4. Add `console.error` guards inside each component to detect mount failures in dev mode
 
-**Files potentially modified**: `src/modes/wizard.tsx`, `src/steps/13-config-export.tsx`, `src/steps/14-browser.tsx`, `src/steps/15-ai-tools.tsx`
+**Files potentially modified**: `src/modes/wizard.tsx`, `src/steps/config-export.tsx`, `src/steps/browser.tsx`, `src/steps/ai-tools.tsx`
 
 ### Phase 2B — Navigation Standardization (US7, BUG-002, P1)
 
@@ -345,7 +345,7 @@ Bear shown as: `Bear (App Store — install manually)` — selecting it adds a p
 
 ### Phase 2C — Contexts Step Merger (US5, P1)
 
-**Goal**: Replace steps 6, 7, 8, 11 with a single `07-contexts.tsx` that drives a per-context nested sub-flow.
+**Goal**: Replace steps 6, 7, 8, 11 with a single `contexts.tsx` that drives a per-context nested sub-flow.
 
 **New step sub-flow per context:**
 ```
@@ -362,9 +362,9 @@ Bear shown as: `Bear (App Store — install manually)` — selecting it adds a p
 - Step 7 (contexts) becomes the unified Contexts step
 - All remaining steps shift index accordingly (or use string IDs instead of numeric indices for routing)
 
-**Config schema impact**: `TildeConfig.contexts[]` must accommodate `gitAuth`, `account`, `languages[]`, `dotfilesPath` per context. Schema version bump to `"1.5"` required.
+**Config schema impact**: `TildeConfig.contexts[]` must accommodate `gitAuth`, `account`, `languages[]`, `dotfilesPath` per context. Schema version bump to `"1.6"` required.
 
-**Files modified**: `src/steps/07-contexts.tsx` (major rewrite), `src/modes/wizard.tsx` (remove steps 6/8/11 from registry and rendering), `src/config/schema.ts` (schema version bump), `src/config/migrations/runner.ts` (add `'1.4' → '1.5'` migration).
+**Files modified**: `src/steps/contexts.tsx` (major rewrite), `src/modes/wizard.tsx` (remove steps 6/8/11 from registry and rendering), `src/config/schema.ts` (schema version bump), `src/config/migrations/runner.ts` (add `'1.4' → '1.6'` migration).
 
 ### Phase 2D — Remove Step 5, Language Bindings in Contexts (US6, P1)
 
@@ -402,7 +402,7 @@ Select Node.js version:
 - `pyenv` → add `.python-version`
 - `direnv` → ensure `.envrc` is in `.gitignore` of context workspace
 
-**Files modified**: `src/modes/wizard.tsx` (remove step 5 from registry), `src/steps/05-languages.tsx` (keep file, but no longer registered — or delete), `src/steps/07-contexts.tsx` (add language sub-flow), `src/data/language-versions.ts` (new static catalog).
+**Files modified**: `src/modes/wizard.tsx` (remove step 5 from registry), `src/steps/languages.tsx` (keep file, but no longer registered — or delete), `src/steps/contexts.tsx` (add language sub-flow), `src/data/language-versions.ts` (new static catalog).
 
 ### Phase 2E — Multiple Package Managers (US8, P2)
 
@@ -410,13 +410,13 @@ Select Node.js version:
 
 **UI change**: `SelectInput` → `MultiSelect` (same pattern as version managers step 4).
 
-**Files modified**: `src/steps/03-package-manager.tsx` (multi-select UI), `src/config/schema.ts` (packageManagers: string[] instead of packageManager: string), `src/config/migrations/runner.ts` (migrate `packageManager` → `packageManagers: [value]`).
+**Files modified**: `src/steps/package-manager.tsx` (multi-select UI), `src/config/schema.ts` (packageManagers: string[] instead of packageManager: string), `src/config/migrations/runner.ts` (migrate `packageManager` → `packageManagers: [value]`).
 
 ### Phase 2F — Enhanced Environment Discovery (US9, P2)
 
 **Goal**: Step 1 detects more of the user's existing environment to pre-populate wizard defaults.
 
-**Detection additions to `src/steps/01-env-capture.tsx`:**
+**Detection additions to `src/steps/env-capture.tsx`:**
 - Language installs: `which node`, `node --version`; `which python3`, `python3 --version`; `which go`, `go version`; `which java`, `java -version`; `which ruby`, `ruby --version`
 - Version managers: `which nvm` (or `~/.nvm` exists), `which pyenv`, `which vfox`, `which rbenv`, `which fnm`
 - Dotfiles: check `~/.zshrc`, `~/.bashrc`, `~/.gitconfig`, `~/.ssh/config`, `~/.config/` exists
@@ -429,7 +429,7 @@ detectedDotfiles: string[]  // paths that exist
 brewLeaves: string[]        // direct installs (only if homebrew present)
 ```
 
-**Files modified**: `src/steps/01-env-capture.tsx`, `src/utils/env-detection.ts` (new or extended), possibly `src/modes/wizard.tsx` (pass env detection results forward as initialValues to contexts step).
+**Files modified**: `src/steps/env-capture.tsx`, `src/utils/env-detection.ts` (new or extended), possibly `src/modes/wizard.tsx` (pass env detection results forward as initialValues to contexts step).
 
 ### Phase 2G — Logic Tree Step Sequencing (US5/US9, P2)
 
@@ -465,14 +465,14 @@ function getNextStep(step: number, config: Partial<TildeConfig>): number {
 12. `feat(package-manager): support multiple package managers (multi-select)` — Phase 2E
 13. `feat(env-capture): detect existing languages, version managers, and dotfiles` — Phase 2F
 14. `feat(wizard): dynamic step sequencing via logic tree` — Phase 2G
-15. `chore(schema): bump schema version to 1.5 with migration` — Schema changes
+15. `chore(schema): bump schema version to 1.6 with migration` — Schema changes
 
 ## Updated Open Questions / Risks
 
 | Item | Status |
 |------|--------|
 | Steps 13–15 root cause | Unknown — Phase 2A investigation required |
-| Config schema bump to 1.5 | Required for per-context gitAuth, account, languages, dotfilesPath |
+| Config schema bump to 1.6 | Required for per-context gitAuth, account, languages, dotfilesPath |
 | Static version catalog staleness | Acceptable for v1 — versioned in repo, updated on major LTS releases |
 | Logic tree completeness | Start with 3–4 key decision points; expand iteratively |
 | `brew leaves` performance | ~200ms on typical machine — acceptable for step 1 |

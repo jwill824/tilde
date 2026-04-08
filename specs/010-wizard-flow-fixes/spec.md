@@ -100,7 +100,7 @@ A developer setting up a new machine with tilde wants to include their note-taki
 
 - **FR-001**: The wizard MUST allow users to navigate to the previous step at any point after the first step, with all previously entered values restored exactly as submitted.
 - **FR-002**: The wizard MUST disable or hide the back action on the first step, with no error or crash.
-- **FR-003**: The wizard MUST complete step transitions without visible lag, flicker, or duplicate rendering.
+- **FR-003**: The wizard MUST complete step transitions without visible lag, flicker, or duplicate rendering. Step transitions MUST complete within 100ms of user input (measured from keypress to next step render).
 - **FR-004**: When a user navigates back and then forward without making changes, the wizard MUST NOT re-prompt for information already provided.
 - **FR-005**: The language version binding step MUST display an independent version input for each language selected in the workspace context — with no cap on the number of languages.
 - **FR-006**: The wizard MUST accept partial language version input; languages left blank MUST have their version key omitted entirely from the saved config (no null, no empty string).
@@ -232,7 +232,7 @@ In any step that uses a text input (`ink-text-input`), pressing 'b' (the intende
 
 - **FR-001**: The wizard MUST allow users to navigate to the previous step at any point after the first step, with all previously entered values restored exactly as submitted.
 - **FR-002**: The wizard MUST disable or hide the back action on the first step, with no error or crash.
-- **FR-003**: The wizard MUST complete step transitions without visible lag, flicker, or duplicate rendering.
+- **FR-003**: The wizard MUST complete step transitions without visible lag, flicker, or duplicate rendering. Step transitions MUST complete within 100ms of user input (measured from keypress to next step render).
 - **FR-004**: When a user navigates back and then forward without making changes, the wizard MUST NOT re-prompt for information already provided.
 - **FR-005**: The language version binding step MUST display an independent version input for each language selected in the workspace context — with no cap on the number of languages.
 - **FR-006**: The wizard MUST accept partial language version input; languages left blank MUST have their version key omitted entirely from the saved config (no null, no empty string).
@@ -256,6 +256,8 @@ In any step that uses a text input (`ink-text-input`), pressing 'b' (the intende
 - **FR-024**: Step 1 MUST detect dotfiles at `~` and standard macOS Unix paths and offer to incorporate them.
 - **FR-025**: When Homebrew is installed, step 1 MUST distinguish directly-installed packages (via `brew leaves`) from transitive dependencies.
 - **FR-026**: Wizard step sequencing MUST support logic tree / scoped step transitions: the next step shown MUST be determined by the user's prior answers, not always the next linear index.
+- **FR-027**: The wizard MUST include a final Apply step that presents a summary of the full configuration and offers the user the choice to (a) apply the configuration immediately (install tools, write dotfiles, configure shell) or (b) save the config and apply later via `tilde install`.
+- **FR-028**: The wizard MUST display a persistent sidebar panel showing all steps, marking each as completed (✓), current (▶), or pending. Completed steps MUST show a brief summary of the user's selection inline. Optional steps MUST be labeled as such (opt).
 
 ## Success Criteria *(mandatory)*
 
