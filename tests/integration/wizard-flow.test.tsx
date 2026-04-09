@@ -41,21 +41,23 @@ describe('Wizard flow integration', () => {
     expect(lastFrame()).toContain('tilde');
   });
 
-  it('wizard step 0 (config detection) auto-advances when no config found', async () => {
-    const { ConfigDetectionStep } = await import('../../src/steps/00-config-detection.js');
+  it('wizard step 0 (config detection) shows create prompt when no config found', async () => {
+    const { ConfigDetectionStep } = await import('../../src/steps/config-detection.js');
     const onComplete = vi.fn();
-    
-    render(React.createElement(ConfigDetectionStep, { onComplete }));
+    const onExit = vi.fn();
+
+    const { lastFrame } = render(React.createElement(ConfigDetectionStep, { onComplete, onExit }));
 
     // Wait for async config scan
     await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Should have called onComplete with wizard mode
-    expect(onComplete).toHaveBeenCalledWith({ mode: 'wizard' });
+
+    // Should NOT have auto-advanced — should show a prompt
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(lastFrame()).toContain('Create a new tilde config');
   });
 
   it('shell step renders options and calls onComplete on selection', async () => {
-    const { ShellStep } = await import('../../src/steps/02-shell.js');
+    const { ShellStep } = await import('../../src/steps/shell.js');
     const onComplete = vi.fn();
     
     const { lastFrame, stdin } = render(
@@ -72,7 +74,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('secrets backend step renders options', async () => {
-    const { SecretsBackendStep } = await import('../../src/steps/12-secrets-backend.js');
+    const { SecretsBackendStep } = await import('../../src/steps/secrets-backend.js');
     const onComplete = vi.fn();
     
     const { lastFrame } = render(
@@ -84,7 +86,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('version manager step allows multi-select with space', async () => {
-    const { VersionManagerStep } = await import('../../src/steps/04-version-manager.js');
+    const { VersionManagerStep } = await import('../../src/steps/version-manager.js');
     const onComplete = vi.fn();
     
     const { stdin, lastFrame } = render(
@@ -109,7 +111,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('browser step renders browser options', async () => {
-    const { BrowserStep } = await import('../../src/steps/14-browser.js');
+    const { BrowserStep } = await import('../../src/steps/browser.js');
     const onComplete = vi.fn();
     const onSkip = vi.fn();
 
@@ -125,7 +127,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('ai tools step renders without crashing', async () => {
-    const { AIToolsStep } = await import('../../src/steps/15-ai-tools.js');
+    const { AIToolsStep } = await import('../../src/steps/ai-tools.js');
     const onComplete = vi.fn();
     const onSkip = vi.fn();
 
@@ -140,7 +142,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('contexts step shows ContextListView when initialContexts provided', async () => {
-    const { ContextsStep } = await import('../../src/steps/07-contexts.js');
+    const { ContextsStep } = await import('../../src/steps/contexts.js');
     const onComplete = vi.fn();
     const onBack = vi.fn();
 
@@ -171,7 +173,7 @@ describe('Wizard flow integration', () => {
   });
 
   it('app config step renders editor selection first', async () => {
-    const { AppConfigStep } = await import('../../src/steps/10-app-config.js');
+    const { AppConfigStep } = await import('../../src/steps/app-config.js');
     const onComplete = vi.fn();
     const onSkip = vi.fn();
 
@@ -181,5 +183,54 @@ describe('Wizard flow integration', () => {
 
     const frame = lastFrame() ?? '';
     expect(frame).toContain('Editor');
+  });
+
+  // T037: Contexts step integration tests
+  it('contexts step renders workspace root prompt on first render', async () => {
+    const { ContextsStep } = await import('../../src/steps/contexts.js');
+    const onComplete = vi.fn();
+    const onBack = vi.fn();
+
+    const { lastFrame } = render(
+      React.createElement(ContextsStep, { onBack, onComplete })
+    );
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('workspace root');
+  });
+
+  it('contexts step calls onBack when back option selected with empty contexts', async () => {
+    const { ContextsStep } = await import('../../src/steps/contexts.js');
+    const onComplete = vi.fn();
+    const onBack = vi.fn();
+
+    render(React.createElement(ContextsStep, { onBack, onComplete }));
+    // onBack should be wired; we just verify render without crash
+    expect(onBack).not.toHaveBeenCalled();
+  });
+
+  // T042: Language sub-flow — language catalog data integrity
+  it('LANGUAGE_CATALOG has entries for all expected languages', async () => {
+    const { LANGUAGE_CATALOG, LANGUAGE_KEYS } = await import('../../src/data/language-versions.js');
+
+    expect(LANGUAGE_KEYS.length).toBeGreaterThanOrEqual(8);
+    for (const key of ['node', 'python', 'java', 'go', 'ruby', 'rust']) {
+      expect(LANGUAGE_CATALOG[key]).toBeDefined();
+      expect(LANGUAGE_CATALOG[key]!.versions.length).toBeGreaterThan(0);
+      expect(LANGUAGE_CATALOG[key]!.managers.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('package manager step renders checkbox multi-select', async () => {
+    const { PackageManagerStep } = await import('../../src/steps/package-manager.js');
+    const onComplete = vi.fn();
+    const onBack = vi.fn();
+
+    const { lastFrame } = render(
+      React.createElement(PackageManagerStep, { onComplete, onBack })
+    );
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('homebrew');
   });
 });

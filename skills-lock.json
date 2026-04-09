@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "astro-developer": {
+      "source": "withastro/astro",
+      "sourceType": "github",
+      "computedHash": "48b1be8c625d1c3897bfaa45c4d33205e63e844ce7bb3201f30ea2fb51ad470c"
+    }
+  }
+}

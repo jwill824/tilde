@@ -3,7 +3,7 @@
   "version": "1",
   "os": "macos",
   "shell": "zsh",
-  "packageManager": "homebrew",
+  "packageManagers": ["homebrew"],
   "versionManagers": [],
   "languages": [],
   "workspaceRoot": "~/Developer",
@@ -31,5 +31,5 @@
     "direnv": true
   },
   "secretsBackend": "1password",
-  "schemaVersion": "1.5"
+  "schemaVersion": "1.6"
 }

@@ -18,17 +18,19 @@ type Phase =
   | { type: 'summary'; report: EnvironmentCaptureReport; skippedCount: number; rcEntryCount: number }
   | { type: 'done' };
 
-const promptItems = [
-  { label: 'Yes (recommended)', value: 'yes' },
-  { label: 'No (start fresh)', value: 'no' },
-];
-
-const confirmItems = [
-  { label: 'Continue', value: 'continue' },
-];
-
-export function EnvCaptureStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
+export function EnvCaptureStep({ onComplete, onBack, isOptional: _isOptional }: Props) {
   const [phase, setPhase] = useState<Phase>({ type: 'prompt' });
+
+  const promptItems = [
+    { label: 'Yes (recommended)', value: 'yes' },
+    { label: 'No (start fresh)', value: 'no' },
+    ...(onBack ? [{ label: '← Back', value: 'back' }] : []),
+  ];
+
+  const confirmItems = [
+    { label: 'Continue', value: 'continue' },
+    ...(onBack ? [{ label: '← Back', value: 'back' }] : []),
+  ];
 
   useEffect(() => {
     if (phase.type !== 'scanning') return;
@@ -52,7 +54,7 @@ export function EnvCaptureStep({ onComplete, onBack: _onBack, isOptional: _isOpt
     doScan().catch(() => {
       // On scan failure, return empty report
       onComplete({
-        captureReport: { dotfiles: [], brewPackages: [], rcFiles: {}, skippedFiles: [] },
+        captureReport: { dotfiles: [], brewPackages: [], rcFiles: {}, skippedFiles: [], detectedLanguages: [], detectedVersionManagers: [] },
       });
     });
   }, [phase.type]);
@@ -66,11 +68,12 @@ export function EnvCaptureStep({ onComplete, onBack: _onBack, isOptional: _isOpt
           <SelectInput
             items={promptItems}
             onSelect={(item) => {
+              if (item.value === 'back' && onBack) { onBack(); return; }
               if (item.value === 'yes') {
                 setPhase({ type: 'scanning' });
               } else {
                 onComplete({
-                  captureReport: { dotfiles: [], brewPackages: [], rcFiles: {}, skippedFiles: [] },
+                  captureReport: { dotfiles: [], brewPackages: [], rcFiles: {}, skippedFiles: [], detectedLanguages: [], detectedVersionManagers: [] },
                 });
               }
             }}
@@ -100,6 +103,12 @@ export function EnvCaptureStep({ onComplete, onBack: _onBack, isOptional: _isOpt
           <Text color="green">✓ Found {report.brewPackages.length} packages (brew)</Text>
           <Text color="green">✓ Found {report.dotfiles.length} dotfiles</Text>
           <Text color="green">✓ Found {rcEntryCount} rc entries</Text>
+          {report.detectedLanguages.length > 0 && (
+            <Text color="green">✓ Languages: {report.detectedLanguages.map(l => `${l.name} ${l.version}`).join(', ')}</Text>
+          )}
+          {report.detectedVersionManagers.length > 0 && (
+            <Text color="green">✓ Version managers: {report.detectedVersionManagers.map(v => v.name).join(', ')}</Text>
+          )}
           {skippedCount > 0 && (
             <Text color="yellow">⚠ Skipped {skippedCount} files (secrets excluded)</Text>
           )}
@@ -107,7 +116,10 @@ export function EnvCaptureStep({ onComplete, onBack: _onBack, isOptional: _isOpt
         <Box marginTop={1}>
           <SelectInput
             items={confirmItems}
-            onSelect={() => onComplete({ captureReport: report })}
+            onSelect={(item) => {
+              if (item.value === 'back' && onBack) { onBack(); return; }
+              onComplete({ captureReport: report });
+            }}
           />
         </Box>
       </Box>

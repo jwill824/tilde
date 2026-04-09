@@ -13,8 +13,8 @@ import { installAll } from '../installer/index.js';
 import { writeAll } from '../dotfiles/writer.js';
 import { pluginRegistry } from '../plugins/registry.js';
 import { ConfigSummary } from '../ui/config-summary.js';
-import { ContextsStep } from '../steps/07-contexts.js';
-import { ShellStep } from '../steps/02-shell.js';
+import { ContextsStep } from '../steps/contexts.js';
+import { ShellStep } from '../steps/shell.js';
 
 interface Props {
   configPath: string;

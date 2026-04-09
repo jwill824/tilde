@@ -32,7 +32,7 @@ const baseConfig: TildeConfig = {
   version: '1',
   os: 'macos',
   shell: 'zsh',
-  packageManager: 'homebrew',
+  packageManagers: ['homebrew'],
   versionManagers: [],
   languages: [],
   workspaceRoot: '~/Developer',

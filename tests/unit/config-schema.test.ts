@@ -6,7 +6,7 @@ const MINIMAL_CONFIG = {
   version: '1' as const,
   os: 'macos' as const,
   shell: 'zsh' as const,
-  packageManager: 'homebrew' as const,
+  packageManagers: ['homebrew'] as const,
   versionManagers: [],
   languages: [],
   workspaceRoot: '~/Developer',
@@ -126,5 +126,36 @@ describe('TildeConfigSchema', () => {
     };
     const result = TildeConfigSchema.safeParse(withLang);
     expect(result.success).toBe(true);
+  });
+
+  // T045: packageManagers array tests
+  it('accepts packageManagers as an array with one entry', () => {
+    const result = TildeConfigSchema.safeParse(MINIMAL_CONFIG);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.packageManagers).toEqual(['homebrew']);
+    }
+  });
+
+  it('accepts packageManagers with multiple entries', () => {
+    const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, packageManagers: ['homebrew', 'nix'] });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.packageManagers).toEqual(['homebrew', 'nix']);
+    }
+  });
+
+  it('rejects empty packageManagers array', () => {
+    const result = TildeConfigSchema.safeParse({ ...MINIMAL_CONFIG, packageManagers: [] });
+    expect(result.success).toBe(false);
+  });
+
+  it('defaults packageManagers to ["homebrew"] when omitted', () => {
+    const { packageManagers: _, ...noPackageManagers } = MINIMAL_CONFIG;
+    const result = TildeConfigSchema.safeParse(noPackageManagers);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.packageManagers).toEqual(['homebrew']);
+    }
   });
 });

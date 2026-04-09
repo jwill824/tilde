@@ -2,12 +2,15 @@ import { readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 import fg from 'fast-glob';
 import { run } from '../utils/exec.js';
+import { detectLanguages, detectVersionManagers, type DetectedLanguage, type DetectedVersionManager } from '../utils/env-detection.js';
 
 export type EnvironmentCaptureReport = {
   dotfiles: string[];
   brewPackages: string[];
   rcFiles: Record<string, string>;
   skippedFiles: string[];
+  detectedLanguages: DetectedLanguage[];
+  detectedVersionManagers: DetectedVersionManager[];
 };
 
 const RC_FILE_NAMES = ['.zshrc', '.zshprofile', '.gitconfig'];
@@ -45,9 +48,11 @@ export async function scanRcFiles(dotfilePaths: string[]): Promise<Record<string
 
 export async function scanEnvironment(homeDir?: string): Promise<EnvironmentCaptureReport> {
   const resolvedHome = homeDir ?? process.env.HOME ?? '~';
-  const [dotfiles, brewPackages] = await Promise.all([
+  const [dotfiles, brewPackages, detectedLanguages, detectedVersionManagers] = await Promise.all([
     scanDotfiles(resolvedHome),
     scanBrewPackages(),
+    detectLanguages(),
+    detectVersionManagers(),
   ]);
   const rcFiles = await scanRcFiles(dotfiles);
   return {
@@ -55,5 +60,7 @@ export async function scanEnvironment(homeDir?: string): Promise<EnvironmentCapt
     brewPackages,
     rcFiles,
     skippedFiles: [],
+    detectedLanguages,
+    detectedVersionManagers,
   };
 }

@@ -18,6 +18,7 @@ interface Props {
   onBack?: () => void;
   isOptional?: boolean;
   onSkip?: () => void;
+  initialValues?: Record<string, unknown>;
 }
 
 interface BrowserEntry {
@@ -41,7 +42,7 @@ const KNOWN_BROWSERS: Omit<BrowserEntry, 'installed' | 'selected'>[] = [
 
 type Phase = 'detecting' | 'select-browsers' | 'set-default' | 'installing' | 'done' | 'error';
 
-export function BrowserStep({ onComplete, onBack, isOptional, onSkip }: Props) {
+export function BrowserStep({ onComplete, onBack, isOptional, onSkip, initialValues = {} }: Props) {
   const [phase, setPhase] = useState<Phase>('detecting');
   const [browsers, setBrowsers] = useState<BrowserEntry[]>([]);
   const [cursor, setCursor] = useState(0);
@@ -50,6 +51,7 @@ export function BrowserStep({ onComplete, onBack, isOptional, onSkip }: Props) {
   const [skippedInstalls, setSkippedInstalls] = useState<string[]>([]);
 
   useEffect(() => {
+    const savedIds = (initialValues.browser as { selected?: string[] } | undefined)?.selected;
     async function detectBrowsers() {
       const { access } = await import('node:fs/promises');
       const entries: BrowserEntry[] = await Promise.all(
@@ -61,7 +63,8 @@ export function BrowserStep({ onComplete, onBack, isOptional, onSkip }: Props) {
           } catch {
             // installed remains false
           }
-          return { ...b, installed, selected: installed };
+          const selected = savedIds ? savedIds.includes(b.id) : installed;
+          return { ...b, installed, selected };
         })
       );
       setBrowsers(entries);
@@ -80,6 +83,7 @@ export function BrowserStep({ onComplete, onBack, isOptional, onSkip }: Props) {
       if (input === ' ') {
         setBrowsers(prev => prev.map((b, i) => i === cursor ? { ...b, selected: !b.selected } : b));
       }
+      if (key.return) { handleConfirmBrowsers().catch(() => {}); return; }
       if (input === 'b' && onBack) { onBack(); return; }
       if (input === 's' && isOptional && onSkip) { onSkip(); return; }
     }
@@ -208,19 +212,10 @@ export function BrowserStep({ onComplete, onBack, isOptional, onSkip }: Props) {
           </Box>
         ))}
       </Box>
-      <Box marginTop={1}>
-        <SelectInput
-          items={[
-            { label: 'Confirm selection', value: 'confirm' },
-            ...(onBack ? [{ label: '← Back', value: 'back' }] : []),
-            ...(isOptional && onSkip ? [{ label: '→ Skip', value: 'skip' }] : []),
-          ]}
-          onSelect={(item) => {
-            if (item.value === 'confirm') { handleConfirmBrowsers().catch(() => {}); }
-            if (item.value === 'back' && onBack) { onBack(); }
-            if (item.value === 'skip' && onSkip) { onSkip(); }
-          }}
-        />
+      <Box marginTop={1} gap={2}>
+        <Text dimColor>↑↓ + Space to toggle, Enter to confirm</Text>
+        {onBack && <Text dimColor>← Back (b)</Text>}
+        {isOptional && onSkip && <Text dimColor>→ Skip (s)</Text>}
       </Box>
     </Box>
   );

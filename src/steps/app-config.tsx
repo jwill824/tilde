@@ -8,6 +8,7 @@ interface Props {
   onBack?: () => void;
   isOptional?: boolean;
   onSkip?: () => void;
+  initialValues?: Record<string, unknown>;
 }
 
 const DOMAINS: { key: keyof ConfigurationDomains; label: string }[] = [
@@ -29,18 +30,30 @@ const EDITOR_OPTIONS = [
 
 type Phase = 'domains' | 'editor-primary' | 'editor-additional';
 
-export function AppConfigStep({ onComplete, onBack, isOptional, onSkip }: Props) {
-  const [phase, setPhase] = useState<Phase>('editor-primary');
-  const [cursor, setCursor] = useState(0);
-  const [enabled, setEnabled] = useState<ConfigurationDomains>({
-    git: true,
-    vscode: false,
-    aliases: false,
-    osDefaults: false,
-    direnv: true,
+export function AppConfigStep({ onComplete, onBack, isOptional, onSkip, initialValues = {} }: Props) {
+  const [phase, setPhase] = useState<Phase>(() => {
+    const savedEditor = initialValues.editors as EditorsConfig | undefined;
+    return savedEditor?.primary ? 'domains' : 'editor-primary';
   });
-  const [primaryEditor, setPrimaryEditor] = useState<string | undefined>();
-  const [additionalEditors] = useState<string[]>([]);
+  const [cursor, setCursor] = useState(0);
+  const [enabled, setEnabled] = useState<ConfigurationDomains>(() => {
+    const saved = initialValues.configurations as ConfigurationDomains | undefined;
+    return saved ?? {
+      git: true,
+      vscode: false,
+      aliases: false,
+      osDefaults: false,
+      direnv: true,
+    };
+  });
+  const [primaryEditor, setPrimaryEditor] = useState<string | undefined>(() => {
+    const savedEditor = initialValues.editors as EditorsConfig | undefined;
+    return savedEditor?.primary;
+  });
+  const [additionalEditors] = useState<string[]>(() => {
+    const savedEditor = initialValues.editors as EditorsConfig | undefined;
+    return savedEditor?.additional ?? [];
+  });
 
   useInput((input, key) => {
     if (phase === 'domains') {

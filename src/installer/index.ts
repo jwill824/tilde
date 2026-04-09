@@ -56,7 +56,7 @@ export async function installAll(
   }
 
   // 2. Install language versions via version managers
-  for (const lang of config.languages) {
+  for (const lang of (config.languages ?? [])) {
     const vmPlugin = registry.get<VersionManagerPlugin>('version-manager', lang.manager);
     if (!vmPlugin) {
       log(`Warning: No version manager plugin found for "${lang.manager}", skipping ${lang.name}@${lang.version}`);
