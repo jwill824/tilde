@@ -1,3 +1,17 @@
+# [1.6.0](https://github.com/jwill824/tilde/compare/v1.5.0...v1.6.0) (2026-04-09)
+
+
+### Bug Fixes
+
+* point all .github symlinks to .copilot and remove stale agent files ([936bba5](https://github.com/jwill824/tilde/commit/936bba5e08919d1c88e71ccf51a0fe252ba3574b))
+* **site:** correct favicon path and docs link on landing page ([#79](https://github.com/jwill824/tilde/issues/79)) ([31624a2](https://github.com/jwill824/tilde/commit/31624a2b34354c530015594e39f5f3055d041fb1))
+
+
+### Features
+
+* **infra:** migrate tilde site to tilde.thingstead.io subdomain ([#76](https://github.com/jwill824/tilde/issues/76)) ([25596ac](https://github.com/jwill824/tilde/commit/25596acd77799c53d17896c4308649e257425ab4))
+* **wizard:** wizard flow fixes & enhancements ([#89](https://github.com/jwill824/tilde/issues/89)) ([252abfb](https://github.com/jwill824/tilde/commit/252abfbf17f9897f02a0da599917a631b2e0207d)), closes [#67](https://github.com/jwill824/tilde/issues/67) [#66](https://github.com/jwill824/tilde/issues/66) [#74](https://github.com/jwill824/tilde/issues/74) [#82](https://github.com/jwill824/tilde/issues/82) [#67](https://github.com/jwill824/tilde/issues/67) [#74](https://github.com/jwill824/tilde/issues/74)
+
 # [1.5.0](https://github.com/jwill824/tilde/compare/v1.4.0...v1.5.0) (2026-04-02)
 
 
