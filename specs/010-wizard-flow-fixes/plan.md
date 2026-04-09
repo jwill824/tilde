@@ -27,7 +27,7 @@ Fix four wizard regressions and enhancements in the tilde CLI: (1) restore step 
 |------|--------|-------|
 | No new external dependencies | ✅ Pass | All changes use existing ink, react, node:fs, node:path |
 | Atomic file writes | ✅ Pass | Config writes continue to use `atomicWriteConfig` (src/config/writer.ts) |
-| Schema version bump required? | ✅ No | No new config fields added in this feature |
+| Schema version bump required? | ✅ Yes — bumped to `1.6` | Schema bumped twice: v1.5 (packageManagers array, contexts per-context fields), v1.6 (migration runner cleanup). Migration chain: `'1'→'1.1'→'1.2'→'1.3'→'1.4'→'1.5'→'1.6'` |
 | ESM-only (no CJS) | ✅ Pass | All new files use `.js` imports |
 | macOS only assertion remains | ✅ Pass | `assertMacOS()` guard unchanged |
 | Ink TTY guard preserved | ✅ Pass | `process.stdin.isTTY` check in index.tsx stays |
@@ -51,22 +51,34 @@ specs/010-wizard-flow-fixes/
 ```text
 src/
 ├── utils/
-│   └── config-discovery.ts    # UPDATE: discovery paths + git root search
+│   ├── config-discovery.ts    UPDATE: discovery paths + git root search
+│   └── env-detection.ts       NEW: detectLanguages(), detectVersionManagers(), detectBrewLeaves(), detectDotfiles()
+├── data/
+│   └── language-versions.ts   NEW: LANGUAGE_CATALOG with version + manager lists per language
 ├── steps/
-│   ├── config-detection.tsx  # UPDATE: use shared discovery util, "no" → exit
-│   ├── languages.tsx         # FIX: accept initialValues, restore on back-nav
-│   └── tools.tsx             # EXTEND: add note-taking app catalog
+│   ├── config-detection.tsx   UPDATE: use shared discovery util, "no" → exit, custom path option
+│   ├── contexts.tsx            REWRITE: unified workspace + contexts + git-auth + accounts + languages sub-flow
+│   ├── tools.tsx               EXTEND: note-taking app catalog
+│   ├── browser.tsx             FIX: remove conflicting SelectInput from multi-select step
+│   ├── ai-tools.tsx            FIX: remove unused SelectInput import
+│   ├── apply.tsx               NEW: Apply & Finish step (installAll + writeAll)
+│   └── env-capture.tsx         UPDATE: surface detected languages/version managers
 ├── modes/
-│   ├── wizard.tsx               # FIX: pass initialValues to all steps on back-nav; wire onBack consistently
-│   └── config-first.tsx         # REFERENCE ONLY — not modified
-├── index.tsx                    # EXTEND: add discovery prompt before entering config-first mode
+│   ├── wizard.tsx               FIX+EXTEND: initialValues/poppedFrame for back-nav; getNextStep() logic tree; sidebar panel; step registry updated to 12 canonical steps
+│   └── config-first.tsx         REFERENCE ONLY — not modified
+├── config/
+│   └── migrations/runner.ts    UPDATE: v1.5→v1.6 migration; Object.fromEntries() for ESLint compliance
+├── installer/
+│   └── index.ts                FIX: config.languages ?? [] nullish guard
+└── index.tsx                    EXTEND: config discovery prompt before config-first mode
 tests/
 ├── unit/
-│   ├── config-discovery.test.ts       # UPDATE: new discovery paths + git root
-│   ├── wizard-navigation.test.ts      # UPDATE: value restoration on back-nav
-│   └── language-bindings.test.ts      # UPDATE: multi-language restore scenario
+│   ├── config-discovery.test.ts       UPDATE: new discovery paths + git root
+│   ├── wizard-navigation.test.ts      UPDATE: value restoration on back-nav; getNextStep() logic tree
+│   ├── config-schema.test.ts          UPDATE: packageManagers array; per-context fields; migration v1.5→v1.6
+│   └── config/migration-runner.test.ts UPDATE: v1.6 migration
 └── integration/
-    └── wizard-flow.test.tsx           # UPDATE: discovery prompt + note-taking step
+    └── wizard-flow.test.tsx            UPDATE: 11 import paths renamed; discovery prompt; contexts; nav consistency
 ```
 
 ## Phase 0 — Research
@@ -471,10 +483,41 @@ function getNextStep(step: number, config: Partial<TildeConfig>): number {
 
 | Item | Status |
 |------|--------|
-| Steps 13–15 root cause | Unknown — Phase 2A investigation required |
-| Config schema bump to 1.6 | Required for per-context gitAuth, account, languages, dotfilesPath |
-| Static version catalog staleness | Acceptable for v1 — versioned in repo, updated on major LTS releases |
-| Logic tree completeness | Start with 3–4 key decision points; expand iteratively |
-| `brew leaves` performance | ~200ms on typical machine — acceptable for step 1 |
-| Contexts step complexity | Largest UX risk — may need sub-step progress indicator within contexts flow |
+| Steps 13–15 root cause | ✅ Resolved — off-by-one in LAST_STEP and missing render branches. Fixed in Phase 2A. |
+| Config schema bump to 1.6 | ✅ Done — per-context gitAuth, account, languages, dotfilesPath; packageManagers array |
+| Static version catalog staleness | ✅ Accepted — `src/data/language-versions.ts` versioned in repo, updated on LTS releases |
+| Logic tree completeness | ✅ Initial tree implemented in `getNextStep()` — case 5 (contexts → tools skip), case 6 (tools → skip app-config if no editor) |
+| `brew leaves` performance | ✅ Acceptable — ~200ms, runs async during step 1 |
+| Contexts step complexity | ✅ Sub-step progress handled by history stack; back-navigation works within sub-flow |
+
+---
+
+## Phase 3 — Final Review & Cleanup (2026-04-09)
+
+All 50 tasks complete. Final review identified and resolved the following before merge:
+
+### Review Findings
+
+| ID | Severity | Finding | Fix |
+|----|----------|---------|-----|
+| H1 | HIGH | 11 integration test imports used old numeric step file names | Updated all imports in `wizard-flow.test.tsx` |
+| H2 | HIGH | 3 ESLint errors in `ai-tools.tsx`, `wizard.tsx`, `runner.ts` | Removed unused import; renamed arg; replaced destructure-discard with `Object.fromEntries()` |
+| H3 | HIGH | `PackageManagerStep` lost user selection on back-navigation — popped history frame was gone before `initialValues` lookup | Added `poppedFrame` state; `goBack()` saves popped frame; `initialValues` prefers `poppedFrame` when `stepIndex` matches current step |
+| H4 | HIGH | `src/steps/accounts.tsx` was orphaned dead code after context unification | Deleted |
+| M1 | MEDIUM | Dead `hasAccount` conditional in `getNextStep()` case 5 — both branches identical | Removed dead `if`; case 5 now returns `6` unconditionally |
+
+### Additional Cleanup
+
+- **Step file renames**: All 17 step files renamed from `NN-name.tsx` to `name.tsx` (e.g., `07-contexts.tsx` → `contexts.tsx`). Step ordering lives in the registry, not filenames.
+- **Default dotfiles path**: Changed from `{context-path}/dotfiles` to `{workspaceRoot}/dotfiles` (one shared dotfiles repo per workspace root, e.g., `~/Developer/dotfiles/`).
+- **`config.languages ?? []`**: Nullish guard added in `src/installer/index.ts` — wizard builds config piecemeal without Zod defaults, so `languages` was `undefined` at apply time.
+
+### Final Test Coverage
+
+| Suite | Result |
+|-------|--------|
+| Unit (208 tests) | ✅ All passing |
+| Integration (42 tests) | ✅ All passing |
+| Contract | ✅ Passing |
+| ESLint | ✅ 0 errors |
 

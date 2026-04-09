@@ -2,7 +2,7 @@
 
 **Feature Branch**: `010-wizard-flow-fixes`  
 **Created**: 2026-04-07  
-**Status**: Analyzed  
+**Status**: Implemented  
 **GitHub Issues**: #67, #66, #74, #82  
 
 ## Clarifications
@@ -281,3 +281,32 @@ In any step that uses a text input (`ink-text-input`), pressing 'b' (the intende
 - The language version step regression (#66) is isolated to the rendering of multi-language selections — the underlying config data model for multiple language bindings is assumed to already support it.
 - Windows support and Linux support remain out of scope for this spec. All wizard behavior targets macOS.
 - Apple Notes is not installable via a package manager and should be treated as a non-installable catalog entry if included.
+
+---
+
+## Phase 3 — Final Review Outcomes (2026-04-09)
+
+All implementation work is complete. The following findings from the final code review were remediated before merge.
+
+### Findings Resolved
+
+| ID | Severity | Description | Resolution |
+|----|----------|-------------|-----------|
+| H1 | HIGH | 11 integration test imports used old numeric step file names | All imports in `wizard-flow.test.tsx` updated to new descriptive names |
+| H2 | HIGH | 3 ESLint errors (unused `SelectInput` import, unused `data` param, unused destructure var `_`) | Removed unused import in `ai-tools.tsx`; renamed to `_data` in `wizard.tsx`; replaced destructure-discard in `runner.ts` with `Object.fromEntries()` |
+| H3 | HIGH | `PackageManagerStep` lost user selection on back-navigation — history frame was popped before being read | Added `poppedFrame` state in `wizard.tsx`; `goBack()` now saves the popped frame; `initialValues` prefers `poppedFrame` when `stepIndex` matches |
+| H4 | HIGH | `src/steps/accounts.tsx` was orphaned dead code (never imported after context unification) | Deleted via `git rm` |
+| M1 | MEDIUM | Dead `hasAccount` conditional in `getNextStep()` case 5 — both branches returned `6` identically | Removed dead `if` block; case now unconditionally returns `6` |
+
+### Additional Changes During Final Review
+
+- **Default dotfiles path**: Changed from `{context-path}/dotfiles` to `{workspaceRoot}/dotfiles` — one shared dotfiles repo per workspace, consistent with how dotfiles repos work in practice (e.g., `~/Developer/dotfiles/tilde.config.json`).
+- **Step file renames**: All 17 step files renamed from numeric-prefixed names (`07-contexts.tsx`) to descriptive names (`contexts.tsx`). Step ordering is now purely a registry concern in `wizard.tsx`, not embedded in file names.
+- **`config.languages` nullish guard**: Added `?? []` guard in `src/installer/index.ts` — TildeConfig assembled piecemeal in the wizard bypasses Zod's `.default([])`, so `languages` could be `undefined` at apply time.
+
+### Test Coverage at Completion
+
+- **Unit**: 208/208 passing (`npm test`)
+- **Integration**: 42/42 passing (`npx vitest run --config vitest.integration.config.ts`)
+- **Contract**: passing (`npx vitest run --config vitest.contract.config.ts`)
+- **Lint**: 0 errors (`npx eslint src/`)
