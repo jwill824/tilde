@@ -19,14 +19,14 @@ export function ConfigSummary({ config }: Props) {
         <Text bold color="cyan">Configuration Summary</Text>
       </Box>
 
-      {/* Header row: OS | shell | packageManager */}
+      {/* Header row: OS | shell | packageManagers */}
       <Box marginBottom={1}>
         <Text bold>OS: </Text>
         <Text>{config.os}</Text>
         <Text bold>  Shell: </Text>
         <Text>{config.shell}</Text>
-        <Text bold>  Package Manager: </Text>
-        <Text>{config.packageManager}</Text>
+        <Text bold>  Package Managers: </Text>
+        <Text>{(config.packageManagers ?? ['homebrew']).join(', ')}</Text>
       </Box>
 
       {/* Contexts table */}

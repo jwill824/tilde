@@ -39,7 +39,7 @@ describe('checkpoint', () => {
     
     await saveCheckpoint(3, {
       shell: 'zsh',
-      packageManager: 'homebrew',
+      packageManagers: ['homebrew'],
     } as Parameters<typeof saveCheckpoint>[1]);
 
     const loaded = await loadCheckpoint();

@@ -10,7 +10,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import Spinner from 'ink-spinner';
-import SelectInput from 'ink-select-input';
 import type { AIToolConfig } from '../config/schema.js';
 import type { AIToolPlugin } from '../plugins/api.js';
 import { AI_TOOL_PLUGINS } from '../plugins/first-party/ai-tools/index.js';
@@ -20,6 +19,7 @@ interface Props {
   onBack?: () => void;
   isOptional?: boolean;
   onSkip?: () => void;
+  initialValues?: Record<string, unknown>;
 }
 
 interface AIToolEntry {
@@ -30,7 +30,7 @@ interface AIToolEntry {
 
 type Phase = 'loading' | 'select' | 'installing' | 'done' | 'error';
 
-export function AIToolsStep({ onComplete, onBack, isOptional, onSkip }: Props) {
+export function AIToolsStep({ onComplete, onBack, isOptional, onSkip, initialValues = {} }: Props) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [tools, setTools] = useState<AIToolEntry[]>([]);
   const [cursorIdx, setCursorIdx] = useState(0);
@@ -38,20 +38,25 @@ export function AIToolsStep({ onComplete, onBack, isOptional, onSkip }: Props) {
   const [skippedInstalls, setSkippedInstalls] = useState<string[]>([]);
 
   useEffect(() => {
+    const savedNames = (initialValues.aiTools as Array<{ name: string }> | undefined)?.map(t => t.name);
     async function loadTools() {
       try {
         const entries: AIToolEntry[] = await Promise.all(
           AI_TOOL_PLUGINS.map(async (plugin) => ({
             plugin,
             installed: await plugin.detectInstalled().catch(() => false),
-            selected: false,
+            selected: savedNames ? savedNames.includes(plugin.name) : false,
           }))
         );
         setTools(entries);
         setPhase('select');
       } catch (err) {
         setErrorMsg((err as Error).message);
-        setTools(AI_TOOL_PLUGINS.map(plugin => ({ plugin, installed: false, selected: false })));
+        setTools(AI_TOOL_PLUGINS.map(plugin => ({
+          plugin,
+          installed: false,
+          selected: savedNames ? savedNames.includes(plugin.name) : false,
+        })));
         setPhase('select');
       }
     }
@@ -65,6 +70,7 @@ export function AIToolsStep({ onComplete, onBack, isOptional, onSkip }: Props) {
       if (input === ' ') {
         setTools(prev => prev.map((t, i) => i === cursorIdx ? { ...t, selected: !t.selected } : t));
       }
+      if (key.return) { handleInstall().catch(() => {}); return; }
       if (input === 'b' && onBack) { onBack(); return; }
       if (input === 's' && isOptional && onSkip) { onSkip(); return; }
     }
@@ -147,19 +153,10 @@ export function AIToolsStep({ onComplete, onBack, isOptional, onSkip }: Props) {
           </Box>
         ))}
       </Box>
-      <Box marginTop={1}>
-        <SelectInput
-          items={[
-            { label: 'Confirm and install selected', value: 'confirm' },
-            ...(onBack ? [{ label: '← Back', value: 'back' }] : []),
-            ...(isOptional && onSkip ? [{ label: '→ Skip (install nothing)', value: 'skip' }] : []),
-          ]}
-          onSelect={(item) => {
-            if (item.value === 'confirm') { handleInstall().catch(() => {}); }
-            if (item.value === 'back' && onBack) { onBack(); }
-            if (item.value === 'skip' && onSkip) { onSkip(); }
-          }}
-        />
+      <Box marginTop={1} gap={2}>
+        <Text dimColor>↑↓ + Space to toggle, Enter to confirm</Text>
+        {onBack && <Text dimColor>← Back (b)</Text>}
+        {isOptional && onSkip && <Text dimColor>→ Skip (s)</Text>}
       </Box>
       {skippedInstalls.length > 0 && (
         <Box marginTop={1}>

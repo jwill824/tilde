@@ -23,7 +23,7 @@ const MINIMAL_CONFIG: TildeConfig = {
   schemaVersion: '1.5',
   os: 'macos',
   shell: 'zsh',
-  packageManager: 'homebrew',
+  packageManagers: ['homebrew'],
   versionManagers: [],
   languages: [],
   workspaceRoot: '~/Developer',
@@ -122,7 +122,7 @@ describe('writeConfig() — schemaVersion contract', () => {
     const content = await readFile(outputPath, 'utf-8');
     const parsed = JSON.parse(content) as Record<string, unknown>;
     expect(String(parsed['schemaVersion'])).toBe(CURRENT_SCHEMA_VERSION);
-    expect(CURRENT_SCHEMA_VERSION).toBe('1.5');
+    expect(CURRENT_SCHEMA_VERSION).toBe('1.6');
   });
 });
 
@@ -146,13 +146,13 @@ describe('loadConfig() — schemaVersion contract', () => {
     expect(String(loaded.schemaVersion)).toBe(CURRENT_SCHEMA_VERSION);
   });
 
-  it('v1 config (schemaVersion: 1) is migrated to v1.5', async () => {
+  it('v1 config (schemaVersion: 1) is migrated to v1.6', async () => {
     const configPath = join(tmpDir, 'v1-config.json');
     const v1Config = { ...MINIMAL_CONFIG, schemaVersion: 1 };
     await writeFile(configPath, JSON.stringify(v1Config, null, 2), 'utf-8');
 
     const loaded = await loadConfig(configPath);
-    expect(String(loaded.schemaVersion)).toBe('1.5');
+    expect(String(loaded.schemaVersion)).toBe('1.6');
   });
 });
 

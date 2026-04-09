@@ -7,15 +7,17 @@ interface Props {
   defaultShell?: 'zsh' | 'bash' | 'fish';
   onBack?: () => void;
   isOptional?: boolean;
+  initialValues?: Record<string, unknown>;
 }
 
-const items = [
+const SHELL_OPTIONS = [
   { label: 'zsh (recommended)', value: 'zsh' },
   { label: 'bash', value: 'bash' },
   { label: 'fish', value: 'fish' },
 ];
 
-export function ShellStep({ onComplete, defaultShell = 'zsh', onBack: _onBack, isOptional: _isOptional }: Props) {
+export function ShellStep({ onComplete, defaultShell = 'zsh', onBack, isOptional: _isOptional }: Props) {
+  const items = [...SHELL_OPTIONS, ...(onBack ? [{ label: '← Back', value: '__back__' }] : [])];
   return (
     <Box flexDirection="column">
       <Text bold>Which shell do you use?</Text>
@@ -23,8 +25,11 @@ export function ShellStep({ onComplete, defaultShell = 'zsh', onBack: _onBack, i
       <Box marginTop={1}>
         <SelectInput
           items={items}
-          initialIndex={items.findIndex(i => i.value === defaultShell)}
-          onSelect={(item) => onComplete({ shell: item.value as 'zsh' | 'bash' | 'fish' })}
+          initialIndex={SHELL_OPTIONS.findIndex(i => i.value === defaultShell)}
+          onSelect={(item) => {
+            if (item.value === '__back__' && onBack) { onBack(); return; }
+            onComplete({ shell: item.value as 'zsh' | 'bash' | 'fish' });
+          }}
         />
       </Box>
     </Box>

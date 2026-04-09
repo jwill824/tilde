@@ -72,14 +72,14 @@ describe('Wizard navigation state machine', () => {
 
     it('back nav restores stepIndex to the previous step (T-1)', () => {
       const s1 = goNext(initialState, { shell: 'zsh' });   // step 0 → 1
-      const s2 = goNext(s1, { packageManager: 'homebrew' }); // step 1 → 2
+      const s2 = goNext(s1, { packageManagers: ['homebrew'] }); // step 1 → 2
       const s3 = goBack(s2);  // back to step 1
       expect(s3.currentIndex).toBe(1);
     });
 
     it('back nav pops the history stack', () => {
       const s1 = goNext(initialState, { shell: 'zsh' });
-      const s2 = goNext(s1, { packageManager: 'homebrew' });
+      const s2 = goNext(s1, { packageManagers: ['homebrew'] });
       expect(s2.history.length).toBe(2);
       const s3 = goBack(s2);
       expect(s3.history.length).toBe(1);
@@ -101,7 +101,7 @@ describe('Wizard navigation state machine', () => {
     it('multi-step back navigation traverses correctly', () => {
       let state = initialState;
       state = goNext(state, { shell: 'zsh' });
-      state = goNext(state, { packageManager: 'homebrew' });
+      state = goNext(state, { packageManagers: ['homebrew'] });
       state = goNext(state, { versionManagers: [] });
       // Now at step 3, history has [0, 1, 2]
       expect(state.currentIndex).toBe(3);
@@ -120,7 +120,7 @@ describe('Wizard navigation state machine', () => {
 
     it('the saved frame values are accessible in history', () => {
       const s1 = goNext(initialState, { shell: 'zsh' });
-      const s2 = goNext(s1, { packageManager: 'homebrew' });
+      const s2 = goNext(s1, { packageManagers: ['homebrew'] });
       // The frame at history[0] should contain shell: 'zsh'
       expect(s2.history[0].values).toEqual({ shell: 'zsh' });
       expect(s2.history[0].stepIndex).toBe(0);
@@ -217,5 +217,37 @@ describe('Wizard navigation state machine', () => {
         && (state.config['contexts'] as unknown[]).length > 0;
       expect(shouldShowListView).toBe(true);
     });
+  });
+});
+
+// T050: getNextStep() logic tree unit tests
+import { getNextStep } from '../../src/modes/wizard.js';
+
+describe('getNextStep()', () => {
+  it('defaults to step+1 for unhandled steps', () => {
+    expect(getNextStep(0, {})).toBe(1);
+    expect(getNextStep(1, {})).toBe(2);
+    expect(getNextStep(9, {})).toBe(10);
+  });
+
+  it('step 6 (tools) → skips step 7 (app-config) when no editor tool selected', () => {
+    expect(getNextStep(6, { tools: [] })).toBe(8);
+    expect(getNextStep(6, { tools: ['slack', 'spotify'] })).toBe(8);
+  });
+
+  it('step 6 (tools) → goes to step 7 (app-config) when editor tool present', () => {
+    expect(getNextStep(6, { tools: ['cursor'] })).toBe(7);
+    expect(getNextStep(6, { tools: ['vscode'] })).toBe(7);
+    expect(getNextStep(6, { tools: ['neovim', 'slack'] })).toBe(7);
+  });
+
+  it('step 6: editor matching is case-insensitive', () => {
+    expect(getNextStep(6, { tools: ['Cursor'] })).toBe(7);
+    expect(getNextStep(6, { tools: ['VSCODE'] })).toBe(7);
+  });
+
+  it('step 5 (contexts) → always goes to step 6', () => {
+    expect(getNextStep(5, {})).toBe(6);
+    expect(getNextStep(5, { contexts: [] })).toBe(6);
   });
 });

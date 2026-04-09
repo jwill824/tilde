@@ -8,15 +8,18 @@ interface Props {
   onComplete: (data: { secretsBackend: SecretsBackend }) => void;
   onBack?: () => void;
   isOptional?: boolean;
+  initialValues?: Record<string, unknown>;
 }
 
-const items = [
+const BACKEND_OPTIONS = [
   { label: '1Password (recommended)', value: '1password' },
   { label: 'macOS Keychain', value: 'keychain' },
   { label: 'Environment variables only (no secrets manager)', value: 'env-only' },
 ];
 
-export function SecretsBackendStep({ onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
+export function SecretsBackendStep({ onComplete, onBack, isOptional: _isOptional, initialValues = {} }: Props) {
+  const items = [...BACKEND_OPTIONS, ...(onBack ? [{ label: '← Back', value: '__back__' }] : [])];
+  const initialIndex = Math.max(0, BACKEND_OPTIONS.findIndex(item => item.value === (initialValues.secretsBackend as string)));
   return (
     <Box flexDirection="column">
       <Text bold>Secrets backend:</Text>
@@ -24,7 +27,11 @@ export function SecretsBackendStep({ onComplete, onBack: _onBack, isOptional: _i
       <Box marginTop={1}>
         <SelectInput
           items={items}
-          onSelect={(item) => onComplete({ secretsBackend: item.value as SecretsBackend })}
+          initialIndex={initialIndex}
+          onSelect={(item) => {
+            if (item.value === '__back__' && onBack) { onBack(); return; }
+            onComplete({ secretsBackend: item.value as SecretsBackend });
+          }}
         />
       </Box>
     </Box>

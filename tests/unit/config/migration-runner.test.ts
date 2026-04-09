@@ -68,7 +68,26 @@ describe('runMigrations()', () => {
     expect(raw).toEqual({ schemaVersion: '1', field: 'x' });
   });
 
-  it('CURRENT_SCHEMA_VERSION is "1.5"', () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe('1.5');
+  it('CURRENT_SCHEMA_VERSION is "1.6"', () => {
+    expect(CURRENT_SCHEMA_VERSION).toBe('1.6');
+  });
+
+  // T038: v1.5 → v1.6 migration converts packageManager string → packageManagers array
+  it('migrates v1.5 config: packageManager string → packageManagers array', () => {
+    const raw = { schemaVersion: '1.5', packageManager: 'homebrew', name: 'test' };
+    const result = runMigrations(raw, '1.6');
+    expect(result.didMigrate).toBe(true);
+    expect(result.migratedFrom).toBe('1.5');
+    expect(result.migratedTo).toBe('1.6');
+    expect(result.config['packageManagers']).toEqual(['homebrew']);
+    expect(result.config['packageManager']).toBeUndefined();
+  });
+
+  it('migrates v1.5 config: missing packageManager leaves packageManagers absent (schema provides default)', () => {
+    const raw = { schemaVersion: '1.5', name: 'test' };
+    const result = runMigrations(raw, '1.6');
+    expect(result.didMigrate).toBe(true);
+    // Migration only converts existing string field; schema.parse() provides the default
+    expect(result.config['packageManager']).toBeUndefined();
   });
 });

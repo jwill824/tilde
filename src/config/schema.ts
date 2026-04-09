@@ -21,8 +21,9 @@ const GitHubAccountSchema = z.object({
 
 // New in v1.5: language version binding per context
 const LanguageBindingSchema = z.object({
-  runtime: z.string().min(1),  // e.g., "nodejs", "java", "python"
-  version: z.string().min(1),  // e.g., "22.0.0", "21.0.3"
+  runtime: z.string().min(1),   // e.g., "node", "java", "python"
+  version: z.string().min(1),   // e.g., "22 (LTS)", "21.0.3"
+  manager: z.string().optional(), // e.g., "nvm", "sdkman", "vfox"
 });
 
 const DeveloperContextSchema = z.object({
@@ -35,6 +36,7 @@ const DeveloperContextSchema = z.object({
   vscodeProfile: z.string().optional(),
   isDefault: z.boolean().optional(),
   languageBindings: z.array(LanguageBindingSchema).optional().default([]),  // NEW v1.5
+  dotfilesPath: z.string().optional(),  // NEW v1.6: per-context dotfiles location
 });
 
 const VersionManagerChoiceSchema = z.object({
@@ -79,10 +81,10 @@ const TildeConfigSchema = z.object({
   version: z.literal('1').default('1'),
   schemaVersion: z.union([z.string(), z.number()])
     .transform(v => String(v))
-    .default('1.5'),
+    .default('1.6'),
   os: z.literal('macos').default('macos'),
   shell: z.enum(['zsh', 'bash', 'fish']),
-  packageManager: z.literal('homebrew').default('homebrew'),
+  packageManagers: z.array(z.string()).min(1).default(['homebrew']),
   versionManagers: z.array(VersionManagerChoiceSchema).default([]),
   languages: z.array(LanguageChoiceSchema).default([]),
   workspaceRoot: z.string().min(1),

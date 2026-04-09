@@ -1,26 +1,23 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Box, Text, Static, useInput } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import type { TildeConfig } from '../config/schema.js';
 import { saveCheckpoint, loadCheckpoint, clearCheckpoint } from '../state/checkpoint.js';
-import { ConfigDetectionStep } from '../steps/00-config-detection.js';
-import { EnvCaptureStep } from '../steps/01-env-capture.js';
+import { ConfigDetectionStep } from '../steps/config-detection.js';
+import { EnvCaptureStep } from '../steps/env-capture.js';
 import type { EnvironmentCaptureReport } from '../capture/scanner.js';
 import { parseGitconfig } from '../capture/parser.js';
-import { ShellStep } from '../steps/02-shell.js';
-import { PackageManagerStep } from '../steps/03-package-manager.js';
-import { VersionManagerStep } from '../steps/04-version-manager.js';
-import { LanguagesStep } from '../steps/05-languages.js';
-import { WorkspaceStep } from '../steps/06-workspace.js';
-import { ContextsStep } from '../steps/07-contexts.js';
-import { GitAuthStep } from '../steps/08-git-auth.js';
-import { ToolsStep } from '../steps/09-tools.js';
-import { AppConfigStep } from '../steps/10-app-config.js';
-import { AccountsStep } from '../steps/11-accounts.js';
-import { SecretsBackendStep } from '../steps/12-secrets-backend.js';
-import { ConfigExportStep } from '../steps/13-config-export.js';
-import { BrowserStep } from '../steps/14-browser.js';
-import { AIToolsStep } from '../steps/15-ai-tools.js';
+import { ShellStep } from '../steps/shell.js';
+import { PackageManagerStep } from '../steps/package-manager.js';
+import { VersionManagerStep } from '../steps/version-manager.js';
+import { ContextsStep } from '../steps/contexts.js';
+import { ToolsStep } from '../steps/tools.js';
+import { AppConfigStep } from '../steps/app-config.js';
+import { SecretsBackendStep } from '../steps/secrets-backend.js';
+import { ConfigExportStep } from '../steps/config-export.js';
+import { BrowserStep } from '../steps/browser.js';
+import { AIToolsStep } from '../steps/ai-tools.js';
+import { ApplyStep } from '../steps/apply.js';
 
 const DEFAULT_CONFIGURATIONS = { git: true, vscode: false, aliases: false, osDefaults: false, direnv: true };
 
@@ -56,7 +53,29 @@ export interface WizardState {
 }
 
 // ---------------------------------------------------------------------------
-// Step registry — all 14 canonical steps (00–13) plus new steps 14–15
+// Logic tree: determines next step given current step and accumulated config
+// ---------------------------------------------------------------------------
+
+export function getNextStep(step: number, config: Partial<TildeConfig>): number {
+  switch (step) {
+    case 5: {
+      // Contexts → always proceed to tools (step 6); no skip logic needed here
+      return 6;
+    }
+    case 6: {
+      // Tools → skip app-config if no editor tool is in the tools list
+      const EDITOR_TOOLS = ['cursor', 'vscode', 'neovim', 'vim', 'webstorm', 'zed'];
+      const hasEditor = (config.tools ?? []).some(t => EDITOR_TOOLS.includes(t.toLowerCase()));
+      if (!hasEditor) return 8; // skip app-config (step 7), go to secrets-backend (step 8)
+      return 7;
+    }
+    default:
+      return step + 1;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Step registry — 12 canonical steps (languages absorbed into contexts)
 // ---------------------------------------------------------------------------
 const STEP_REGISTRY: StepDefinition[] = [
   { id: 'config-detection',  label: 'Config Detection',    required: true  }, // 0
@@ -64,17 +83,14 @@ const STEP_REGISTRY: StepDefinition[] = [
   { id: 'shell',             label: 'Shell',               required: true  }, // 2
   { id: 'package-manager',   label: 'Package Manager',     required: true  }, // 3
   { id: 'version-manager',   label: 'Version Manager',     required: true  }, // 4
-  { id: 'languages',         label: 'Languages',           required: true  }, // 5
-  { id: 'workspace',         label: 'Workspace Directory', required: true  }, // 6
-  { id: 'contexts',          label: 'Workspace Contexts',  required: true  }, // 7
-  { id: 'git-auth',          label: 'Git Authentication',  required: true  }, // 8
-  { id: 'tools',             label: 'Tools & Applications',required: true  }, // 9
-  { id: 'app-config',        label: 'Editor Configuration',required: false }, // 10  ← optional
-  { id: 'accounts',          label: 'Accounts',            required: false }, // 11  ← optional
-  { id: 'secrets-backend',   label: 'Secrets Backend',     required: true  }, // 12
-  { id: 'config-export',     label: 'Config Export',       required: true  }, // 13
-  { id: 'browser',           label: 'Browser Selection',   required: false }, // 14  ← new optional
-  { id: 'ai-tools',          label: 'AI Coding Tools',     required: false }, // 15  ← new optional
+  { id: 'contexts',          label: 'Workspace & Contexts',required: true  }, // 5 (absorbs workspace/lang/git-auth/accounts)
+  { id: 'tools',             label: 'Tools & Applications',required: true  }, // 6
+  { id: 'app-config',        label: 'Editor Configuration',required: false }, // 7
+  { id: 'secrets-backend',   label: 'Secrets Backend',     required: true  }, // 8
+  { id: 'browser',           label: 'Browser Selection',   required: false }, // 9
+  { id: 'ai-tools',          label: 'AI Coding Tools',     required: false }, // 10
+  { id: 'config-export',     label: 'Config Export',       required: true  }, // 11 (was 9)
+  { id: 'apply',             label: 'Apply & Finish',      required: true  }, // 12 (new)
 ];
 
 const LAST_STEP = STEP_REGISTRY.length - 1; // index of final step
@@ -85,7 +101,45 @@ const LAST_STEP = STEP_REGISTRY.length - 1; // index of final step
 
 interface CompletedStep {
   id: number;
-  summary: string;
+  summary: string[];
+}
+
+/** Derive sidebar summary lines from accumulated config for a given step index. */
+function makeSummaryLines(stepIdx: number, cfg: Partial<TildeConfig>): string[] {
+  switch (stepIdx) {
+    case 0: return [];
+    case 1: return [];
+    case 2: return cfg.shell ? [cfg.shell] : [];
+    case 3: return cfg.packageManagers?.length ? [cfg.packageManagers.join(', ')] : [];
+    case 4: return cfg.versionManagers?.length
+      ? [cfg.versionManagers.map(v => v.name).join(', ')]
+      : ['none'];
+    case 5: {
+      const lines: string[] = [];
+      if (cfg.workspaceRoot) lines.push(cfg.workspaceRoot);
+      (cfg.contexts ?? []).forEach(c => lines.push(`• ${c.label}`));
+      return lines;
+    }
+    case 6: {
+      const tools = cfg.tools ?? [];
+      if (!tools.length) return [];
+      const preview = tools.slice(0, 4).join(', ');
+      return [tools.length > 4 ? `${preview}…` : preview];
+    }
+    case 7: {
+      const cfgs = cfg.configurations ?? {};
+      const active = Object.entries(cfgs).filter(([, v]) => v).map(([k]) => k);
+      return active.length ? [active.join(', ')] : [];
+    }
+    case 8: return cfg.secretsBackend ? [cfg.secretsBackend] : [];
+    case 9: return cfg.browser?.selected?.length ? [cfg.browser.selected.join(', ')] : [];
+    case 10: return (cfg as Record<string, unknown>).aiTools
+      ? [((cfg as Record<string, unknown>).aiTools as Array<{label: string}>).map(t => t.label).join(', ')]
+      : [];
+    case 11: return [];  // config export
+    case 12: return [];  // apply
+    default: return [];
+  }
 }
 
 interface WizardProps {
@@ -107,6 +161,8 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
 
   // Navigation history stack (T007)
   const [history, setHistory] = useState<StepFrame[]>([]);
+  // Last popped frame when navigating back — used to restore initialValues
+  const [poppedFrame, setPoppedFrame] = useState<StepFrame | null>(null);
 
   // Checkpoint/resume state
   const [resumeStatus, setResumeStatus] = useState<'loading' | 'prompt' | 'ready'>('loading');
@@ -139,10 +195,11 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
    * (T007: goNext)
    */
   const advance = useCallback(
-    async (stepData: Partial<TildeConfig>, summary: string) => {
+    async (stepData: Partial<TildeConfig>, summary: string[]) => {
       const merged = { ...config, ...stepData };
       setConfig(merged);
       setCompletedSteps(prev => [...prev, { id: currentStep, summary }]);
+      setPoppedFrame(null); // clear any back-nav restore frame on forward advance
 
       // Push current step onto history
       setHistory(prev => [...prev, { stepIndex: currentStep, values: stepData as Record<string, unknown> }]);
@@ -153,7 +210,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
         // Non-fatal: continue even if checkpoint fails
       }
 
-      const nextStep = currentStep + 1;
+      const nextStep = getNextStep(currentStep, merged as Partial<TildeConfig>);
       if (nextStep > LAST_STEP) {
         onComplete?.(merged as TildeConfig);
       } else {
@@ -168,7 +225,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
    * (T007: skip)
    */
   const skip = useCallback(async () => {
-    await advance({}, `${STEP_REGISTRY[currentStep]?.label ?? 'Step'}: skipped`);
+    await advance({}, ['skipped']);
   }, [advance, currentStep]);
 
   /**
@@ -178,9 +235,10 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
   const goBack = useCallback(() => {
     if (history.length === 0) return;
     const newHistory = history.slice(0, -1);
-    const prevFrame = history[history.length - 1];
+    const popped = history[history.length - 1];
     setHistory(newHistory);
-    setCurrentStep(prevFrame.stepIndex);
+    setCurrentStep(popped.stepIndex);
+    setPoppedFrame(popped); // preserve values so the returned-to step can restore them
     // Also remove the last completed step entry
     setCompletedSteps(prev => prev.slice(0, -1));
   }, [history]);
@@ -191,6 +249,12 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
   const isCurrentOptional = !(STEP_REGISTRY[currentStep]?.required ?? true);
   // onBack handler — only passed when back-nav is available
   const onBack = canGoBack ? goBack : undefined;
+  // Restore values when navigating back: prefer the just-popped frame (goBack),
+  // fall back to an earlier frame for the same step (resume/multi-back scenarios)
+  const prevFrame = poppedFrame?.stepIndex === currentStep
+    ? poppedFrame
+    : history.find(f => f.stepIndex === currentStep);
+  const initialValues: Record<string, unknown> = prevFrame?.values ?? {};
 
   return (
     <Box flexDirection="column">
@@ -212,6 +276,20 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
                 if (item.value === 'resume') {
                   setConfig(resumeConfig);
                   setCurrentStep(resumeStep + 1);
+                  // Reconstruct synthetic completed steps so sidebar shows ✓ for prior steps
+                  setCompletedSteps(
+                    STEP_REGISTRY.slice(0, resumeStep + 1).map((_, idx) => ({
+                      id: idx,
+                      summary: makeSummaryLines(idx, resumeConfig),
+                    }))
+                  );
+                  // Populate history so back-nav works from the resumed step
+                  setHistory(
+                    STEP_REGISTRY.slice(0, resumeStep + 1).map((_, idx) => ({
+                      stepIndex: idx,
+                      values: {},  // per-step values not stored in checkpoint; steps fall back to config
+                    }))
+                  );
                 } else {
                   setCurrentStep(0);
                 }
@@ -222,25 +300,55 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
         </Box>
       )}
 
-      {resumeStatus === 'ready' && (
-        <>
-      <Static items={completedSteps}>
-        {(step) => (
-          <Box key={step.id}>
-            <Text color="green">✓ </Text>
-            <Text dimColor>{step.summary}</Text>
-          </Box>
-        )}
-      </Static>
+      {resumeStatus === 'ready' && (() => {
+        const completedStepSet = new Set(completedSteps.map(s => s.id));
+        return (
+          <Box flexDirection="row" alignItems="flex-start">
 
-      <Box marginTop={completedSteps.length > 0 ? 1 : 0}>
+            {/* ── Left: step progress sidebar ── */}
+            <Box flexDirection="column" marginRight={3}>
+              {STEP_REGISTRY.map((step, idx) => {
+                const done = completedStepSet.has(idx);
+                const active = idx === currentStep;
+                const summary = completedSteps.find(s => s.id === idx)?.summary ?? [];
+                return (
+                  <Box key={idx} flexDirection="column">
+                    <Box>
+                      <Text color={done ? 'green' : active ? 'cyan' : undefined} dimColor={!done && !active}>
+                        {done ? '✓' : active ? '▶' : ' '}{' '}
+                      </Text>
+                      <Text
+                        bold={active}
+                        color={done ? 'green' : active ? 'cyan' : undefined}
+                        dimColor={!done && !active}
+                      >
+                        {step.label}
+                      </Text>
+                      {!step.required && !done && <Text dimColor> (opt)</Text>}
+                    </Box>
+                    {done && summary.map((line, i) => (
+                      <Box key={i} marginLeft={2}>
+                        <Text dimColor>{line}</Text>
+                      </Box>
+                    ))}
+                  </Box>
+                );
+              })}
+              <Box marginTop={1}>
+                <Text dimColor>▶ current  ✓ done  (opt) optional</Text>
+              </Box>
+            </Box>
+
+            {/* ── Right: active step content ── */}
+            <Box flexDirection="column" flexGrow={1}>
         {currentStep === 0 && (
           <ConfigDetectionStep
             onBack={onBack}
+            onExit={onExit}
             isOptional={false}
-            onComplete={(data) => advance(
+            onComplete={(_data) => advance(
               {},
-              `Config detection: ${data.mode === 'config-first' ? `using ${data.configPath}` : 'starting fresh wizard'}`
+              []
             )}
           />
         )}
@@ -256,19 +364,25 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
                 rcFiles['.bash_profile'] !== undefined ? 'bash' : undefined;
               advance(
                 detectedShell ? { shell: detectedShell } : {},
-                `Environment scan: ${data.captureReport.dotfiles.length} dotfiles, ${data.captureReport.brewPackages.length} brew packages`
+                [
+                  `${data.captureReport.dotfiles.length} dotfiles, ${data.captureReport.brewPackages.length} brew pkgs`,
+                  ...(data.captureReport.detectedLanguages.length > 0
+                    ? [`${data.captureReport.detectedLanguages.length} languages`]
+                    : []),
+                ]
               );
             }}
           />
         )}
         {currentStep === 2 && (
           <ShellStep
-            defaultShell={config.shell ?? 'zsh'}
+            defaultShell={((initialValues.shell ?? config.shell) as 'zsh' | 'bash' | 'fish' | undefined) ?? 'zsh'}
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { shell: data.shell },
-              `Shell: ${data.shell}`
+              [data.shell]
             )}
           />
         )}
@@ -276,9 +390,10 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
           <PackageManagerStep
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
-              { packageManager: data.packageManager },
-              `Package manager: ${data.packageManager}`
+              { packageManagers: data.packageManagers } as Partial<TildeConfig>,
+              [data.packageManagers.join(', ')]
             )}
           />
         )}
@@ -286,142 +401,118 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
           <VersionManagerStep
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { versionManagers: data.versionManagers },
-              `Version managers: ${data.versionManagers.length === 0 ? 'none' : data.versionManagers.map(v => v.name).join(', ')}`
+              [data.versionManagers.length === 0 ? 'none' : data.versionManagers.map(v => v.name).join(', ')]
             )}
           />
         )}
         {currentStep === 5 && (
-          <LanguagesStep
-            versionManagers={config.versionManagers ?? []}
+          <ContextsStep
+            defaultGitName={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').name : undefined}
+            defaultGitEmail={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').email : undefined}
+            initialContexts={canGoBack ? (config.contexts ?? []) : []}
+            detectedLanguages={captureReport?.detectedLanguages}
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
-              { languages: data.languages },
-              `Languages: ${data.languages.length === 0 ? 'none' : data.languages.map(l => `${l.name}@${l.version}`).join(', ')}`
+              { workspaceRoot: data.workspaceRoot, dotfilesRepo: data.dotfilesRepo, contexts: data.contexts },
+              [
+                data.workspaceRoot,
+                ...data.contexts.map(c => `• ${c.label}`),
+              ]
             )}
           />
         )}
         {currentStep === 6 && (
-          <WorkspaceStep
-            onBack={onBack}
-            isOptional={false}
-            onComplete={(data) => advance(
-              { workspaceRoot: data.workspaceRoot, dotfilesRepo: data.dotfilesRepo },
-              `Workspace: ${data.workspaceRoot}, dotfiles: ${data.dotfilesRepo}`
-            )}
-          />
-        )}
-        {currentStep === 7 && (
-          <ContextsStep
-            workspaceRoot={config.workspaceRoot ?? '~/Developer'}
-            defaultGitName={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').name : undefined}
-            defaultGitEmail={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').email : undefined}
-            initialContexts={canGoBack ? (config.contexts ?? []) : []}
-            onBack={onBack}
-            isOptional={false}
-            onComplete={(data) => advance(
-              { contexts: data.contexts },
-              `Contexts: ${data.contexts.map(c => c.label).join(', ')}`
-            )}
-          />
-        )}
-        {currentStep === 8 && (
-          <GitAuthStep
-            contexts={config.contexts ?? []}
-            onBack={onBack}
-            isOptional={false}
-            onComplete={(data) => advance(
-              { contexts: data.contexts },
-              `Git auth: ${data.contexts.map(c => `${c.label}→${c.authMethod}`).join(', ')}`
-            )}
-          />
-        )}
-        {currentStep === 9 && (
           <ToolsStep
             defaultTools={captureReport ? captureReport.brewPackages.join(', ') : undefined}
             onBack={onBack}
             isOptional={false}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               {
                 tools: data.tools,
                 configurations: { ...(config.configurations ?? DEFAULT_CONFIGURATIONS), direnv: data.configurations.direnv },
               },
-              `Tools: ${data.tools.length === 0 ? 'none' : data.tools.slice(0, 3).join(', ')}${data.tools.length > 3 ? '…' : ''}`
+              data.tools.length === 0 ? [] : [
+                data.tools.slice(0, 4).join(', ') + (data.tools.length > 4 ? '…' : ''),
+              ]
             )}
           />
         )}
-        {currentStep === 10 && (
+        {currentStep === 7 && (
           <AppConfigStep
             onBack={onBack}
             isOptional={isCurrentOptional}
             onSkip={isCurrentOptional ? skip : undefined}
+            initialValues={initialValues}
             onComplete={(data) => advance(
               { configurations: { ...(config.configurations ?? DEFAULT_CONFIGURATIONS), ...data.configurations },
                 editors: data.editors },
-              `Config domains: ${Object.entries(data.configurations).filter(([, v]) => v).map(([k]) => k).join(', ') || 'none'}`
+              [Object.entries(data.configurations).filter(([, v]) => v).map(([k]) => k).join(', ') || 'none']
+            )}
+          />
+        )}
+        {currentStep === 8 && (
+          <SecretsBackendStep
+            onBack={onBack}
+            isOptional={false}
+            initialValues={initialValues}
+            onComplete={(data) => advance(
+              { secretsBackend: data.secretsBackend },
+              [data.secretsBackend]
+            )}
+          />
+        )}
+        {currentStep === 9 && (
+          <BrowserStep
+            onBack={onBack}
+            isOptional={isCurrentOptional}
+            onSkip={isCurrentOptional ? skip : undefined}
+            initialValues={initialValues}
+            onComplete={(data) => advance(
+              { browser: data.browser },
+              [data.browser.selected.length === 0 ? 'none' : data.browser.selected.join(', ')]
+            )}
+          />
+        )}
+        {currentStep === 10 && (
+          <AIToolsStep
+            onBack={onBack}
+            isOptional={isCurrentOptional}
+            onSkip={isCurrentOptional ? skip : undefined}
+            initialValues={initialValues}
+            onComplete={(data) => advance(
+              { aiTools: data.aiTools },
+              [data.aiTools.length === 0 ? 'none' : data.aiTools.map(t => t.label).join(', ')]
             )}
           />
         )}
         {currentStep === 11 && (
-          <AccountsStep
-            contexts={config.contexts ?? []}
-            onBack={onBack}
-            isOptional={isCurrentOptional}
-            onSkip={isCurrentOptional ? skip : undefined}
-            onComplete={(data) => advance(
-              { contexts: data.contexts },
-              `Accounts configured`
-            )}
-          />
-        )}
-        {currentStep === 12 && (
-          <SecretsBackendStep
-            onBack={onBack}
-            isOptional={false}
-            onComplete={(data) => advance(
-              { secretsBackend: data.secretsBackend },
-              `Secrets backend: ${data.secretsBackend}`
-            )}
-          />
-        )}
-        {currentStep === 13 && (
           <ConfigExportStep
             config={config as TildeConfig}
             onBack={onBack}
             isOptional={false}
             onComplete={() => {
               clearCheckpoint().catch(() => {});
-              onComplete?.(config as TildeConfig);
+              void advance({}, ['saved']);
             }}
           />
         )}
-        {currentStep === 14 && (
-          <BrowserStep
+        {currentStep === 12 && (
+          <ApplyStep
+            config={config as TildeConfig}
             onBack={onBack}
-            isOptional={isCurrentOptional}
-            onSkip={isCurrentOptional ? skip : undefined}
-            onComplete={(data) => advance(
-              { browser: data.browser },
-              `Browsers: ${data.browser.selected.length === 0 ? 'none' : data.browser.selected.join(', ')}`
-            )}
+            onComplete={() => void advance({}, [])}
           />
         )}
-        {currentStep === 15 && (
-          <AIToolsStep
-            onBack={onBack}
-            isOptional={isCurrentOptional}
-            onSkip={isCurrentOptional ? skip : undefined}
-            onComplete={(data) => advance(
-              { aiTools: data.aiTools },
-              `AI tools: ${data.aiTools.length === 0 ? 'none' : data.aiTools.map(t => t.label).join(', ')}`
-            )}
-          />
-        )}
-      </Box>
-        </>
-      )}
+            </Box>
+          </Box>
+        );
+      })()}
     </Box>
   );
 }

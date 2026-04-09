@@ -1,29 +1,61 @@
 /**
- * Config auto-discovery utilities (T012).
+ * Config auto-discovery utilities.
  *
  * Searches for tilde.config.json in standard locations in priority order:
  * 1. --config flag (caller responsibility — not handled here)
  * 2. ./tilde.config.json (current working directory)
- * 3. ~/.config/tilde/tilde.config.json
- * 4. ~/tilde.config.json
+ * 3. <git-repo-root>/tilde.config.json (if cwd is inside a git repo and root differs from cwd)
+ * 4. ~/.tilde/tilde.config.json (canonical home location; may be a symlink)
  *
- * Per contracts/cli-schema.md §2 and research.md §6.
+ * Per specs/010-wizard-flow-fixes/contracts/cli-schema.md §1.
  */
 
 import { access } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
+import { execa } from 'execa';
+
+/**
+ * Detect the git repository root of the current working directory.
+ * Returns null if not in a git repo, git is unavailable, or detection times out.
+ */
+async function getGitRepoRoot(): Promise<string | null> {
+  try {
+    const result = await execa('git', ['rev-parse', '--show-toplevel'], {
+      timeout: 1000,
+      reject: false,
+    });
+    if (result.exitCode === 0 && result.stdout.trim()) {
+      return result.stdout.trim();
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * The standard config discovery search order (excludes --config explicit path).
+ * Returns 2–3 paths depending on whether a git root is detected.
  */
-export function getDiscoveryPaths(): string[] {
+export async function getDiscoveryPaths(): Promise<string[]> {
   const home = homedir();
-  return [
-    resolve(process.cwd(), 'tilde.config.json'),
-    join(home, '.config', 'tilde', 'tilde.config.json'),
-    join(home, 'tilde.config.json'),
-  ];
+  const cwd = resolve(process.cwd(), 'tilde.config.json');
+  const canonicalHome = join(home, '.tilde', 'tilde.config.json');
+
+  const paths: string[] = [cwd];
+
+  const gitRoot = await getGitRepoRoot();
+  if (gitRoot) {
+    const gitRootConfig = join(gitRoot, 'tilde.config.json');
+    // Only add git root path if it differs from cwd
+    if (gitRootConfig !== cwd) {
+      paths.push(gitRootConfig);
+    }
+  }
+
+  paths.push(canonicalHome);
+  return paths;
 }
 
 /**
@@ -31,7 +63,7 @@ export function getDiscoveryPaths(): string[] {
  * Returns the first path found, or null if none found.
  */
 export async function discoverConfig(): Promise<string | null> {
-  for (const p of getDiscoveryPaths()) {
+  for (const p of await getDiscoveryPaths()) {
     try {
       await access(p);
       return p;
@@ -43,10 +75,10 @@ export async function discoverConfig(): Promise<string | null> {
 }
 
 /**
- * Format the "no config found" error message (per cli-schema.md §2).
+ * Format the "no config found" error message (per cli-schema.md §3).
  */
-export function formatNoConfigError(command: string = 'install'): string {
-  const paths = getDiscoveryPaths();
+export async function formatNoConfigError(command: string = 'install'): Promise<string> {
+  const paths = await getDiscoveryPaths();
   return [
     `Error: tilde requires a config file to run ${command}.`,
     `No config found at any of the standard locations.`,

@@ -10,17 +10,18 @@ const MANAGER_LANGUAGES: Record<string, string[]> = {
   sdkman: ['java', 'kotlin', 'scala'],
 };
 
-interface Props {
-  versionManagers: VersionManagerChoice[];
-  onComplete: (data: { languages: LanguageChoice[] }) => void;
-  onBack?: () => void;
-  isOptional?: boolean;
-}
-
-interface LanguageEntry {
+export interface LanguageEntry {
   name: string;
   manager: string;
   version: string;
+}
+
+interface Props {
+  versionManagers: VersionManagerChoice[];
+  onComplete: (data: { languages: LanguageChoice[]; _entries: LanguageEntry[]; _currentIdx: number }) => void;
+  onBack?: () => void;
+  isOptional?: boolean;
+  initialValues?: Record<string, unknown>;
 }
 
 /** Auto-advances by calling onComplete on mount. */
@@ -31,7 +32,7 @@ function AutoAdvanceEmpty({ onComplete }: { onComplete: () => void }) {
   return <Box><Text dimColor>No version managers selected, skipping languages.</Text></Box>;
 }
 
-export function LanguagesStep({ versionManagers, onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
+export function LanguagesStep({ versionManagers, onComplete, onBack, isOptional: _isOptional, initialValues = {} }: Props) {
   const allLanguages: LanguageEntry[] = versionManagers.flatMap(vm =>
     (MANAGER_LANGUAGES[vm.name] ?? []).map(lang => ({
       name: lang,
@@ -45,11 +46,16 @@ export function LanguagesStep({ versionManagers, onComplete, onBack: _onBack, is
     new Map(allLanguages.map(l => [l.name, l])).values()
   );
 
-  const [entries, setEntries] = useState<LanguageEntry[]>(unique);
-  const [currentIdx, setCurrentIdx] = useState(0);
+  const [entries, setEntries] = useState<LanguageEntry[]>(() => {
+    const saved = initialValues._entries as LanguageEntry[] | undefined;
+    return saved ?? unique;
+  });
+  const [currentIdx, setCurrentIdx] = useState(() =>
+    Math.min((initialValues._currentIdx as number | undefined) ?? 0, unique.length)
+  );
 
   if (versionManagers.length === 0) {
-    return <AutoAdvanceEmpty onComplete={() => onComplete({ languages: [] })} />;
+    return <AutoAdvanceEmpty onComplete={() => onComplete({ languages: [], _entries: [], _currentIdx: 0 })} />;
   }
 
   if (currentIdx >= entries.length) {
@@ -77,6 +83,8 @@ export function LanguagesStep({ versionManagers, onComplete, onBack: _onBack, is
         languages: updated
           .filter(e => e.version.trim())
           .map(e => ({ name: e.name, version: e.version.trim(), manager: e.manager })),
+        _entries: updated,
+        _currentIdx: updated.length,
       });
     } else {
       setCurrentIdx(idx => idx + 1);
@@ -100,6 +108,11 @@ export function LanguagesStep({ versionManagers, onComplete, onBack: _onBack, is
           placeholder="e.g. 20.0.0"
         />
       </Box>
+      {onBack && currentIdx === 0 && (
+        <Box marginTop={1}>
+          <Text dimColor>← Back (b)</Text>
+        </Box>
+      )}
     </Box>
   );
 }

@@ -13,13 +13,14 @@ interface Props {
 
 type Status = 'confirm' | 'writing' | 'done' | 'error';
 
-export function ConfigExportStep({ config, onComplete, onBack: _onBack, isOptional: _isOptional }: Props) {
+export function ConfigExportStep({ config, onComplete, onBack, isOptional: _isOptional }: Props) {
   const [status, setStatus] = useState<Status>('confirm');
   const [error, setError] = useState('');
   const [outputPath, setOutputPath] = useState('');
 
   const items = [
-    { label: 'Write config and finish', value: 'confirm' },
+    { label: 'Write config and continue', value: 'confirm' },
+    ...(onBack ? [{ label: '← Back', value: '__back__' }] : []),
     { label: 'Cancel', value: 'cancel' },
   ];
 
@@ -36,11 +37,6 @@ export function ConfigExportStep({ config, onComplete, onBack: _onBack, isOption
       <Box flexDirection="column">
         <Text color="green" bold>✓ tilde.config.json written!</Text>
         <Text dimColor>{outputPath}</Text>
-        <Box marginTop={1}>
-          <Text>Setup complete. Run </Text>
-          <Text color="cyan">tilde install</Text>
-          <Text> on any machine to apply this config.</Text>
-        </Box>
       </Box>
     );
   }
@@ -59,18 +55,19 @@ export function ConfigExportStep({ config, onComplete, onBack: _onBack, isOption
       <Text bold>Configuration summary</Text>
       <Box borderStyle="round" borderColor="cyan" flexDirection="column" padding={1} marginTop={1}>
         <Text>OS: <Text color="cyan">{config.os}</Text></Text>
-        <Text>Shell: <Text color="cyan">{config.shell}</Text></Text>
-        <Text>Package manager: <Text color="cyan">{config.packageManager}</Text></Text>
-        <Text>Workspace: <Text color="cyan">{config.workspaceRoot}</Text></Text>
-        <Text>Dotfiles repo: <Text color="cyan">{config.dotfilesRepo}</Text></Text>
-        <Text>Contexts: <Text color="cyan">{config.contexts.map(c => c.label).join(', ')}</Text></Text>
-        <Text>Secrets backend: <Text color="cyan">{config.secretsBackend}</Text></Text>
-        <Text>Tools: <Text color="cyan">{config.tools.length === 0 ? 'none' : config.tools.join(', ')}</Text></Text>
+        <Text>Shell: <Text color="cyan">{config.shell ?? 'not set'}</Text></Text>
+        <Text>Package managers: <Text color="cyan">{(config.packageManagers ?? ['homebrew']).join(', ')}</Text></Text>
+        <Text>Workspace: <Text color="cyan">{config.workspaceRoot ?? 'not set'}</Text></Text>
+        <Text>Dotfiles repo: <Text color="cyan">{config.dotfilesRepo ?? 'not set'}</Text></Text>
+        <Text>Contexts: <Text color="cyan">{config.contexts?.map(c => c.label).join(', ') ?? 'none'}</Text></Text>
+        <Text>Secrets backend: <Text color="cyan">{config.secretsBackend ?? 'not set'}</Text></Text>
+        <Text>Tools: <Text color="cyan">{(config.tools?.length ?? 0) === 0 ? 'none' : config.tools!.join(', ')}</Text></Text>
       </Box>
       <Box marginTop={1}>
         <SelectInput
           items={items}
           onSelect={async (item) => {
+            if (item.value === '__back__' && onBack) { onBack(); return; }
             if (item.value === 'cancel') {
               onComplete();
               return;
