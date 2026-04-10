@@ -6,6 +6,13 @@
  * ```tsx
  * <StepNav onBack={onBack} isOptional={isOptional} onSkip={onSkip} />
  * ```
+ *
+ * isInputFocused: pass true when the step contains an active TextInput to prevent
+ *   (b) from firing while the user is typing. Back nav re-enables once the field
+ *   loses focus (user presses Esc or Tab).
+ *
+ * onAtFirstStep: called when (b) is pressed on the very first step (no onBack).
+ *   The parent should render a transient inline hint in response.
  */
 import React from 'react';
 import { Box, Text, useInput } from 'ink';
@@ -14,6 +21,8 @@ interface StepNavProps {
   onBack?: () => void;
   isOptional?: boolean;
   onSkip?: () => void;
+  isInputFocused?: boolean;
+  onAtFirstStep?: () => void;
 }
 
 /**
@@ -21,22 +30,26 @@ interface StepNavProps {
  * - "← Back" when onBack is provided (press 'b')
  * - "→ Skip" when isOptional and onSkip provided (press 's')
  */
-export function StepNav({ onBack, isOptional, onSkip }: StepNavProps) {
+export function StepNav({ onBack, isOptional, onSkip, isInputFocused, onAtFirstStep }: StepNavProps) {
   useInput((input, key) => {
-    if ((input === 'b' || (key.leftArrow && key.meta)) && onBack) {
-      onBack();
+    if (input === 'b' || (key.leftArrow && key.meta)) {
+      if (onBack) {
+        onBack();
+      } else if (onAtFirstStep) {
+        onAtFirstStep();
+      }
     }
     if (input === 's' && isOptional && onSkip) {
       onSkip();
     }
-  });
+  }, { isActive: !isInputFocused });
 
-  const hasControls = onBack || (isOptional && onSkip);
+  const hasControls = onBack || onAtFirstStep || (isOptional && onSkip);
   if (!hasControls) return null;
 
   return (
     <Box marginTop={1} gap={2}>
-      {onBack && (
+      {(onBack || onAtFirstStep) && (
         <Text dimColor>← Back (b)</Text>
       )}
       {isOptional && onSkip && (

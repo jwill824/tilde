@@ -22,14 +22,35 @@ tilde
 
 ## Navigating the wizard
 
-At any step (except the first), use **← Back** to return to the previous step — your values are restored. Optional steps (Editor, Applications, Browser, AI Tools) show a **Skip** option.
+Use these keyboard shortcuts at any time:
+
+| Key | Action |
+|-----|--------|
+| **← / b** | Go back to the previous step (values restored) |
+| **s** | Skip the current step *(optional steps only)* |
+| **q** | Quit the wizard |
+
+On the first step, pressing **b** shows a reminder that there is no previous step.
+Optional steps — **Editor Configuration**, **Browser Selection**, and **AI Coding Tools** — are labelled with `(opt)` in the sidebar and can be skipped.
 
 ## The setup wizard
 
-tilde's interactive wizard walks you through each configuration category in order.
-You can skip any category and revisit it later by re-running `tilde`.
+tilde's interactive wizard walks you through 13 steps. Steps 0–1 run automatically (no input required); steps 2–12 are interactive.
 
-### 1. Shell
+### 0. Config Detection *(automated)*
+
+tilde scans three locations for an existing `tilde.config.json`:
+1. The current working directory
+2. `~/.tilde/`
+3. `~/dotfiles/` (if it exists)
+
+If no config is found, the wizard proceeds to full setup. If a partial config is found, you are offered the option to resume or start over.
+
+### 1. Environment Capture *(automated)*
+
+tilde scans your machine for installed tools, shell rc files, git config, Homebrew packages, and programming languages already present. This information pre-fills later steps.
+
+### 2. Shell
 
 tilde asks which shell you use:
 
@@ -37,61 +58,51 @@ tilde asks which shell you use:
 - **bash**
 - **fish**
 
-### 2. Package manager
+### 3. Package Manager
 
 Choose your preferred macOS package manager:
 
 - **Homebrew** *(recommended)* — tilde uses Homebrew to install all command-line tools.
+- **MacPorts**
 
-### 3. Version manager
+### 4. Version Manager
 
 Select how you want to manage programming language versions:
 
 - **vfox** — universal, shell-agnostic version manager *(recommended)*
 - **nvm** — Node.js version manager
+- **fnm** — fast Node.js version manager
 - **pyenv** — Python version manager
+- **rbenv** — Ruby version manager
+- **python-venv** — Python virtual environment manager
 - **sdkman** — JVM/JDK version manager
 
-### 4. Languages
+### 5. Workspace & Contexts
 
-Select which programming languages to configure. For each language, tilde asks for
-your preferred version (or uses the latest stable).
+All workspace, identity, and language configuration is collected in one step:
 
-Supported: **Node.js**, **Python**, **Ruby**, **Go**, **Java**, **Rust**
+1. **Workspace root** — the parent directory for all project folders (e.g., `~/Developer`)
+2. **Named contexts** — one entry per identity (personal, work, etc.), each with:
+   - Context label and workspace path
+   - Git name and email
+   - GitHub authentication method (`gh-cli`, `https`, or `ssh`)
+   - GitHub username *(optional)*
+   - Dotfiles path *(optional)*
+   - Language version bindings *(optional — see below)*
+3. **Language version bindings** — per context, select languages and specify versions:
+   - Supported: **Node.js**, **Python**, **Ruby**, **Go**, **Java**, **Rust**
+   - For each language, choose a version manager and version (or enter manually)
 
-### 5. Workspace
+### 6. Tools & Applications
 
-Configure your local directory structure — tilde creates a `~/dev/` workspace
-(or your preferred path) with per-account project folders.
-
-### 6. Git identity
-
-Set your global git name, email, and default branch name. If you have multiple
-GitHub accounts (personal + work), tilde configures per-directory git identities.
-
-### 7. GitHub accounts
-
-Connect one or more GitHub accounts. tilde configures SSH keys and git credential
-helpers for each account.
-
-### 8. Tools
-
-Select additional CLI tools to install via Homebrew:
+Select CLI tools and applications to install via Homebrew:
 
 - **Docker Desktop**
 - **VS Code** (via Homebrew Cask)
 - **Terraform**, **kubectl**, **helm** (cloud/infra tools)
 - Any custom tools you add to `tilde.config.json`
 
-### 9. Secrets
-
-Configure a secrets backend to sync credentials and tokens:
-
-- **1Password CLI** *(recommended for macOS)*
-- **Bitwarden CLI**
-- **Environment file** (plain `.env` — not recommended for shared machines)
-
-### 10. Editor *(optional)*
+### 7. Editor Configuration *(optional)*
 
 Choose a primary code editor to install via Homebrew Cask:
 
@@ -101,24 +112,25 @@ Choose a primary code editor to install via Homebrew Cask:
 - **JetBrains Toolbox**
 - **Zed**
 
-### 11. Applications *(optional)*
+### 8. Secrets Backend
 
-Select additional CLI tools and applications to install.
+Configure a secrets backend to sync credentials and tokens:
 
-### 12. Review & Export
+- **1Password CLI** *(recommended for macOS)*
+- **macOS Keychain**
+- **Environment variables only**
 
-Review your complete configuration before it is written to disk. tilde writes `~/.tilde/tilde.config.json` at this step.
+### 9. Browser Selection *(optional)*
 
-### 13. Browser *(optional)*
-
-Choose a browser to install via Homebrew Cask. This step occurs after config export so it can be skipped without affecting your saved config:
+Choose a browser to install via Homebrew Cask:
 
 - **Google Chrome**
 - **Firefox**
 - **Arc**
 - **Brave**
+- **Safari** *(pre-installed)*
 
-### 14. AI Tools *(optional)*
+### 10. AI Coding Tools *(optional)*
 
 Choose AI coding tools to install via Homebrew:
 
@@ -127,6 +139,14 @@ Choose AI coding tools to install via Homebrew:
 - **Cursor (AI Editor)**
 - **Windsurf**
 - **GitHub Copilot CLI**
+
+### 11. Config Export
+
+Review your complete configuration before it is written to disk. tilde writes `~/.tilde/tilde.config.json` (or a custom path) at this step.
+
+### 12. Apply & Finish
+
+tilde runs all installation and configuration steps based on your saved config. Progress is shown in real time.
 
 ## Expected output
 

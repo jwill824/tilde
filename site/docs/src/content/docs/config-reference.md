@@ -31,14 +31,14 @@ it directly — tilde validates the schema on startup.
 
 **Type**: `string`  
 **Required**: Yes  
-**Valid values**: `"1.5"` (current)  
-**Default**: `"1.5"`  
+**Valid values**: `"1.6"` (current)  
+**Default**: `"1.6"`  
 **Description**: Internal schema version. tilde uses this for automatic migrations from `1` (integer, previous format) to the current string-based version.  
 **Since**: `0.1.0`
 
 ```json
 {
-  "schemaVersion": "1.5"
+  "schemaVersion": "1.6"
 }
 ```
 
@@ -110,7 +110,7 @@ Each item:
 
 | Field | Type | Valid values |
 |-------|------|-------------|
-| `name` | string | `"vfox"` \| `"nvm"` \| `"pyenv"` \| `"sdkman"` \| `"mise"` |
+| `name` | string | `"vfox"` \| `"nvm"` \| `"fnm"` \| `"pyenv"` \| `"rbenv"` \| `"python-venv"` \| `"sdkman"` \| `"mise"` |
 
 **Since**: `0.1.0`
 
@@ -324,12 +324,15 @@ Each item:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `name` | string | Browser identifier (e.g. `"chrome"`, `"firefox"`, `"arc"`, `"brave"`) |
-| `isDefault` | boolean | Set as the macOS default browser |
+| `selected` | array of strings | Browser identifiers to install (e.g. `["chrome", "firefox", "arc"]`) |
+| `default` | string \| null | Identifier of the browser to set as the macOS default |
 
 ```json
 {
-  "browser": { "name": "arc", "isDefault": true }
+  "browser": {
+    "selected": ["arc", "chrome"],
+    "default": "arc"
+  }
 }
 ```
 
@@ -369,12 +372,14 @@ Each item:
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | string | Tool identifier: `"claude-code"`, `"claude-desktop"`, `"cursor"`, `"windsurf"`, `"github-copilot-cli"` |
+| `label` | string | Display name shown in the wizard and config summary (e.g. `"Claude Desktop"`) |
+| `variant` | string | Category: `"cli-tool"` \| `"desktop-app"` \| `"ai-editor"` \| `"cli-extension"` |
 
 ```json
 {
   "aiTools": [
-    { "name": "claude-code" },
-    { "name": "github-copilot-cli" }
+    { "name": "claude-code", "label": "Claude Code", "variant": "cli-tool" },
+    { "name": "github-copilot-cli", "label": "GitHub Copilot CLI", "variant": "cli-extension" }
   ]
 }
 ```
@@ -411,13 +416,13 @@ and `accounts[].secretRef`.
 ```json
 {
   "$schema": "https://thingstead.io/tilde/config-schema/v1.json",
-  "schemaVersion": "1.5",
+  "schemaVersion": "1.6",
   "os": "macos",
   "shell": "zsh",
-  "packageManager": "homebrew",
+  "packageManagers": ["homebrew"],
   "versionManagers": [
     { "name": "vfox" },
-    { "name": "mise" }
+    { "name": "fnm" }
   ],
   "languages": [
     { "name": "nodejs", "version": "20", "manager": "vfox" },
@@ -434,7 +439,7 @@ and `accounts[].secretRef`.
       "authMethod": "ssh",
       "isDefault": true,
       "languageBindings": [
-        { "runtime": "nodejs", "version": "22.0.0" }
+        { "runtime": "nodejs", "version": "22.0.0", "manager": "fnm" }
       ]
     }
   ],
@@ -450,14 +455,17 @@ and `accounts[].secretRef`.
     { "service": "npm", "identifier": "janedoe", "secretRef": "NPM_TOKEN" }
   ],
   "secretsBackend": "1password",
-  "browser": { "name": "arc", "isDefault": true },
+  "browser": {
+    "selected": ["arc", "chrome"],
+    "default": "arc"
+  },
   "editors": {
     "primary": "vscode",
     "additional": ["cursor"]
   },
   "aiTools": [
-    { "name": "claude-code" },
-    { "name": "github-copilot-cli" }
+    { "name": "claude-code", "label": "Claude Code", "variant": "cli-tool" },
+    { "name": "github-copilot-cli", "label": "GitHub Copilot CLI", "variant": "cli-extension" }
   ]
 }
 ```

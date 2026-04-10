@@ -216,6 +216,7 @@ export function ContextsStep({
   // Language sub-flow transient state
   const [currentLangKey, setCurrentLangKey] = useState('');
   const [currentManager, setCurrentManager] = useState('');
+  const [versionError, setVersionError] = useState('');
 
   function resetForm() {
     setForm({ ...EMPTY_FORM, gitName: defaultGitName, gitEmail: defaultGitEmail });
@@ -579,16 +580,21 @@ export function ContextsStep({
           hint={`e.g. ${catalog?.versions[0] ?? '1.0.0'}`}
           currentValue=""
           placeholder={catalog?.versions[0] ?? '1.0.0'}
+          error={versionError || undefined}
           onConfirm={(v) => {
             const ver = v.trim();
-            if (!ver) return;
+            if (!ver) {
+              setVersionError(`Version cannot be empty — enter a valid version (e.g., ${catalog?.versions[0] ?? '1.0.0'})`);
+              return;
+            }
+            setVersionError('');
             setForm(f => ({
               ...f,
               langBindings: [...f.langBindings, { runtime: currentLangKey, version: ver, manager: currentManager }],
             }));
             setPhase('lang-another');
           }}
-          onBack={() => setPhase('lang-version')}
+          onBack={() => { setVersionError(''); setPhase('lang-version'); }}
         />
       </Box>
     );

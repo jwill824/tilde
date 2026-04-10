@@ -53,10 +53,26 @@ export function ConfigSummary({ config }: Props) {
       </Box>
 
       {/* Secrets backend */}
-      <Box>
+      <Box marginBottom={config.browser?.selected?.length || config.aiTools?.length ? 1 : 0}>
         <Text bold>Secrets backend: </Text>
         <Text>{config.secretsBackend}</Text>
       </Box>
+
+      {/* Browser — only shown when configured */}
+      {!!config.browser?.selected?.length && (
+        <Box marginBottom={config.aiTools?.length ? 1 : 0}>
+          <Text bold>Browser: </Text>
+          <Text>{config.browser.selected.join(', ')}</Text>
+        </Box>
+      )}
+
+      {/* AI Coding Tools — only shown when configured */}
+      {!!config.aiTools?.length && (
+        <Box>
+          <Text bold>AI Coding Tools: </Text>
+          <Text>{config.aiTools.map(t => t.label).join(', ')}</Text>
+        </Box>
+      )}
     </Box>
   );
 }
