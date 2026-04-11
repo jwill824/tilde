@@ -11,7 +11,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { writeFile, readFile, mkdir, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { tmpdir, homedir } from 'node:os';
 import { writeConfig } from '../../src/config/writer.js';
 import { loadConfig } from '../../src/config/reader.js';
 import { CURRENT_SCHEMA_VERSION } from '../../src/config/migrations/runner.js';
@@ -99,6 +99,13 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  // Remove canonical copy written to ~/.tilde/tilde.config.json by writeConfig()
+  // to avoid overwriting the developer's real config on every test run (H1).
+  try {
+    await unlink(join(homedir(), '.tilde', 'tilde.config.json'));
+  } catch {
+    // ignore — file may not exist if writeConfig wasn't called
+  }
   try {
     const { readdir } = await import('node:fs/promises');
     const files = await readdir(tmpDir);

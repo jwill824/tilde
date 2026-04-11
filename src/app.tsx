@@ -62,6 +62,7 @@ function NonInteractiveMode({ configPath, dryRun }: NonInteractiveProps) {
 export function App({ mode, configPath, dryRun, resume, reconfigure, version = '0.1.0' }: AppProps) {
   const [splashDone, setSplashDone] = useState(false);
   const [done, setDone] = useState(false);
+  const [configEditMode, setConfigEditMode] = useState<'apply' | 'edit' | 'start-over'>('apply');
   const [environment, setEnvironment] = useState<EnvironmentSnapshot>({
     os: 'macOS',
     arch: 'unknown',
@@ -125,6 +126,47 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
   }
 
   if (mode === 'config-first' && configPath) {
+    // User chose "Edit configuration" — open wizard pre-populated with existing config
+    if (configEditMode === 'edit') {
+      if (done) {
+        return (
+          <Box>
+            <Text color="green">✓ Configuration updated. Run </Text>
+            <Text bold>tilde</Text>
+            <Text color="green"> to apply.</Text>
+          </Box>
+        );
+      }
+      return (
+        <Box flexDirection="column">
+          {header}
+          <ReconfigureMode
+            configPath={configPath}
+            environment={environment}
+            onComplete={() => setDone(true)}
+          />
+        </Box>
+      );
+    }
+
+    // User chose "Start over" — fresh wizard, ignoring existing config
+    if (configEditMode === 'start-over') {
+      if (done) {
+        return (
+          <Box>
+            <Text color="green" bold>✓ Configuration complete.</Text>
+            <Text dimColor>Run <Text color="cyan">tilde</Text> to apply.</Text>
+          </Box>
+        );
+      }
+      return (
+        <Box flexDirection="column">
+          {header}
+          <Wizard onComplete={() => setDone(true)} />
+        </Box>
+      );
+    }
+
     if (done) {
       return (
         <Box>
@@ -134,10 +176,16 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
         </Box>
       );
     }
+
     return (
       <Box flexDirection="column">
         {header}
-        <ConfigFirstMode configPath={configPath} onComplete={() => setDone(true)} />
+        <ConfigFirstMode
+          configPath={configPath}
+          onComplete={() => setDone(true)}
+          onEdit={() => setConfigEditMode('edit')}
+          onStartOver={() => setConfigEditMode('start-over')}
+        />
       </Box>
     );
   }
@@ -146,11 +194,18 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
     <Box flexDirection="column">
       {header}
       {resume && <Text color="yellow">Resuming from checkpoint...</Text>}
-      <Wizard
-        onComplete={(_config: TildeConfig) => {
-          // wizard complete — process.exit is handled by ConfigExportStep
-        }}
-      />
+      {done ? (
+        <Box flexDirection="column">
+          <Text color="green" bold>✓ Configuration complete.</Text>
+          <Text dimColor>Run <Text color="cyan">tilde</Text> to edit, or <Text color="cyan">tilde install</Text> to re-apply.</Text>
+        </Box>
+      ) : (
+        <Wizard
+          onComplete={(_config: TildeConfig) => {
+            setDone(true);
+          }}
+        />
+      )}
     </Box>
   );
 }

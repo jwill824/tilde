@@ -6,6 +6,11 @@
  * ```tsx
  * <StepNav onBack={onBack} isOptional={isOptional} onSkip={onSkip} />
  * ```
+ *
+ * Note: focus-safe back-nav for steps with active text inputs is handled
+ * per-component via GateInput (contexts.tsx) and SelectInput menu items —
+ * not via this component. StepNav is only rendered in steps that have no
+ * active text fields, so useInput fires unconditionally.
  */
 import React from 'react';
 import { Box, Text, useInput } from 'ink';

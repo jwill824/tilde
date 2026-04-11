@@ -1,118 +1,217 @@
 # GitHub Issues Backlog
 <!-- Auto-updated by /speckit.specify via issue-triage agent -->
-<!-- last_refreshed: 2026-04-07T13:01:23Z -->
+<!-- last_refreshed: 2026-04-09T19:48:42Z -->
 
 ## Priority Queue — Top Issues
 
-| Rank | # | Title | Cluster | Score | Labels |
-|------|---|-------|---------|-------|--------|
-| 1 | #67 | fix: make wizard more fluid | Wizard UX & Flow | 7.5 | `bug` |
-| 2 | #66 | fix: context language version | Wizard UX & Flow | 7.2 | `bug` |
-| 3 | #52 | fix: generated *.js files copying *.tsx | Build Artifacts | 6.8 | `bug` |
-| 4 | #3 | feat: Homebrew formula for `brew install tilde` | Install & Distribution | 6.8 | `enhancement` |
-| 5 | #84 | feat: create plugin registry and search | Search & Discovery | 6.5 | *(none)* |
-| 6 | #74 | feat: prompt user when config exists but `--config` not passed | Wizard UX & Flow | 6.3 | *(none)* |
-| 7 | #2 | feat: clean up bootstrap Node.js installation after first-run | Install & Distribution | 6.2 | `enhancement` |
-| 8 | #70 | feat: add a way to search for homebrew formulae | Search & Discovery | 6.0 | `enhancement` |
-| 9 | #31 | feat: add resource search capabilities | Search & Discovery | 6.0 | `enhancement` |
-| 10 | #54 | feat: create more standardized spec for tilde.config.json | Config & Schema | 6.0 | `enhancement` |
+| Rank | # | Title | Cluster | Priority | Labels |
+|------|---|-------|---------|----------|--------|
+| 1 | #91 | fix: certain wizard steps don't respond to (b) back key | Wizard UX & Flow | 🔴 P0 | `bug` |
+| 2 | #90 | fix: terminal cursor disappears after tilde applies changes | Wizard UX & Flow | 🔴 P0 | `bug` |
+| 3 | #92 | fix: resuming from last wizard step causes command to exit | Wizard UX & Flow | 🔴 P0 | `bug` |
+| 4 | #93 | fix: 'Editor Configuration (opt)' label shown in grey | Wizard UX & Flow | 🔴 P0 | `bug` |
+| 5 | #94 | fix: configuration summary missing browser and AI tools steps | Wizard UX & Flow | 🔴 P0 | `bug` |
+| 6 | #66 | fix: context language version | Wizard UX & Flow | 🔴 P0 | `bug` |
+| 7 | #95 | fix: config file not found when saved in non-default location | Config & Schema | 🔴 P1 | `bug` |
+| 8 | #74 | feat: prompt user when config exists but --config not passed | Wizard UX & Flow | 🔴 P1 | *(none)* |
+| 9 | #103 | chore: update site docs for spec 010 changes | Docs & Site | 🔴 P1 *(→ spec 011)* | `documentation` |
+| 10 | #52 | fix: generated *.js files copying *.tsx | Build Artifacts | 🔴 P1 | `bug` |
+| 11 | #99 | feat: show already-installed tools in wizard | Wizard UX & Flow | 🟠 P2 | `enhancement` |
+| 12 | #100 | feat: auto-select AI coding tools if already installed | Wizard UX & Flow | 🟠 P2 | `enhancement` |
+| 13 | #98 | feat: add common data location for all step maps | Architecture | 🟠 P2 | `enhancement` |
+| 14 | #96 | feat: add terminal emulator wizard step | Wizard Steps | 🟠 P2 | `enhancement` |
+| 15 | #97 | feat: add productivity apps wizard step | Wizard Steps | 🟠 P2 | `enhancement` |
+| 16 | #84 | feat: create plugin registry and search | Plugin System | 🟠 P2 | *(none)* |
+| 17 | #3 | feat: Homebrew formula for `brew install tilde` | Install & Distribution | 🟠 P2 | `enhancement` |
+| 18 | #104 | feat: dotfiles discovery, mapping, and management | Dotfiles | 🟠 P2 | `enhancement` |
+| 19 | #102 | feat: allow step navigation via sidebar | Wizard UX & Flow | 🟡 P3 | `enhancement` |
+| 20 | #101 | feat: add zsh plugin support | Shell & Dotfiles | 🟡 P3 | `enhancement` |
+| 21 | #112 | feat: determine direct vs dependency homebrew installs | Package Mgmt | 🟡 P3 | `enhancement` |
+| 22 | #105 | feat: wrapper API for packages, extensions, plugins | Plugin System | 🟡 P3 | `enhancement` |
+| 23 | #106 | feat: built-in claude profile switching | AI Tools | 🟡 P3 | `enhancement` |
+| 24 | #107 | feat: save configs based on OS | Config & Schema | 🟡 P3 | `enhancement` |
+| 25 | #73 | feat: tell you what tilde installed vs OOTB/manual/App Store | Visibility | 🟡 P3 | `enhancement` |
+| 26 | #31 | feat: add resource search capabilities | Search & Discovery | 🟡 P3 | `enhancement` |
+| 27 | #54 | feat: create more standardized spec for tilde.config.json | Config & Schema | 🟡 P3 | `enhancement` |
+| 28 | #82 | Add note taking apps to tilde wizard | Wizard Steps | 🟡 P3 | *(none)* |
+| 29 | #8 | feat: additional secrets backends (Bitwarden, macOS Keychain) | Plugin System | 🟡 P3 | `enhancement` |
+| 30 | #2 | feat: clean up bootstrap Node.js after first-run | Install & Distribution | 🟡 P3 | `enhancement` |
+| 31 | #70 | feat: search homebrew formulae | Search & Discovery | 🟡 P3 | `enhancement` |
+| 32 | #56 | feat: search macOS defaults | Search & Discovery | 🟡 P3 | `enhancement` |
+| 33 | #72 | feat: config/tooling map CLI/UI for repos/projects | Visibility | 🟡 P3 | `enhancement` |
+| 34 | #81 | Add repos.json schema versioning support | Config & Schema | 🟡 P3 | *(none)* |
+| 35 | #83 | Add schema viewer for tilde | Config & Schema | 🟡 P3 | *(none)* |
+| 36 | #55 | feat: add other package managers for macOS (nix, macports) | Package Mgmt | 🟡 P3 | `enhancement` |
+| 37 | #108 | feat: add Firefox with CLI configuration | Browser | 🟡 P3 | `enhancement` |
+| 38 | #110 | feat: Obsidian iCloud Drive symlink sync | Notes Apps | 🟡 P3 | `enhancement` |
+| 39 | #60 | feat: update what is considered first-party | Plugin System | 🟡 P3 | `enhancement` |
+| 40 | #5 | feat: pnpm and yarn global install support | Install & Distribution | 🟡 P3 | `enhancement` |
+| 41 | #77 | Follow-up: decommission tilde-cloudflare and tilde-github TF workspaces | Infrastructure | 🟡 P3 | `enhancement` |
+| 42 | #75 | chore: deprecate terraform | Infrastructure | 🟡 P3 | *(none)* |
+| 43 | #64 | feat: add triggered GitHub agents | CI/CD | 🔵 P4 | `enhancement` |
+| 44 | #62 | feat: add canary releases (alpha/beta) | CI/CD | 🔵 P4 | `enhancement` |
+| 45 | #65 | chore: don't run CI on merge to main | CI/CD | 🔵 P4 | `chore` |
+| 46 | #71 | chore: create GitHub labeling system | DevOps | 🔵 P4 | `chore` |
+| 47 | #111 | feat: demo of manual provisioning vs tilde | Docs & Site | 🔵 P4 | `enhancement` |
+| 48 | #109 | feat: browser bookmark integration | Browser | 🔵 P4 | `enhancement` |
+| 49 | #68 | chore: categorize first-party plugins | Plugin System | 🔵 P4 | `chore` |
+| 50 | #61 | fix: make wording less macOS-specific | Platform | 🔵 P4 | `bug` |
+| 51 | #7 | feat: Windows support | Platform | 🔵 P4 | `enhancement` |
+| 52 | #69 | feat: make docs site more snazzy | Docs & Site | 🔵 P4 | `enhancement` |
+| 53 | #80 | Reference .speckit/memory/stack.md in docs/ | Docs & Site | 🔵 P4 | *(none)* |
+| 54 | #57 | chore: move repo to thingstead org | Org & Brand | ⚪ P5 | `chore` |
+| 55 | #58 | chore: add thingstead logo | Org & Brand | ⚪ P5 | `chore` |
+| 56 | #30 | chore: update terraform for GHA ordering | Infrastructure | ⚪ P5 | `chore` |
 
+---
 
 ## All Issues by Cluster
 
 ### 🧙 Wizard UX & Flow
-| # | Title | Score | Labels | Linked Spec |
-|---|-------|-------|--------|-------------|
-| #67 | fix: make wizard more fluid | 7.5 | `bug` | spec/010 |
-| #66 | fix: context language version | 7.2 | `bug` | spec/010 |
-| #74 | feat: prompt user if config exists but `--config` not passed | 6.3 | *(none)* | spec/010 |
-| #82 | Add note taking apps to tilde wizard | 4.5 | *(none)* | spec/010 |
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #91 | fix: certain wizard steps don't respond to (b) back key | 🔴 P0 | `bug` |
+| #90 | fix: terminal cursor disappears after tilde applies changes | 🔴 P0 | `bug` |
+| #92 | fix: resuming from last wizard step causes command to exit | 🔴 P0 | `bug` |
+| #93 | fix: 'Editor Configuration (opt)' label shown in grey | 🔴 P0 | `bug` |
+| #94 | fix: configuration summary missing browser and AI tools steps | 🔴 P0 | `bug` |
+| #66 | fix: context language version | 🔴 P0 | `bug` |
+| #74 | feat: prompt user when config exists but --config not passed | 🔴 P1 | *(none)* |
+| #99 | feat: show already-installed tools in wizard | 🟠 P2 | `enhancement` |
+| #100 | feat: auto-select AI coding tools if already installed | 🟠 P2 | `enhancement` |
+| #102 | feat: allow step navigation via sidebar | 🟡 P3 | `enhancement` |
+| #82 | Add note taking apps to tilde wizard | 🟡 P3 | *(none)* |
 
-### 🔍 Search & Discovery
-| # | Title | Score | Labels | Linked Spec |
-|---|-------|-------|--------|-------------|
-| #84 | feat: create plugin registry and search | 6.5 | *(none)* | spec/011 |
-| #31 | feat: add resource search capabilities | 6.0 | `enhancement` | spec/011 |
-| #70 | feat: add a way to search for homebrew formulae | 6.0 | `enhancement` | spec/011 |
-| #56 | feat: add a way to search for macos defaults | 5.0 | `enhancement` | spec/011 |
+### 🐛 Build Artifacts
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #52 | fix: generated *.js files copying *.tsx | 🔴 P1 | `bug` |
 
-### 📦 Install & Distribution
-| # | Title | Score | Labels | Linked Spec |
-|---|-------|-------|--------|-------------|
-| #3 | feat: Homebrew formula for `brew install tilde` | 6.8 | `enhancement` | spec/012 |
-| #2 | feat: clean up bootstrap Node.js installation after first-run | 6.2 | `enhancement` | spec/012 |
-| #55 | feat: add other package managers for macos (nix, macports) | 5.5 | `enhancement` | spec/012 |
-| #5 | feat: pnpm and yarn global install support | 5.0 | `enhancement` | spec/012 |
+### 🏗️ Architecture
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #98 | feat: add common data location for all step maps | 🟠 P2 | `enhancement` |
 
-### 🗂️ Config & Schema Evolution
-| # | Title | Score | Labels | Linked Spec |
-|---|-------|-------|--------|-------------|
-| #54 | feat: create more standardized spec for tilde.config.json | 6.0 | `enhancement` | spec/013 |
-| #81 | Add repos.json schema versioning support | 5.5 | *(none)* | spec/013 |
-| #83 | Add schema viewer for tilde | 5.0 | *(none)* | spec/013 |
+### 🖥️ Wizard Steps (New)
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #96 | feat: add terminal emulator wizard step (Hyper, iTerm2, Ghostty, Warp, Kitty, Wezterm) | 🟠 P2 | `enhancement` |
+| #97 | feat: add productivity apps wizard step (Alfred, Raycast, Radial, ExtraBar) | 🟠 P2 | `enhancement` |
 
 ### 🔌 Plugin System & Catalog
-| # | Title | Score | Labels | Linked Spec |
-|---|-------|-------|--------|-------------|
-| #8 | feat: additional secrets backends (Bitwarden, macOS Keychain) | 5.8 | `enhancement` | spec/014 |
-| #60 | feat: update what is considered `first-party` | 5.5 | `enhancement` | — |
-| #68 | chore: categorize first party plugins and re-organize | 4.5 | `chore` | — |
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #84 | feat: create plugin registry and search | 🟠 P2 | *(none)* |
+| #105 | feat: wrapper API for packages, extensions, plugins | 🟡 P3 | `enhancement` |
+| #8 | feat: additional secrets backends (Bitwarden, macOS Keychain) | 🟡 P3 | `enhancement` |
+| #60 | feat: update what is considered first-party | 🟡 P3 | `enhancement` |
+| #68 | chore: categorize first-party plugins | 🔵 P4 | `chore` |
 
-### 🏗️ Terraform & Infrastructure Cleanup
-| # | Title | Score | Labels | Linked Spec |
-|---|-------|-------|--------|-------------|
-| #77 | Follow-up: Decommission tilde-cloudflare and tilde-github TF workspaces | 5.8 | `enhancement` | spec/016 |
-| #75 | chore: deprecate terraform (in favor of github-repo-factory) | 5.5 | *(none)* | spec/016 |
-| #30 | chore: update terraform to ensure it runs before other GHA workflows | 3.5 | `chore` | spec/016 |
+### 📁 Dotfiles & Shell
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #104 | feat: dotfiles discovery, mapping, and management | 🟠 P2 | `enhancement` |
+| #101 | feat: add zsh plugin support | 🟡 P3 | `enhancement` |
 
-### ⚙️ GitHub DevOps & CI
-| # | Title | Score | Labels | Linked Spec |
-|---|-------|-------|--------|-------------|
-| #65 | chore: don't need to run CI workflow on merge into main | 5.0 | `chore` | spec/017 |
-| #62 | feat: add canary releases (alpha/beta) | 4.8 | `enhancement` | spec/017 |
-| #64 | feat: add triggered github agents | 4.5 | `enhancement` | spec/017 |
-| #71 | chore: create github labeling system to organize new issues | 4.5 | `chore` | spec/017 |
+### 📦 Install & Distribution
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #3 | feat: Homebrew formula for `brew install tilde` | 🟠 P2 | `enhancement` |
+| #2 | feat: clean up bootstrap Node.js after first-run | 🟡 P3 | `enhancement` |
+| #55 | feat: add other package managers (nix, macports) | 🟡 P3 | `enhancement` |
+| #5 | feat: pnpm and yarn global install support | 🟡 P3 | `enhancement` |
+
+### 🗂️ Config & Schema
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #95 | fix: config file not found when saved in non-default location | 🔴 P1 | `bug` |
+| #107 | feat: save configs based on OS | 🟡 P3 | `enhancement` |
+| #54 | feat: create more standardized spec for tilde.config.json | 🟡 P3 | `enhancement` |
+| #81 | Add repos.json schema versioning support | 🟡 P3 | *(none)* |
+| #83 | Add schema viewer for tilde | 🟡 P3 | *(none)* |
+
+### 🔍 Search & Discovery
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #31 | feat: add resource search capabilities | 🟡 P3 | `enhancement` |
+| #70 | feat: search homebrew formulae | 🟡 P3 | `enhancement` |
+| #56 | feat: search macOS defaults | 🟡 P3 | `enhancement` |
 
 ### 📊 Visibility & Analytics
-| # | Title | Score | Labels | Linked Spec |
-|---|-------|-------|--------|-------------|
-| #73 | feat: tell you what tilde installed vs OOTB / manual / App Store | 5.5 | `enhancement` | spec/015 |
-| #72 | feat: create a config/tooling map cli/ui for repos/projects | 5.0 | `enhancement` | spec/015 |
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #73 | feat: tell you what tilde installed vs OOTB/manual/App Store | 🟡 P3 | `enhancement` |
+| #112 | feat: determine direct vs dependency homebrew installs | 🟡 P3 | `enhancement` |
+| #72 | feat: config/tooling map CLI/UI for repos/projects | 🟡 P3 | `enhancement` |
+
+### 🤖 AI Tools
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #106 | feat: built-in claude profile switching | 🟡 P3 | `enhancement` |
+
+### 🌐 Browser
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #108 | feat: add Firefox with CLI configuration | 🟡 P3 | `enhancement` |
+| #109 | feat: browser bookmark integration | 🔵 P4 | `enhancement` |
+
+### 📝 Notes Apps
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #110 | feat: Obsidian iCloud Drive symlink sync | 🟡 P3 | `enhancement` |
+
+### 📚 Docs & Site
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #103 | chore: update site docs for spec 010 changes | 🔴 P1 *(→ spec 011)* | `documentation` |
+| #111 | feat: demo of manual provisioning vs tilde | 🔵 P4 | `enhancement` |
+| #69 | feat: make docs site more snazzy | 🔵 P4 | `enhancement` |
+| #80 | Reference .speckit/memory/stack.md in docs/ | 🔵 P4 | *(none)* |
+
+### 🏗️ Infrastructure / Terraform
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #77 | Follow-up: decommission tilde-cloudflare and tilde-github TF workspaces | 🟡 P3 | `enhancement` |
+| #75 | chore: deprecate terraform | 🟡 P3 | *(none)* |
+| #30 | chore: update terraform for GHA ordering | ⚪ P5 | `chore` |
+
+### ⚙️ CI/CD & DevOps
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #64 | feat: add triggered GitHub agents | 🔵 P4 | `enhancement` |
+| #62 | feat: add canary releases (alpha/beta) | 🔵 P4 | `enhancement` |
+| #65 | chore: don't run CI on merge to main | 🔵 P4 | `chore` |
+| #71 | chore: create GitHub labeling system | 🔵 P4 | `chore` |
 
 ### 🪟 Platform Expansion
-| # | Title | Score | Labels | Linked Spec |
-|---|-------|-------|--------|-------------|
-| #61 | fix: make wording less specific to macos | 6.0 | `bug` | spec/018 |
-| #7 | feat: Windows support (winget / Chocolatey package manager plugin) | 4.5 | `enhancement` | spec/018 |
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #61 | fix: make wording less macOS-specific | 🔵 P4 | `bug` |
+| #7 | feat: Windows support | 🔵 P4 | `enhancement` |
 
 ### 🏢 Org & Brand
-| # | Title | Score | Labels | Linked Spec |
-|---|-------|-------|--------|-------------|
-| #57 | chore: move repo and issues to thingstead org | 4.0 | `chore` | spec/019 |
-| #58 | chore: add thingstead logo to thingstead org | 2.5 | `chore` | spec/019 |
+| # | Title | Priority | Labels |
+|---|-------|----------|--------|
+| #57 | chore: move repo to thingstead org | ⚪ P5 | `chore` |
+| #58 | chore: add thingstead logo | ⚪ P5 | `chore` |
 
-### 📝 Docs & Site
-| # | Title | Score | Labels | Linked Spec |
-|---|-------|-------|--------|-------------|
-| #69 | feat: make the docs site more snazzy | 3.5 | `enhancement` | — |
-| #80 | Reference .speckit/memory/stack.md in docs/ | 3.5 | *(none)* | — |
+---
 
-### 🔩 Singletons
-| # | Title | Score | Labels | Linked Spec |
-|---|-------|-------|--------|-------------|
-| #52 | fix: generated *.js files copying *.tsx | 6.8 | `bug` | — |
+## Suggested Next Spec Mapping
 
-## Suggested Spec Mapping
-
-| Spec # | Title | Issues | Priority |
-|--------|-------|--------|----------|
-| 010 | wizard-flow-and-context-fixes | #67, #66, #74, #82 | 🔴 P1 |
-| 011 | plugin-registry-and-search | #84, #31, #70, #56 | 🟠 P1 |
-| 012 | zero-prereq-install-and-distribution | #3, #2, #5, #55 | 🟠 P1 |
-| 013 | config-schema-versioning-and-viewer | #54, #81, #83 | 🟡 P2 |
-| 014 | secrets-backends-bitwarden-keychain | #8 | 🟡 P2 |
-| 015 | install-provenance-and-tooling-map | #73, #72 | 🟡 P2 |
-| 016 | terraform-workspace-decommission | #77, #75, #30 | 🟡 P2 |
-| 017 | github-devops-and-ci-improvements | #65, #62, #64, #71 | 🔵 P3 |
-| 018 | windows-platform-support | #7, #61 | 🔵 P3 |
-| 019 | thingstead-org-migration | #57, #58 | ⚪ P4 |
+| Spec # | Candidate Title | Key Issues | Priority |
+|--------|----------------|------------|----------|
+| 011 | wizard-bug-fixes | #91, #92, #93, #90, #94, #66, #103 | 🔴 P0 |
+| 012 | wizard-ux-enhancements | #99, #100, #102, #74, #95 | 🔴 P1 |
+| 013 | new-wizard-steps-terminal-productivity | #96, #97, #82 | 🟠 P2 |
+| 014 | dotfiles-discovery-management | #104, #101, #112, #98 | 🟠 P2 |
+| 015 | plugin-registry-and-wrapper-api | #84, #105, #31, #70, #56 | 🟠 P2 |
+| 016 | install-and-distribution | #3, #2, #5, #55 | 🟠 P2 |
+| 017 | config-schema-evolution | #54, #81, #83, #107 | 🟡 P3 |
+| 018 | ai-tools-and-claude-profiles | #106, #100 | 🟡 P3 |
+| 019 | visibility-and-provenance | #73, #72 | 🟡 P3 |
+| 020 | terraform-decommission | #77, #75, #30 | 🟡 P3 |
+| 021 | github-devops-improvements | #64, #62, #65, #71 | 🔵 P4 |
+| 022 | browser-and-bookmarks | #108, #109, #110 | 🔵 P4 |
+| 023 | windows-platform-support | #7, #61 | 🔵 P4 |
+| 024 | thingstead-org-migration | #57, #58 | ⚪ P5 |

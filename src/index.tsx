@@ -238,6 +238,13 @@ async function handleConfigSubcommand(sub: string, pathArg: string | undefined, 
 }
 
 export async function main() {
+  // Ensure terminal cursor is always restored on exit, regardless of exit path.
+  // Ink hides the cursor during rendering but doesn't always restore it on forced exits.
+  process.stdout.write('\x1b[?25h');
+  process.on('exit', () => process.stdout.write('\x1b[?25h'));
+  process.on('SIGINT', () => { process.stdout.write('\x1b[?25h'); process.exit(130); });
+  process.on('SIGTERM', () => { process.stdout.write('\x1b[?25h'); process.exit(143); });
+
   // Disable colors if requested
   if (process.env.TILDE_NO_COLOR) {
     process.env.FORCE_COLOR = '0';

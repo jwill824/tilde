@@ -1,7 +1,7 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 2.3.0 → 2.4.0
+Version change: 2.3.0 → 2.4.1
 MINOR bump (spec 010-wizard-flow-fixes, local testing findings):
   - Config detection step now documents the three-path discovery search order
     (cwd → git-root → ~/.tilde/tilde.config.json) and the auto-discovery confirmation prompt
@@ -24,6 +24,15 @@ MINOR bump (spec 010-wizard-flow-fixes, local testing findings):
   - Logseq added to Browsers table as a note-taking app clarification (removed — stays in
     tools catalog, not browsers)
 
+PATCH bump (spec 011-wizard-bug-fixes, post-PR manual test findings):
+  - Schema version updated from "1.5" to "1.6" in Config export step
+  - Entry Modes table: Config-first now documents all four confirmation options
+    (Apply / Edit / Start Over / Cancel)
+  - Principle IV: config-first confirmation MUST offer Apply, Edit configuration,
+    Start over, and Cancel — not just a binary confirm/cancel
+  - Config export: `writeConfig` always writes a canonical copy to `~/.tilde/tilde.config.json`
+    in addition to the user's dotfiles repo path (enables `tilde install` discovery)
+
 Rationale for context step unification:
   Git authentication, VCS accounts, and language version bindings are all properties of
   a developer context — not of the global environment. The constitution has always described
@@ -34,17 +43,19 @@ Rationale for context step unification:
 Modified principles:
   - IV. Interactive & Ink-First UX — added back-navigation requirement: all wizard steps
     MUST provide a focus-safe, explicit back affordance; key-binding-only back is prohibited
-    on steps with active text inputs
+    on steps with active text inputs; config-first confirmation MUST offer four options
 
 Modified sections:
   - Setup Wizard Flow — step 1 adds discovery search order; step 2 adds language/VM
     detection and brew-leaves note; step 7 (Languages) removed as standalone, language
     selection moved into step 8 (Contexts); step 8 clarified as unified contexts step
     encompassing workspace, contexts, git auth, VCS accounts, and per-context language
-    bindings; step numbering updated to 15 steps total; dynamic sequencing note added
+    bindings; step numbering updated to 15 steps total; dynamic sequencing note added;
+    step 11 schema version updated to "1.6"
   - Package Managers — MacPorts added for macOS (implementation pending)
   - Version Managers — rbenv, fnm, python-venv added
   - Setup Wizard Flow (tools step) — note-taking app catalog noted
+  - Entry Modes table — Config-first now shows full confirm menu description
 
 Removed sections: None
 
@@ -128,10 +139,14 @@ machine-parseable.
 
 Config-first mode (providing a `tilde.config.json` before running) is a first-class user
 preference and MUST be treated as such in the UI — not as a workaround. When a config file
-is detected, tilde MUST display a summary of what will be applied and ask for confirmation
-before proceeding. Prompt-first is the default entry path for users with no existing config.
-Fully non-interactive execution (e.g., `--yes` / `--ci`) MUST be supported as an opt-in
-escape hatch for automation contexts and MUST require a complete, valid config file.
+is detected, tilde MUST display a summary of what will be applied and present a confirmation
+menu with at least four options: **Apply this configuration**, **Edit configuration**
+(re-open the full wizard pre-populated with the existing config), **Start over (run wizard)**
+(clear state and run a fresh wizard), and **Cancel**. This ensures users can always adjust
+or restart their configuration after the initial setup run. Prompt-first is the default entry
+path for users with no existing config. Fully non-interactive execution (e.g., `--yes` /
+`--ci`) MUST be supported as an opt-in escape hatch for automation contexts and MUST require
+a complete, valid config file.
 
 Every wizard step that is not the first MUST expose a clearly visible back-navigation
 affordance. Back navigation MUST be implemented as an explicit, focus-safe UI element (e.g.,
@@ -203,7 +218,7 @@ Tilde MUST detect and branch at startup:
 
 | Mode | Trigger | Behaviour |
 |---|---|---|
-| **Config-first** | `tilde.config.json` found (local, flag, or URL) | Display config summary → confirm → apply; prompt only for missing fields |
+| **Config-first** | `tilde.config.json` found (local, flag, or URL) | Display config summary → confirm (Apply / Edit / Start Over / Cancel); prompt only for missing fields |
 | **Prompt-first** | No config file present | Run full wizard top-down; generate config on completion |
 | **Reconfigure** | `--reconfigure` flag | Load existing `tilde.config.json` via config reader; re-run full wizard with all fields pre-populated from stored values; user may navigate and change any step; on completion overwrite existing config |
 | **Non-interactive** | `--yes` / `--ci` flag | Apply complete config silently; error if any field missing ⚠ implementation pending |
@@ -279,7 +294,7 @@ made in earlier steps.
 9. **App configurations** — user enables/customises config domains (VS Code, Git, aliases,
    hooks, shell profiles, OS defaults).
 10. **Secrets backend** — user selects how secrets are stored and referenced.
-11. **Config export** — tilde writes `tilde.config.json` (schema version `1.5`) to the
+11. **Config export** — tilde writes `tilde.config.json` (schema version `1.6`) to the
     dotfiles repo or the canonical `~/.tilde/` location.
 12. **Browser selection** *(optional)* — user chooses preferred browsers (see Browsers);
     selected browsers are installed via the active package manager if not already present;
@@ -435,4 +450,4 @@ tilde project. Amendments require:
 All PRs and reviews MUST verify compliance with the eight Core Principles. Exceptions require
 explicit written justification recorded in the plan's Complexity Tracking table.
 
-**Version**: 2.4.0 | **Ratified**: 2026-03-27 | **Last Amended**: 2026-04-09
+**Version**: 2.4.1 | **Ratified**: 2026-03-27 | **Last Amended**: 2026-04-11

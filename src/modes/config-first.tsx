@@ -19,6 +19,8 @@ import { ShellStep } from '../steps/shell.js';
 interface Props {
   configPath: string;
   onComplete: () => void;
+  onEdit?: () => void;
+  onStartOver?: () => void;
 }
 
 type Phase =
@@ -62,7 +64,7 @@ function validateAndTransition(partial: Record<string, unknown>): Phase {
   return { type: 'error', message: validationError.message };
 }
 
-export function ConfigFirstMode({ configPath, onComplete }: Props) {
+export function ConfigFirstMode({ configPath, onComplete, onEdit, onStartOver }: Props) {
   const [phase, setPhase] = useState<Phase>({ type: 'loading' });
 
   useEffect(() => {
@@ -157,11 +159,13 @@ export function ConfigFirstMode({ configPath, onComplete }: Props) {
   if (phase.type === 'confirm') {
     const items = [
       { label: 'Apply this configuration', value: 'apply' },
+      ...(onEdit ? [{ label: 'Edit configuration', value: 'edit' }] : []),
+      ...(onStartOver ? [{ label: 'Start over (run wizard)', value: 'start-over' }] : []),
       { label: 'Cancel', value: 'cancel' },
     ];
     return (
       <Box flexDirection="column">
-        <ConfigSummary config={phase.config} />
+        <ConfigSummary config={phase.config} configPath={configPath} />
         <Box marginTop={1}>
           <SelectInput
             items={items}
@@ -169,6 +173,10 @@ export function ConfigFirstMode({ configPath, onComplete }: Props) {
               if (item.value === 'apply') {
                 setPhase({ type: 'applying', config: phase.config, progress: [] });
                 applyConfig(phase.config);
+              } else if (item.value === 'edit') {
+                onEdit?.();
+              } else if (item.value === 'start-over') {
+                onStartOver?.();
               } else {
                 onComplete();
               }

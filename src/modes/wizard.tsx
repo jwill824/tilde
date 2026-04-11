@@ -18,6 +18,7 @@ import { ConfigExportStep } from '../steps/config-export.js';
 import { BrowserStep } from '../steps/browser.js';
 import { AIToolsStep } from '../steps/ai-tools.js';
 import { ApplyStep } from '../steps/apply.js';
+import { detectOS } from '../utils/os.js';
 
 const DEFAULT_CONFIGURATIONS = { git: true, vscode: false, aliases: false, osDefaults: false, direnv: true };
 
@@ -142,6 +143,28 @@ function makeSummaryLines(stepIdx: number, cfg: Partial<TildeConfig>): string[] 
   }
 }
 
+/**
+ * Extract per-step values from a full config for use in resume history frames.
+ * Values must match what each step's `advance()` call stores so that
+ * navigating back populates initialValues correctly.
+ */
+export function extractStepValues(stepIdx: number, cfg: Partial<TildeConfig>): Record<string, unknown> {
+  switch (stepIdx) {
+    case 2: return { shell: cfg.shell };
+    case 3: return { packageManagers: cfg.packageManagers };
+    case 4: return { versionManagers: cfg.versionManagers };
+    case 5: return { workspaceRoot: cfg.workspaceRoot, dotfilesRepo: cfg.dotfilesRepo, contexts: cfg.contexts };
+    // configurations is written by both step 6 (Tools) and step 7 (Editor Config);
+    // both frames carry it so back-nav to either step restores the correct partial state.
+    case 6: return { tools: cfg.tools, configurations: cfg.configurations };
+    case 7: return { configurations: cfg.configurations, editors: cfg.editors };
+    case 8: return { secretsBackend: cfg.secretsBackend };
+    case 9: return { browser: cfg.browser };
+    case 10: return { aiTools: cfg.aiTools };
+    default: return {};
+  }
+}
+
 interface WizardProps {
   initialStep?: number;
   initialConfig?: Partial<TildeConfig>;
@@ -155,7 +178,10 @@ interface WizardProps {
 
 export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit }: WizardProps) {
   const [currentStep, setCurrentStep] = useState(initialStep);
-  const [config, setConfig] = useState<Partial<TildeConfig>>(initialConfig);
+  const [config, setConfig] = useState<Partial<TildeConfig>>({
+    ...initialConfig,
+    os: (initialConfig.os ?? detectOS()) as 'macos',
+  });
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
   const [captureReport, setCaptureReport] = useState<EnvironmentCaptureReport | null>(null);
 
@@ -168,6 +194,9 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
   const [resumeStatus, setResumeStatus] = useState<'loading' | 'prompt' | 'ready'>('loading');
   const [resumeStep, setResumeStep] = useState(-1);
   const [resumeConfig, setResumeConfig] = useState<Partial<TildeConfig>>({});
+
+  // First-step back-key hint (fires when user presses (b) on step 0)
+  const [showFirstStepHint, setShowFirstStepHint] = useState(false);
 
   useEffect(() => {
     loadCheckpoint().then((checkpoint) => {
@@ -212,6 +241,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
 
       const nextStep = getNextStep(currentStep, merged as Partial<TildeConfig>);
       if (nextStep > LAST_STEP) {
+        await clearCheckpoint().catch(() => {});
         onComplete?.(merged as TildeConfig);
       } else {
         setCurrentStep(nextStep);
@@ -226,7 +256,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
    */
   const skip = useCallback(async () => {
     await advance({}, ['skipped']);
-  }, [advance, currentStep]);
+  }, [advance]);
 
   /**
    * Go back to the previous step by popping from the history stack.
@@ -249,6 +279,14 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
   const isCurrentOptional = !(STEP_REGISTRY[currentStep]?.required ?? true);
   // onBack handler — only passed when back-nav is available
   const onBack = canGoBack ? goBack : undefined;
+
+  // Show a non-modal inline hint when (b) is pressed on the first step
+  useInput((input) => {
+    if (input === 'b') {
+      setShowFirstStepHint(true);
+      setTimeout(() => setShowFirstStepHint(false), 2000);
+    }
+  }, { isActive: resumeStatus === 'ready' && !canGoBack });
   // Restore values when navigating back: prefer the just-popped frame (goBack),
   // fall back to an earlier frame for the same step (resume/multi-back scenarios)
   const prevFrame = poppedFrame?.stepIndex === currentStep
@@ -264,18 +302,23 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
 
       {resumeStatus === 'prompt' && (
         <Box flexDirection="column">
-          <Text color="yellow">A previous session was found (last completed step: {resumeStep}).</Text>
+          {resumeStep >= LAST_STEP
+            ? <Text color="yellow">An existing configuration was found.</Text>
+            : <Text color="yellow">A previous session was found (last completed step: {resumeStep}).</Text>
+          }
           <Text dimColor>Use ↑↓ to navigate, Enter to select</Text>
           <Box marginTop={1}>
             <SelectInput
               items={[
-                { label: `Resume from step ${resumeStep + 1}`, value: 'resume' },
+                resumeStep >= LAST_STEP
+                  ? { label: 'Edit configuration', value: 'resume' }
+                  : { label: `Resume from step ${resumeStep + 1}`, value: 'resume' },
                 { label: 'Start over', value: 'start-over' },
               ]}
               onSelect={(item) => {
                 if (item.value === 'resume') {
                   setConfig(resumeConfig);
-                  setCurrentStep(resumeStep + 1);
+                  setCurrentStep(Math.min(resumeStep + 1, LAST_STEP));
                   // Reconstruct synthetic completed steps so sidebar shows ✓ for prior steps
                   setCompletedSteps(
                     STEP_REGISTRY.slice(0, resumeStep + 1).map((_, idx) => ({
@@ -287,7 +330,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
                   setHistory(
                     STEP_REGISTRY.slice(0, resumeStep + 1).map((_, idx) => ({
                       stepIndex: idx,
-                      values: {},  // per-step values not stored in checkpoint; steps fall back to config
+                      values: extractStepValues(idx, resumeConfig),  // pre-populate from saved config
                     }))
                   );
                 } else {
@@ -324,7 +367,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
                       >
                         {step.label}
                       </Text>
-                      {!step.required && !done && <Text dimColor> (opt)</Text>}
+                      {!step.required && !done && <Text> (opt)</Text>}
                     </Box>
                     {done && summary.map((line, i) => (
                       <Box key={i} marginLeft={2}>
@@ -341,6 +384,9 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
 
             {/* ── Right: active step content ── */}
             <Box flexDirection="column" flexGrow={1}>
+        {showFirstStepHint && (
+          <Text color="yellow">Already on the first step — press (q) to quit.</Text>
+        )}
         {currentStep === 0 && (
           <ConfigDetectionStep
             onBack={onBack}
@@ -497,7 +543,6 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             onBack={onBack}
             isOptional={false}
             onComplete={() => {
-              clearCheckpoint().catch(() => {});
               void advance({}, ['saved']);
             }}
           />

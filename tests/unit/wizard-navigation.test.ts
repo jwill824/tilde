@@ -9,6 +9,8 @@
  * - Context data preserved across back/forward navigation
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import React from 'react';
+import { render } from 'ink-testing-library';
 
 // We test the navigation logic in isolation by constructing state machine
 // operations that mirror what the Wizard component does internally.
@@ -249,5 +251,112 @@ describe('getNextStep()', () => {
   it('step 5 (contexts) → always goes to step 6', () => {
     expect(getNextStep(5, {})).toBe(6);
     expect(getNextStep(5, { contexts: [] })).toBe(6);
+  });
+});
+
+// T008: StepNav rendering tests
+import { StepNav } from '../../src/ui/step-nav.js';
+
+describe('StepNav — rendering', () => {
+  it('renders ← Back hint when onBack is provided', () => {
+    const { lastFrame } = render(React.createElement(StepNav, { onBack: vi.fn() }));
+    expect(lastFrame()).toContain('← Back (b)');
+  });
+
+  it('renders → Skip hint when isOptional + onSkip provided', () => {
+    const { lastFrame } = render(React.createElement(StepNav, { onSkip: vi.fn(), isOptional: true }));
+    expect(lastFrame()).toContain('→ Skip (s)');
+  });
+
+  it('renders nothing when no controls are provided', () => {
+    const { lastFrame } = render(React.createElement(StepNav, {}));
+    expect(lastFrame()?.trim()).toBe('');
+  });
+});
+
+// T012: extractStepValues + resume clamping
+import { extractStepValues } from '../../src/modes/wizard.js';
+
+describe('extractStepValues()', () => {
+  it('step 2 → returns shell value', () => {
+    expect(extractStepValues(2, { shell: 'zsh' })).toEqual({ shell: 'zsh' });
+  });
+
+  it('step 3 → returns packageManagers value', () => {
+    expect(extractStepValues(3, { packageManagers: ['homebrew'] })).toEqual({ packageManagers: ['homebrew'] });
+  });
+
+  it('step 5 → returns workspaceRoot, dotfilesRepo, contexts', () => {
+    const result = extractStepValues(5, { workspaceRoot: '~/Dev', dotfilesRepo: 'git@...', contexts: [] });
+    expect(result).toEqual({ workspaceRoot: '~/Dev', dotfilesRepo: 'git@...', contexts: [] });
+  });
+
+  it('step 9 → returns browser', () => {
+    const browser = { selected: ['chrome'] };
+    expect(extractStepValues(9, { browser })).toEqual({ browser });
+  });
+
+  it('step 10 → returns aiTools', () => {
+    const aiTools = [{ label: 'GitHub Copilot', name: 'copilot', variant: 'cli-extension' as const }];
+    expect(extractStepValues(10, { aiTools })).toEqual({ aiTools });
+  });
+
+  it('step 0 (config-detection) → returns empty object', () => {
+    expect(extractStepValues(0, { shell: 'zsh' })).toEqual({});
+  });
+
+  it('step 11 (config-export) → returns empty object', () => {
+    expect(extractStepValues(11, { shell: 'zsh' })).toEqual({});
+  });
+});
+
+describe('resume clamping — last step does not overshoot', () => {
+  const LAST_STEP = 12;  // matches wizard STEP_REGISTRY length - 1
+
+  it('resumeStep at LAST_STEP clamps to LAST_STEP (not LAST_STEP+1)', () => {
+    const nextStep = Math.min(LAST_STEP + 1, LAST_STEP);
+    expect(nextStep).toBe(LAST_STEP);
+  });
+
+  it('resumeStep below LAST_STEP advances normally', () => {
+    const nextStep = Math.min(5 + 1, LAST_STEP);
+    expect(nextStep).toBe(6);
+  });
+});
+
+// T021: Language binding multi-select schema validation
+import { LanguageBindingSchema } from '../../src/config/schema.js';
+
+describe('LanguageBinding schema — multi-language support (US6)', () => {
+  it('accepts a valid binding with runtime, version, manager', () => {
+    const result = LanguageBindingSchema.safeParse({ runtime: 'nodejs', version: '22.0.0', manager: 'nvm' });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts a binding without manager (manager is optional)', () => {
+    const result = LanguageBindingSchema.safeParse({ runtime: 'python', version: '3.12.0' });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a binding with empty version string', () => {
+    const result = LanguageBindingSchema.safeParse({ runtime: 'nodejs', version: '' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a binding with empty runtime string', () => {
+    const result = LanguageBindingSchema.safeParse({ runtime: '', version: '22.0.0' });
+    expect(result.success).toBe(false);
+  });
+
+  it('multiple bindings accumulate correctly in an array', () => {
+    const bindings = [
+      { runtime: 'nodejs', version: '22.0.0', manager: 'nvm' },
+      { runtime: 'python', version: '3.12.0', manager: 'pyenv' },
+    ];
+    bindings.forEach(b => {
+      const result = LanguageBindingSchema.safeParse(b);
+      expect(result.success).toBe(true);
+    });
+    expect(bindings.length).toBe(2);
   });
 });

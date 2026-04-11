@@ -4,9 +4,10 @@ import type { TildeConfig } from '../config/schema.js';
 
 interface Props {
   config: TildeConfig;
+  configPath?: string;
 }
 
-export function ConfigSummary({ config }: Props) {
+export function ConfigSummary({ config, configPath }: Props) {
   const enabledDomains = Object.entries(config.configurations)
     .filter(([, v]) => v)
     .map(([k]) => k);
@@ -53,10 +54,34 @@ export function ConfigSummary({ config }: Props) {
       </Box>
 
       {/* Secrets backend */}
-      <Box>
+      <Box marginBottom={config.browser?.selected?.length || config.aiTools?.length ? 1 : 0}>
         <Text bold>Secrets backend: </Text>
         <Text>{config.secretsBackend}</Text>
       </Box>
+
+      {/* Browser — only shown when configured */}
+      {!!config.browser?.selected?.length && (
+        <Box marginBottom={config.aiTools?.length ? 1 : 0}>
+          <Text bold>Browser: </Text>
+          <Text>{config.browser.selected.join(', ')}</Text>
+        </Box>
+      )}
+
+      {/* AI Coding Tools — only shown when configured */}
+      {!!config.aiTools?.length && (
+        <Box marginBottom={configPath ? 1 : 0}>
+          <Text bold>AI Coding Tools: </Text>
+          <Text>{config.aiTools.map(t => t.label).join(', ')}</Text>
+        </Box>
+      )}
+
+      {/* Config file location */}
+      {!!configPath && (
+        <Box>
+          <Text bold>Config: </Text>
+          <Text dimColor>{configPath}</Text>
+        </Box>
+      )}
     </Box>
   );
 }
