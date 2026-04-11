@@ -178,7 +178,7 @@ interface WizardProps {
 
 export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit }: WizardProps) {
   const [currentStep, setCurrentStep] = useState(initialStep);
-  const [config, setConfig] = useState<Partial<TildeConfig>>({ os: detectOS(), ...initialConfig });
+  const [config, setConfig] = useState<Partial<TildeConfig>>({ os: detectOS() as 'macos', ...initialConfig });
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
   const [captureReport, setCaptureReport] = useState<EnvironmentCaptureReport | null>(null);
 
