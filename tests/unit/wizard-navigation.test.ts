@@ -254,17 +254,12 @@ describe('getNextStep()', () => {
   });
 });
 
-// T008: StepNav back-key guard tests
+// T008: StepNav rendering tests
 import { StepNav } from '../../src/ui/step-nav.js';
 
-describe('StepNav — isInputFocused guard', () => {
+describe('StepNav — rendering', () => {
   it('renders ← Back hint when onBack is provided', () => {
     const { lastFrame } = render(React.createElement(StepNav, { onBack: vi.fn() }));
-    expect(lastFrame()).toContain('← Back (b)');
-  });
-
-  it('renders ← Back hint when onAtFirstStep is provided (no onBack)', () => {
-    const { lastFrame } = render(React.createElement(StepNav, { onAtFirstStep: vi.fn() }));
     expect(lastFrame()).toContain('← Back (b)');
   });
 

@@ -7,12 +7,10 @@
  * <StepNav onBack={onBack} isOptional={isOptional} onSkip={onSkip} />
  * ```
  *
- * isInputFocused: pass true when the step contains an active TextInput to prevent
- *   (b) from firing while the user is typing. Back nav re-enables once the field
- *   loses focus (user presses Esc or Tab).
- *
- * onAtFirstStep: called when (b) is pressed on the very first step (no onBack).
- *   The parent should render a transient inline hint in response.
+ * Note: focus-safe back-nav for steps with active text inputs is handled
+ * per-component via GateInput (contexts.tsx) and SelectInput menu items —
+ * not via this component. StepNav is only rendered in steps that have no
+ * active text fields, so useInput fires unconditionally.
  */
 import React from 'react';
 import { Box, Text, useInput } from 'ink';
@@ -21,8 +19,6 @@ interface StepNavProps {
   onBack?: () => void;
   isOptional?: boolean;
   onSkip?: () => void;
-  isInputFocused?: boolean;
-  onAtFirstStep?: () => void;
 }
 
 /**
@@ -30,26 +26,22 @@ interface StepNavProps {
  * - "← Back" when onBack is provided (press 'b')
  * - "→ Skip" when isOptional and onSkip provided (press 's')
  */
-export function StepNav({ onBack, isOptional, onSkip, isInputFocused, onAtFirstStep }: StepNavProps) {
+export function StepNav({ onBack, isOptional, onSkip }: StepNavProps) {
   useInput((input, key) => {
-    if (input === 'b' || (key.leftArrow && key.meta)) {
-      if (onBack) {
-        onBack();
-      } else if (onAtFirstStep) {
-        onAtFirstStep();
-      }
+    if ((input === 'b' || (key.leftArrow && key.meta)) && onBack) {
+      onBack();
     }
     if (input === 's' && isOptional && onSkip) {
       onSkip();
     }
-  }, { isActive: !isInputFocused });
+  });
 
-  const hasControls = onBack || onAtFirstStep || (isOptional && onSkip);
+  const hasControls = onBack || (isOptional && onSkip);
   if (!hasControls) return null;
 
   return (
     <Box marginTop={1} gap={2}>
-      {(onBack || onAtFirstStep) && (
+      {onBack && (
         <Text dimColor>← Back (b)</Text>
       )}
       {isOptional && onSkip && (
