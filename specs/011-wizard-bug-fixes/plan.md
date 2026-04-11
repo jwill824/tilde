@@ -159,11 +159,11 @@ So upcoming steps (not active, not done) are already dimmed by design. Adding `d
 
 ### R6: Config Summary — Missing Sections
 
-**Finding**: `src/ui/config-summary.tsx` renders these sections: OS, Shell, Package Managers, Version Managers, Contexts, Tools, Editor Config, Secrets Backend. Fields `browser` and `aiTools` are present in `TildeConfig` (from spec 010) but not rendered in the summary. The `browser` field is of type `string` (e.g., `"chrome"`); `aiTools` is an array of tool-name strings.
+**Finding**: `src/ui/config-summary.tsx` renders these sections: OS, Shell, Package Managers, Version Managers, Contexts, Tools, Editor Config, Secrets Backend. Fields `browser` and `aiTools` are present in `TildeConfig` (from spec 010) but not rendered in the summary. The `browser` field is of type `object` (`{ selected: string[], default: string | null }`); `aiTools` is an array of objects (`{ name: string, label: string, variant: string }`).
 
 **Fix**: Add two new sections after "Secrets Backend":
-- **Browser** — single string, same pattern as Shell section
-- **AI Coding Tools** — array, same pattern as Tools section
+- **Browser** — conditional on `config.browser?.selected?.length`; renders `config.browser.selected.join(', ')`
+- **AI Coding Tools** — conditional on `config.aiTools?.length`; renders `config.aiTools.map(t => t.label).join(', ')`
 
 ### R7: Site Docs — Out-of-Date Content
 
