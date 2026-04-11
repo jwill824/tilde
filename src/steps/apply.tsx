@@ -30,7 +30,7 @@ export function ApplyStep({ config, onComplete, onBack }: Props) {
   const [phase, setPhase] = useState<Phase>('confirm');
   const [progress, setProgress] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
-  const completeTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const completeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => clearTimeout(completeTimerRef.current), []);
 
