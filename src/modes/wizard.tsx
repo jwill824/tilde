@@ -153,6 +153,8 @@ export function extractStepValues(stepIdx: number, cfg: Partial<TildeConfig>): R
     case 3: return { packageManagers: cfg.packageManagers };
     case 4: return { versionManagers: cfg.versionManagers };
     case 5: return { workspaceRoot: cfg.workspaceRoot, dotfilesRepo: cfg.dotfilesRepo, contexts: cfg.contexts };
+    // configurations is written by both step 6 (Tools) and step 7 (Editor Config);
+    // both frames carry it so back-nav to either step restores the correct partial state.
     case 6: return { tools: cfg.tools, configurations: cfg.configurations };
     case 7: return { configurations: cfg.configurations, editors: cfg.editors };
     case 8: return { secretsBackend: cfg.secretsBackend };
