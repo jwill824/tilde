@@ -155,7 +155,27 @@
 - [X] T024 Run `npm run lint` and fix any lint errors introduced by changes in T003–T023
 - [X] T025 [P] Run `npm test` and confirm all unit tests pass (includes wizard-navigation, language-bindings, ai-tools, config-summary coverage)
 - [X] T026 [P] Run `npm run test:integration` and confirm all integration tests pass (includes wizard-flow, cli-regression, reconfigure)
-- [ ] T027 Manual smoke test: launch `tilde` wizard, navigate forward through all 13 steps, navigate back through all steps (including text-input steps), confirm `(opt)` labels, confirm cursor visible after quit, confirm summary shows browser + AI tools when configured
+- [X] T027 Manual smoke test: launch `tilde` wizard, navigate forward through all 13 steps, navigate back through all steps (including text-input steps), confirm `(opt)` labels, confirm cursor visible after quit, confirm summary shows browser + AI tools when configured
+
+---
+
+## Phase 11: Post-PR Manual Test Bug Fixes
+
+**Purpose**: Resolve bugs discovered during manual testing after PR #114 was opened.
+
+### US8 — OS blank in config summary, AI tools auto-selection, apply flow regressions (Priority: P1)
+
+- [X] T028 [US8] Fix `src/modes/wizard.tsx` config state initialisation: change `{ os: detectOS(), ...initialConfig }` to `{ ...initialConfig, os: (initialConfig.os ?? detectOS()) as 'macos' }` so a checkpoint's `os: undefined` cannot clobber the detected value; import `detectOS` from `../utils/environment.js`. Closes #100 partial.
+- [X] T029 [US8] Fix `src/steps/ai-tools.tsx`: when `savedNames` is absent (first wizard run), default each tool's `selected` to the `installed` flag so pre-installed tools are auto-checked. Closes #100 partial.
+- [X] T030 [US8] Fix app/wizard completion flow: (a) move `clearCheckpoint()` inside `advance()` when `nextStep > LAST_STEP` in `src/modes/wizard.tsx` so the checkpoint is cleared after — not before — the final advance; (b) fix `src/app.tsx` Wizard `onComplete` from no-op to `setDone(true)`; (c) fix `src/steps/apply.tsx` to call `setTimeout(onComplete, 1500)` after `setPhase('done')` so Apply success actually terminates the wizard.
+- [X] T031 [US8] Fix TypeScript error in `src/modes/wizard.tsx`: `detectOS()` returns `OS = 'macos' | 'linux' | 'windows'` but `TildeConfig.os` is typed as `z.literal('macos')`; cast with `as 'macos'` at the initialisation site until the schema is broadened to support all OS values.
+
+### US9 — Config canonical write, resume UX labels, config-first Edit/Start Over (Priority: P1)
+
+- [X] T032 [US9] Fix `src/config/writer.ts`: `writeConfig` must always write a canonical copy to `~/.tilde/tilde.config.json` (in addition to the user's dotfiles repo), making `tilde install` discoverable without a `--config` flag. Make `dotfilesRepo` parameter optional (`string | null`). Closes GitHub issue for config-not-found bug.
+- [X] T033 [US9] Fix `src/modes/wizard.tsx` resume label: when `resumeStep >= LAST_STEP` show "Edit configuration" instead of "Resume from step N" — the wizard is complete and the user is editing, not resuming mid-flow.
+- [X] T034 [US9] Add Edit/Start Over to config-first mode: (a) add `onEdit?` and `onStartOver?` callbacks to `ConfigFirstMode` props in `src/modes/config-first.tsx`; (b) render "Edit configuration" and "Start over (run wizard)" items in the confirm phase select menu; (c) in `src/app.tsx` add `configEditMode` state and branch on `'edit'` (renders `ReconfigureMode`) vs `'start-over'` (renders fresh `Wizard`) vs `'apply'` (renders `ConfigFirstMode` as before). Closes the "after tilde run, only shows Apply" UX bug.
+- [X] T035 [P] [US9] Add optional `configPath?: string` prop to `ConfigSummary` in `src/ui/config-summary.tsx`; render dimmed `Config: <path>` row at the bottom of the summary box; pass `configPath` from `config-first.tsx`; omit from `apply.tsx` (path not yet known before apply runs).
 
 ---
 

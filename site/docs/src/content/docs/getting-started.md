@@ -41,10 +41,11 @@ tilde's interactive wizard walks you through 13 steps. Steps 0–1 run automatic
 
 tilde scans three locations for an existing `tilde.config.json`:
 1. The current working directory
-2. `~/.tilde/`
-3. `~/dotfiles/` (if it exists)
+2. The git repository root of the current directory (if inside a git repo)
+3. `~/.tilde/tilde.config.json` (the canonical location written after each wizard run)
 
-If no config is found, the wizard proceeds to full setup. If a partial config is found, you are offered the option to resume or start over.
+If no config is found, the wizard proceeds to full setup. If a config is found, tilde shows
+a summary and asks what you'd like to do (see [Re-running tilde](#re-running-tilde) below).
 
 ### 1. Environment Capture *(automated)*
 
@@ -171,13 +172,26 @@ tilde 🌿 — macOS Developer Environment Setup
   Setup complete. Your environment is ready. 🎉
 ```
 
-Your configuration is saved to `~/.tilde/tilde.config.json`.
+Your configuration is saved to `~/.tilde/tilde.config.json` (canonical copy) and optionally to your dotfiles repo if you specified one during setup.
+
+## Re-running tilde
+
+After completing the initial setup, run `tilde` at any time to manage your configuration. If a config file is found, tilde shows the Configuration Summary and a menu with four options:
+
+| Option | What it does |
+|--------|-------------|
+| **Apply this configuration** | Re-runs all installs and dotfile writes using the saved config |
+| **Edit configuration** | Re-opens the full wizard with all steps pre-populated from your saved config |
+| **Start over (run wizard)** | Clears state and runs a fresh wizard from scratch |
+| **Cancel** | Exits without making any changes |
+
+The config file path is shown at the bottom of the summary so you always know which file is being used.
 
 ## Updating your config
 
-After initial setup, use `tilde update <resource>` to change one part of your config without re-running the full wizard.
+The easiest way to update your configuration is to run `tilde` and select **Edit configuration** from the menu. This opens the full wizard pre-populated with your current settings — navigate to the step you want to change and save.
 
-### Examples
+For targeted one-step updates, use `tilde update <resource>`:
 
 ```bash
 # Change your shell

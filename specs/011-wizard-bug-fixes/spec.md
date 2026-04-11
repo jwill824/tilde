@@ -131,7 +131,40 @@ A new developer visits the tilde documentation site to understand the wizard flo
 
 ---
 
-### Edge Cases
+### User Story 8 - Config-First Mode Offers Edit & Start Over After Completion (Priority: P1)
+
+A developer completes the wizard, which writes a canonical copy of `tilde.config.json` to `~/.tilde/`. The next time they run `tilde`, the config is discovered automatically and config-first mode launches. The confirmation screen MUST offer four options — Apply, Edit configuration, Start over, and Cancel — not just "Apply this configuration". Without Edit/Start Over, users have no way to modify their setup without deleting the config file manually.
+
+**Why this priority**: After the initial setup run, every subsequent `tilde` launch triggers config-first mode. If it only offers "Apply", the tool is effectively read-only after first use — violating the Configuration-First principle.
+
+**Acceptance Scenarios**:
+
+1. **Given** the wizard has been completed and `~/.tilde/tilde.config.json` exists, **When** the user runs `tilde`, **Then** config-first mode shows: Apply this configuration, Edit configuration, Start over (run wizard), and Cancel.
+2. **Given** the user selects "Edit configuration", **When** the wizard opens, **Then** all steps are pre-populated with the existing config values.
+3. **Given** the user selects "Start over (run wizard)", **When** the wizard opens, **Then** it starts fresh with no pre-populated values.
+4. **Given** the configuration summary is displayed, **When** the user reads it, **Then** the path of the config file being used is shown at the bottom of the summary.
+
+---
+
+### User Story 9 - OS Detection, AI Tools Auto-Selection & Apply Flow Reliability (Priority: P1)
+
+Several apply-path regressions were discovered during manual testing after the initial PR:
+
+- The OS field in the configuration summary displayed as blank because `config.os` was never set during the wizard (the Zod default only applies during `schema.parse()`, not manual merging).
+- Pre-installed AI coding tools were not auto-selected in the AI Tools step.
+- The "Finish" option in the apply step silently did nothing — `onComplete` was never called.
+- After completing the wizard, re-running `tilde` showed "Resume from step 12" instead of "Edit configuration".
+
+**Why this priority**: These bugs make the core apply and review flow unreliable and create a broken first impression.
+
+**Acceptance Scenarios**:
+
+1. **Given** a fresh wizard run on macOS, **When** the user reaches the Configuration Summary, **Then** the OS field shows `macos`, not blank.
+2. **Given** AI coding tools are already installed on the machine, **When** the AI Tools wizard step loads, **Then** installed tools are pre-checked.
+3. **Given** the user selects "Finish — config is saved, apply later", **When** the apply step processes the choice, **Then** the wizard completes and exits cleanly.
+4. **Given** the wizard has been completed, **When** the user runs `tilde` again and sees the resume prompt, **Then** the label reads "Edit configuration" not "Resume from step 12".
+
+---
 
 - What happens when the user presses (b) on the very first step — the wizard must show a non-modal inline hint and not crash, exit, or loop.
 - What happens when the user presses (b) while a text input is focused — the key must not trigger back navigation; only after blurring the field (Esc or Tab) should (b) navigate back.
@@ -158,6 +191,13 @@ A new developer visits the tilde documentation site to understand the wizard flo
 - **FR-009**: All language-version pairs configured in a context MUST be persisted correctly in the output configuration file.
 - **FR-010**: The wizard MUST display a clear validation message when a language version field is left empty or contains an invalid value; the user MUST NOT be able to proceed until the field is corrected.
 - **FR-011**: The documentation site MUST be updated to accurately reflect the spec 010 wizard changes: 13-step condensed flow, merged Contexts step, back-navigation pattern, and all newly supported tools (MacPorts, rbenv, fnm, python-venv).
+- **FR-012**: When a config file is detected and tilde enters config-first mode, the confirmation screen MUST display four options: Apply this configuration, Edit configuration, Start over (run wizard), and Cancel.
+- **FR-013**: The Configuration Summary MUST always display a non-blank OS value (defaulting to the detected OS if not explicitly set in the config).
+- **FR-014**: Pre-installed AI coding tools MUST be auto-selected in the AI Tools wizard step on first run (when no prior selections are saved).
+- **FR-015**: The "Finish — config is saved, apply later" option in the Apply step MUST complete and exit the wizard cleanly.
+- **FR-016**: The resume prompt label MUST read "Edit configuration" when the wizard has been fully completed (`lastCompletedStep >= LAST_STEP`), not "Resume from step N".
+- **FR-017**: `writeConfig` MUST always write a canonical copy to `~/.tilde/tilde.config.json` (in addition to any user-specified dotfiles repo path) to enable `tilde install` discovery without a `--config` flag.
+- **FR-018**: The Configuration Summary MUST display the file path of the config being shown when a `configPath` is available.
 
 ## Success Criteria *(mandatory)*
 
@@ -170,6 +210,9 @@ A new developer visits the tilde documentation site to understand the wizard flo
 - **SC-005**: Users can configure at least 3 language-version pairs per context without errors.
 - **SC-006**: All 6 reported bugs (#90, #91, #92, #93, #94, #66) have no reproduction path after this spec is implemented.
 - **SC-007**: 100% of spec 010 wizard changes are reflected in the documentation site — zero stale step descriptions, tool listings, or navigation instructions remain.
+- **SC-008**: After completing the wizard and re-running `tilde`, the config-first confirmation screen presents all four options (Apply / Edit / Start Over / Cancel) — the "Apply this configuration" only screen has no reproduction path.
+- **SC-009**: OS field in Configuration Summary is never blank; AI tools step auto-selects installed tools; Apply step "Finish" option exits cleanly — all three regressions have no reproduction path.
+- **SC-010**: `tilde install` discovers the config at `~/.tilde/tilde.config.json` without requiring a `--config` flag after any wizard completion.
 
 ## Assumptions
 
