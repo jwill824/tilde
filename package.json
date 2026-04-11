@@ -1,6 +1,6 @@
 {
   "name": "@jwill824/tilde",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Interactive CLI to bootstrap a complete developer environment",
   "repository": {
     "type": "git",

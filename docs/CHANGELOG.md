@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/jwill824/tilde/compare/v1.6.0...v1.7.0) (2026-04-11)
+
+
+### Features
+
+* **011:** wizard bug fixes — back-nav, resume, cursor, labels, summary, docs ([#114](https://github.com/jwill824/tilde/issues/114)) ([8451afc](https://github.com/jwill824/tilde/commit/8451afc5f742b98c03188d3df3322be7a6a2e4e1)), closes [#90](https://github.com/jwill824/tilde/issues/90) [#91](https://github.com/jwill824/tilde/issues/91) [#92](https://github.com/jwill824/tilde/issues/92) [#93](https://github.com/jwill824/tilde/issues/93) [#94](https://github.com/jwill824/tilde/issues/94) [#66](https://github.com/jwill824/tilde/issues/66) [#103](https://github.com/jwill824/tilde/issues/103) [#90](https://github.com/jwill824/tilde/issues/90) [#91](https://github.com/jwill824/tilde/issues/91) [#92](https://github.com/jwill824/tilde/issues/92) [#93](https://github.com/jwill824/tilde/issues/93) [#94](https://github.com/jwill824/tilde/issues/94) [#90](https://github.com/jwill824/tilde/issues/90) [#113](https://github.com/jwill824/tilde/issues/113) [#100](https://github.com/jwill824/tilde/issues/100)
+
 # [1.6.0](https://github.com/jwill824/tilde/compare/v1.5.0...v1.6.0) (2026-04-09)
 
 
