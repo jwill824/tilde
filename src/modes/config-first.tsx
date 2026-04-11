@@ -165,7 +165,7 @@ export function ConfigFirstMode({ configPath, onComplete, onEdit, onStartOver }:
     ];
     return (
       <Box flexDirection="column">
-        <ConfigSummary config={phase.config} />
+        <ConfigSummary config={phase.config} configPath={configPath} />
         <Box marginTop={1}>
           <SelectInput
             items={items}

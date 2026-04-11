@@ -4,9 +4,10 @@ import type { TildeConfig } from '../config/schema.js';
 
 interface Props {
   config: TildeConfig;
+  configPath?: string;
 }
 
-export function ConfigSummary({ config }: Props) {
+export function ConfigSummary({ config, configPath }: Props) {
   const enabledDomains = Object.entries(config.configurations)
     .filter(([, v]) => v)
     .map(([k]) => k);
@@ -68,9 +69,17 @@ export function ConfigSummary({ config }: Props) {
 
       {/* AI Coding Tools — only shown when configured */}
       {!!config.aiTools?.length && (
-        <Box>
+        <Box marginBottom={configPath ? 1 : 0}>
           <Text bold>AI Coding Tools: </Text>
           <Text>{config.aiTools.map(t => t.label).join(', ')}</Text>
+        </Box>
+      )}
+
+      {/* Config file location */}
+      {!!configPath && (
+        <Box>
+          <Text bold>Config: </Text>
+          <Text dimColor>{configPath}</Text>
         </Box>
       )}
     </Box>
