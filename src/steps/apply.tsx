@@ -8,7 +8,7 @@
  * Delegates to the same installAll + writeAll pipeline used by config-first
  * mode so behaviour is identical to `tilde install`.
  */
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import SelectInput from 'ink-select-input';
 import Spinner from 'ink-spinner';
@@ -30,6 +30,9 @@ export function ApplyStep({ config, onComplete, onBack }: Props) {
   const [phase, setPhase] = useState<Phase>('confirm');
   const [progress, setProgress] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
+  const completeTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => clearTimeout(completeTimerRef.current), []);
 
   async function handleApply() {
     setPhase('applying');
@@ -44,7 +47,7 @@ export function ApplyStep({ config, onComplete, onBack }: Props) {
       await writeAll(config);
       setProgress([...log]);
       setPhase('done');
-      setTimeout(onComplete, 1500);
+      completeTimerRef.current = setTimeout(onComplete, 1500);
     } catch (err) {
       setErrorMsg((err as Error).message);
       setPhase('error');

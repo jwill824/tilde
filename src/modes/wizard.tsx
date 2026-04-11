@@ -256,7 +256,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
    */
   const skip = useCallback(async () => {
     await advance({}, ['skipped']);
-  }, [advance, currentStep]);
+  }, [advance]);
 
   /**
    * Go back to the previous step by popping from the history stack.
