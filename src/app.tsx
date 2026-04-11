@@ -146,11 +146,18 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
     <Box flexDirection="column">
       {header}
       {resume && <Text color="yellow">Resuming from checkpoint...</Text>}
-      <Wizard
-        onComplete={(_config: TildeConfig) => {
-          // wizard complete — process.exit is handled by ConfigExportStep
-        }}
-      />
+      {done ? (
+        <Box flexDirection="column">
+          <Text color="green" bold>✓ Configuration complete.</Text>
+          <Text dimColor>Run <Text color="cyan">tilde</Text> to edit, or <Text color="cyan">tilde install</Text> to re-apply.</Text>
+        </Box>
+      ) : (
+        <Wizard
+          onComplete={(_config: TildeConfig) => {
+            setDone(true);
+          }}
+        />
+      )}
     </Box>
   );
 }

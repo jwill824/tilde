@@ -178,7 +178,10 @@ interface WizardProps {
 
 export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit }: WizardProps) {
   const [currentStep, setCurrentStep] = useState(initialStep);
-  const [config, setConfig] = useState<Partial<TildeConfig>>({ os: detectOS() as 'macos', ...initialConfig });
+  const [config, setConfig] = useState<Partial<TildeConfig>>({
+    ...initialConfig,
+    os: (initialConfig.os ?? detectOS()) as 'macos',
+  });
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
   const [captureReport, setCaptureReport] = useState<EnvironmentCaptureReport | null>(null);
 
@@ -299,12 +302,17 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
 
       {resumeStatus === 'prompt' && (
         <Box flexDirection="column">
-          <Text color="yellow">A previous session was found (last completed step: {resumeStep}).</Text>
+          {resumeStep >= LAST_STEP
+            ? <Text color="yellow">An existing configuration was found.</Text>
+            : <Text color="yellow">A previous session was found (last completed step: {resumeStep}).</Text>
+          }
           <Text dimColor>Use ↑↓ to navigate, Enter to select</Text>
           <Box marginTop={1}>
             <SelectInput
               items={[
-                { label: `Resume from step ${resumeStep + 1}`, value: 'resume' },
+                resumeStep >= LAST_STEP
+                  ? { label: 'Edit configuration', value: 'resume' }
+                  : { label: `Resume from step ${resumeStep + 1}`, value: 'resume' },
                 { label: 'Start over', value: 'start-over' },
               ]}
               onSelect={(item) => {

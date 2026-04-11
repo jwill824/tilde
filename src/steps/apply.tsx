@@ -44,6 +44,7 @@ export function ApplyStep({ config, onComplete, onBack }: Props) {
       await writeAll(config);
       setProgress([...log]);
       setPhase('done');
+      setTimeout(onComplete, 1500);
     } catch (err) {
       setErrorMsg((err as Error).message);
       setPhase('error');
