@@ -43,12 +43,13 @@
 
 ### Implementation
 
-- [X] T003 [US1] Add `isInputFocused?: boolean` and `onAtFirstStep?: () => void` props to `StepNavProps` interface in `src/ui/step-nav.tsx`
-- [X] T004 [US1] Update `StepNav.useInput` call to pass `{ isActive: !isInputFocused }` option, and call `onAtFirstStep()` when `(b)` is pressed but `onBack` is undefined, in `src/ui/step-nav.tsx`
-- [X] T005 [US1] Add `showFirstStepHint` boolean state to `src/modes/wizard.tsx`; wire `onAtFirstStep={() => setShowFirstStepHint(true)}` when rendering `StepNav` at step 0; render inline `<Text color="yellow">Already on the first step — press (q) to quit.</Text>` below step title when `showFirstStepHint` is true; auto-clear after 2s via `setTimeout`
+- [X] T003 [US1] Add `isInputFocused?: boolean` and `onAtFirstStep?: () => void` props to `StepNavProps` interface in `src/ui/step-nav.tsx` — **superseded by post-analysis refactor; props subsequently removed (see T003b)**
+- [X] T004 [US1] Update `StepNav.useInput` call to pass `{ isActive: !isInputFocused }` option, and call `onAtFirstStep()` when `(b)` is pressed but `onBack` is undefined, in `src/ui/step-nav.tsx` — **superseded by post-analysis refactor (see T003b)**
+- [X] T005 [US1] Add `showFirstStepHint` boolean state to `src/modes/wizard.tsx`; wire first-step `(b)` hint via wizard-level `useInput`; render inline `<Text color="yellow">Already on the first step — press (q) to quit.</Text>`; auto-clear after 2s via `setTimeout`
 - [~] T006 [P] [US1] ~~Derive `isInputFocused` from current phase name in `src/steps/contexts.tsx`~~ — **Deferred**: `GateInput` in `contexts.tsx` already uses `{ isActive: !!onBack }` which satisfies FR-001's focus-safe back-nav requirement without the `isInputFocused` prop thread. No code change needed.
 - [~] T007 [P] [US1] ~~Derive `isInputFocused` from whether the step is in text-entry mode in `src/steps/app-config.tsx`~~ — **N/A**: `app-config.tsx` has no text-input phases; the `isInputFocused` guard is not required here.
-- [X] T008 [US1] Update `tests/unit/wizard-navigation.test.ts` to add: (a) test that `onAtFirstStep` is called when `onBack` is absent and `(b)` is pressed, (b) test that `useInput` is inactive (`isActive: false`) when `isInputFocused` is true
+- [X] T008 [US1] StepNav tests in `tests/unit/wizard-navigation.test.ts`: back hint renders with `onBack`, skip hint renders with `isOptional+onSkip`, nothing rendered with no props
+- [X] T003b [POST-ANALYSIS] Remove orphaned `isInputFocused` + `onAtFirstStep` props from `StepNav`; simplify `useInput` to always-active; document per-component back-nav pattern in file header. Closes #113
 
 **Checkpoint**: All wizard steps respond to `(b)`; text-input focus guard works; first-step hint renders and clears
 
