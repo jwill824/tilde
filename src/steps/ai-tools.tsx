@@ -42,11 +42,15 @@ export function AIToolsStep({ onComplete, onBack, isOptional, onSkip, initialVal
     async function loadTools() {
       try {
         const entries: AIToolEntry[] = await Promise.all(
-          AI_TOOL_PLUGINS.map(async (plugin) => ({
-            plugin,
-            installed: await plugin.detectInstalled().catch(() => false),
-            selected: savedNames ? savedNames.includes(plugin.name) : false,
-          }))
+          AI_TOOL_PLUGINS.map(async (plugin) => {
+            const installed = await plugin.detectInstalled().catch(() => false);
+            return {
+              plugin,
+              installed,
+              // Auto-select tools that are already installed when no prior selection exists
+              selected: savedNames ? savedNames.includes(plugin.name) : installed,
+            };
+          })
         );
         setTools(entries);
         setPhase('select');

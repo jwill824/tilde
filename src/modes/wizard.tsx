@@ -18,6 +18,7 @@ import { ConfigExportStep } from '../steps/config-export.js';
 import { BrowserStep } from '../steps/browser.js';
 import { AIToolsStep } from '../steps/ai-tools.js';
 import { ApplyStep } from '../steps/apply.js';
+import { detectOS } from '../utils/os.js';
 
 const DEFAULT_CONFIGURATIONS = { git: true, vscode: false, aliases: false, osDefaults: false, direnv: true };
 
@@ -177,7 +178,7 @@ interface WizardProps {
 
 export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit }: WizardProps) {
   const [currentStep, setCurrentStep] = useState(initialStep);
-  const [config, setConfig] = useState<Partial<TildeConfig>>(initialConfig);
+  const [config, setConfig] = useState<Partial<TildeConfig>>({ os: detectOS(), ...initialConfig });
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
   const [captureReport, setCaptureReport] = useState<EnvironmentCaptureReport | null>(null);
 
@@ -237,6 +238,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
 
       const nextStep = getNextStep(currentStep, merged as Partial<TildeConfig>);
       if (nextStep > LAST_STEP) {
+        await clearCheckpoint().catch(() => {});
         onComplete?.(merged as TildeConfig);
       } else {
         setCurrentStep(nextStep);
@@ -533,7 +535,6 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             onBack={onBack}
             isOptional={false}
             onComplete={() => {
-              clearCheckpoint().catch(() => {});
               void advance({}, ['saved']);
             }}
           />
