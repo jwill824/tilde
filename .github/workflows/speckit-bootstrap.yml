@@ -16,7 +16,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -33,7 +33,7 @@ jobs:
 
       - name: Create speckit symlinks
         run: |
-          mkdir -p .specify/memory specs
+          mkdir -p .specify/memory .specify/extensions .specify/integrations specs
           for link_pair in \
             ".specify/templates:../.speckit/.specify/templates" \
             ".specify/scripts:../.speckit/.specify/scripts"; do
@@ -45,6 +45,34 @@ jobs:
               echo "Linked $link → $target"
             fi
           done
+
+          for dir_pair in \
+            ".speckit/.specify/extensions:.specify/extensions" \
+            ".speckit/.specify/integrations:.specify/integrations"; do
+            source_dir="${dir_pair%%:*}"
+            target_dir="${dir_pair##*:}"
+            if [ -d "$source_dir" ]; then
+              mkdir -p "$target_dir"
+              for src in "$source_dir"/*; do
+                [ -e "$src" ] || continue
+                name="$(basename "$src")"
+                case "$name" in
+                  .*) continue ;;
+                esac
+                link="$target_dir/$name"
+                target="../../$source_dir/$name"
+                if [ ! -e "$link" ] && [ ! -L "$link" ]; then
+                  ln -s "$target" "$link"
+                  echo "Linked $link → $target"
+                fi
+              done
+            fi
+          done
+
+          if [ ! -f .specify/extensions.yml ] && [ -f .speckit/.specify/extensions.yml ]; then
+            cp .speckit/.specify/extensions.yml .specify/extensions.yml
+            echo "Copied .specify/extensions.yml"
+          fi
 
       - name: Create memory stubs
         run: |
@@ -67,68 +95,72 @@ jobs:
 
 
 
-      - name: Fetch copilot-kit submodule
+      - name: Fetch copilot kit submodule
         run: |
-          if [ ! -d .copilot ]; then
+          kit_path=".copilot"
+          kit_repo="copilot-kit"
+          if [ ! -d "$$kit_path" ]; then
             git clone --depth=1 --branch main \
-              https://github.com/jwill824/copilot-kit.git .copilot
+              https://github.com/jwill824/$$kit_repo "$$kit_path"
           else
-            git -C .copilot fetch --depth=1 origin main
-            git -C .copilot reset --hard origin/main
+            git -C "$$kit_path" fetch --depth=1 origin main
+            git -C "$$kit_path" reset --hard origin/main
           fi
 
-      - name: Create copilot symlinks
+      - name: Link copilot integration
         run: |
-          mkdir -p .github
+          if [ -x .speckit/.specify/scripts/bash/link-ai-integration.sh ] && [ -f .copilot/.specify/ai-kit.manifest.json ]; then
+            bash .speckit/.specify/scripts/bash/link-ai-integration.sh copilot .copilot
+          else
+            mkdir -p .github
 
-          # agents: real directory with individual file symlinks so repo-specific
-          # agents can be added alongside copilot-kit agents without touching the submodule.
-          mkdir -p .github/agents
-          for src in .copilot/.github/agents/*; do
-            fname="$(basename "$src")"
-            # Skip speckit.* agents if speckit-core (.speckit/) is not present —
-            # those agents reference .specify/templates/ which won't exist.
-            if [[ "$fname" == speckit.* ]] && [ ! -d .speckit ]; then
-              echo "Skipping speckit agent $fname (speckit-core not bootstrapped)"
-              continue
-            fi
-            link=".github/agents/$fname"
-            if [ ! -e "$link" ] && [ ! -L "$link" ]; then
-              ln -s "../../.copilot/.github/agents/$fname" "$link"
-              echo "Linked $link → ../../.copilot/.github/agents/$fname"
-            fi
-          done
+            mkdir -p .github/agents
+            for src in .copilot/.github/agents/*; do
+              fname="$(basename "$$src")"
+              if [[ "$$fname" == speckit.* ]] && [ ! -d .speckit ]; then
+                echo "Skipping speckit agent $$fname (speckit-core not bootstrapped)"
+                continue
+              fi
+              link=".github/agents/$$fname"
+              if [ ! -e "$$link" ] && [ ! -L "$$link" ]; then
+                ln -s "../../.copilot/.github/agents/$$fname" "$$link"
+                echo "Linked $$link → ../../.copilot/.github/agents/$$fname"
+              fi
+            done
 
-          # prompts, skills, hooks: directory symlinks
-          for link_pair in \
-            ".github/prompts:../.copilot/.github/prompts" \
-            ".github/skills:../.copilot/.github/skills" \
-            ".github/hooks:../.copilot/.github/hooks"; do
-            link="${link_pair%%:*}"
-            target="${link_pair##*:}"
-            if [ ! -e "$link" ] && [ ! -L "$link" ]; then
-              mkdir -p "$(dirname "$link")"
-              ln -s "$target" "$link"
-              echo "Linked $link → $target"
-            fi
-          done
+            for link_pair in \
+              ".github/prompts:../.copilot/.github/prompts" \
+              ".github/skills:../.copilot/.github/skills" \
+              ".github/hooks:../.copilot/.github/hooks"; do
+              link="${link_pair%%:*}"
+              target="${link_pair##*:}"
+              if [ ! -e "$$link" ] && [ ! -L "$$link" ]; then
+                mkdir -p "$(dirname "$$link")"
+                ln -s "$$target" "$$link"
+                echo "Linked $$link → $$target"
+              fi
+            done
 
-      - name: Create copilot-instructions stub
-        run: |
-          if [ ! -f .github/copilot-instructions.md ]; then
-            printf '%s\n' \
-              "# Copilot Instructions" \
-              "" \
-              "<!-- TODO: customize for your project. Run /speckit.constitution first. -->" \
-              "" \
-              "This project uses spec-driven development via speckit-core + copilot-kit." \
-              "" \
-              "## Spec-Kit Workflow" \
-              "" \
-              "\`/speckit.specify\` → \`/speckit.clarify\` → \`/speckit.plan\` → \`/speckit.tasks\` → \`/speckit.implement\` → \`/speckit.analyze\`" \
-              > .github/copilot-instructions.md
+            if [ ! -f .github/copilot-instructions.md ] && [ -f .copilot/.github/copilot-instructions.md ]; then
+              cp .copilot/.github/copilot-instructions.md .github/copilot-instructions.md
+              echo "Copied .github/copilot-instructions.md"
+            fi
           fi
 
+
+      - name: Write project-tooling.json
+        run: |
+          if [ ! -f .specify/project-tooling.json ]; then
+            mkdir -p .specify
+            {
+              echo '{'
+              echo '  "spec_workflow": true,'
+              echo '  "ai_tool": "copilot",'
+              echo '  "ai_kit_path": ".copilot"'
+              echo '}'
+            } > .specify/project-tooling.json
+            echo "Wrote .specify/project-tooling.json"
+          fi
 
       - name: Create docs scaffold
         run: |
@@ -144,7 +176,7 @@ jobs:
           fi
 
       - name: Open bootstrap PR
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: chore/bootstrap-speckit
