@@ -10,6 +10,7 @@ import {
   getToolsByConfigPath,
   getToolsByDotfilePath,
   getToolsByHomebrewCask,
+  getToolsByHomebrewFormula,
   getToolsByPlatform,
   getToolsBySource,
   getToolsByVariant,
@@ -158,7 +159,42 @@ describe('tool metadata registry', () => {
       'obsidian',
       'notion',
       'bear',
+      'homebrew',
+      'vfox',
+      'vscode',
+      'neovim',
+      'webstorm',
+      'intellij',
+      'cursor',
+      'zed',
     ]);
+  });
+
+  it('INV-01/D-05 exposes plugin-backed package manager, version manager, and editor rows', () => {
+    expect(getToolsByCategory('package-manager').map(tool => [tool.id, tool.label])).toEqual([
+      ['homebrew', 'Homebrew'],
+    ]);
+    expect(getToolsByCategory('version-manager').map(tool => [tool.id, tool.label])).toEqual([
+      ['vfox', 'vfox'],
+    ]);
+
+    expect(getToolsByCategory('editor').map(tool => [tool.id, tool.label])).toEqual([
+      ['vscode', 'Visual Studio Code'],
+      ['neovim', 'Neovim'],
+      ['webstorm', 'WebStorm'],
+      ['intellij', 'IntelliJ IDEA'],
+      ['cursor', 'Cursor'],
+      ['zed', 'Zed'],
+    ]);
+  });
+
+  it('INV-01/D-05 resolves plugin-backed Homebrew formulae and casks from static metadata only', () => {
+    expect(getToolsByHomebrewFormula('vfox').map(tool => tool.id)).toEqual(['vfox']);
+    expect(getToolsByHomebrewFormula('neovim').map(tool => tool.id)).toEqual(['neovim']);
+    expect(getToolsByHomebrewCask('visual-studio-code').map(tool => tool.id)).toEqual(['vscode']);
+    expect(getToolsByHomebrewCask('webstorm').map(tool => tool.id)).toEqual(['webstorm']);
+    expect(getToolsByHomebrewCask('cursor').map(tool => tool.id)).toEqual(['cursor']);
+    expect(getToolsByHomebrewCask('zed').map(tool => tool.id)).toEqual(['zed']);
   });
 
   it('D-13/D-14 answers lookup questions deterministically', () => {
