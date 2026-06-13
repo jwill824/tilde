@@ -41,11 +41,11 @@ export function getToolsByHomebrewId(id: string): ToolMetadata[] {
 }
 
 export function getToolsByConfigPath(path: string): ToolMetadata[] {
-  return allToolMetadata.filter(tool => tool.configPaths?.includes(path));
+  return allToolMetadata.filter(tool => tool.configPaths?.some(configPath => pathMatches(configPath, path)));
 }
 
 export function getToolsByDotfilePath(path: string): ToolMetadata[] {
-  return allToolMetadata.filter(tool => tool.dotfilePaths?.includes(path));
+  return allToolMetadata.filter(tool => tool.dotfilePaths?.some(dotfilePath => pathMatches(dotfilePath, path)));
 }
 
 export function getToolsByVariant(variant: string): ToolMetadata[] {
@@ -76,4 +76,16 @@ export function searchTools(query: string): ToolMetadata[] {
 
     return fields.some(value => value.includes(normalizedQuery));
   });
+}
+
+function pathMatches(knownPath: string, queryPath: string): boolean {
+  const normalizedKnownPath = normalizePath(knownPath);
+  const normalizedQueryPath = normalizePath(queryPath);
+
+  return normalizedQueryPath === normalizedKnownPath ||
+    normalizedQueryPath.startsWith(`${normalizedKnownPath}/`);
+}
+
+function normalizePath(path: string): string {
+  return path.trim().replace(/\/+$/, '');
 }

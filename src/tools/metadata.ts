@@ -7,6 +7,8 @@ const HomebrewIdentifierSchema = z.string()
 
 const NonBlankStringSchema = z.string().min(1).refine(value => value.trim().length > 0, {
   message: 'Value must not be blank',
+}).refine(value => !/[\u0000-\u001F\u007F]/.test(value), {
+  message: 'Value must not contain control characters',
 });
 
 export const PlatformSchema = z.enum(['darwin', 'linux', 'win32']);

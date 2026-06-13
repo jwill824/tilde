@@ -13,6 +13,9 @@ export const noteTakingToolMetadata: ToolMetadata[] = [
         cask: 'obsidian',
       },
     },
+    configPaths: ['~/Library/Application Support/obsidian'],
+    dotfilePaths: ['~/.obsidian'],
+    variants: ['knowledge-base'],
   },
   {
     id: 'notion',
@@ -26,6 +29,7 @@ export const noteTakingToolMetadata: ToolMetadata[] = [
         cask: 'notion',
       },
     },
+    variants: ['knowledge-base'],
   },
   {
     id: 'bear',
