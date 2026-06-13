@@ -68,17 +68,23 @@ Cross-cutting constraints:
   3. Missing or failing external commands do not crash the wizard.
   4. Tests cover scanner success and failure paths with mocked command execution.
 
-**Plans**: 2 plans
+**Plans**: 5 plans
 
 Plans:
 
 **Wave 1**
 
-- [ ] 02-01-PLAN.md - Extend scanner output with registry-aligned installed-tool facts and early wizard inventory summary.
+- [ ] 02-01-PLAN.md - Create inventory report, scanner, summary helpers, and mocked scanner tests.
+- [ ] 02-02-PLAN.md - Seed plugin-backed metadata rows and registry tests for inventory categories.
 
 **Wave 2 (blocked on Wave 1 completion)**
 
-- [ ] 02-02-PLAN.md - Add Homebrew direct/dependency classification and wizard/config-first summary integration.
+- [ ] 02-03-PLAN.md - Wire startup inventory into the wizard and renamed InventoryStep.
+- [ ] 02-04-PLAN.md - Add Homebrew installed-on-request helper, classifier, scanner integration, and unit tests.
+
+**Wave 3 (blocked on Wave 2 completion)**
+
+- [ ] 02-05-PLAN.md - Render final inventory summary in config-first and wizard confirmation paths.
 
 ### Phase 3: Dotfiles Discovery Map
 
@@ -149,7 +155,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Tool Metadata Registry | 3/3 | Complete    | 2026-06-13 |
-| 2. Machine Inventory Scanner | 0/2 | Not started | - |
+| 2. Machine Inventory Scanner | 0/5 | Not started | - |
 | 3. Dotfiles Discovery Map | 0/2 | Not started | - |
 | 4. Provenance Summary | 0/2 | Not started | - |
 | 5. Config Discovery Polish | 0/1 | Not started | - |
