@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-06-13T21:07:32.807Z"
+last_updated: "2026-06-13T22:05:34.078Z"
 last_activity: 2026-06-13 -- Phase 02 execution started
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 8
-  completed_plans: 5
-  percent: 63
+  completed_plans: 6
+  percent: 20
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-12)
 ## Current Position
 
 Phase: 02 (machine-inventory-scanner) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-06-13 -- Phase 02 execution started
 
@@ -53,6 +53,7 @@ Progress: [██████░░░░] 63%
 
 | Phase 02 P01 | 19 min | 2 tasks | 4 files |
 | Phase 02 P02 | 10 min | 2 tasks | 9 files |
+| Phase 02 P03 | 54 min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Recent decisions affecting current work:
 - [Phase ?]: Keep scanner-owned shell and core-tool categories local to inventory instead of widening ToolCategorySchema. — Shell and core tools are scanner-owned INV-01 facts, not shared metadata categories yet.
 - [Phase ?]: Use read-only fs access only for metadata-declared appPath values. — The scanner must stay non-destructive and persist only app path plus existence evidence.
 - [Phase 02]: Plugin-backed inventory metadata stays static and is aggregated through validateToolMetadata without broadening PluginRegistry; JetBrains coverage follows existing WebStorm and IntelliJ plugin IDs.
+- [Phase 02]: App startup owns inventory scanning and failure fallback; InventoryStep renders only supplied InventoryReport data.
+- [Phase 02]: Wizard defaults continue through inventory.environment, including rcFiles for git defaults and detectedLanguages for context suggestions.
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T21:07:32.803Z
+Last session: 2026-06-13T22:05:15.941Z
 Stopped at: Completed 02-02-PLAN.md
 Resume file: None
