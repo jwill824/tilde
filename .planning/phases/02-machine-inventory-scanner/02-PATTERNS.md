@@ -1,8 +1,8 @@
 # Phase 02: machine-inventory-scanner - Pattern Map
 
 **Mapped:** 2026-06-13
-**Files analyzed:** 14
-**Analogs found:** 14 / 14
+**Files analyzed:** 15
+**Analogs found:** 15 / 15
 
 ## File Classification
 
@@ -21,7 +21,8 @@
 | `src/modes/config-first.tsx` | component | event-driven | `src/modes/config-first.tsx` | exact |
 | `tests/unit/inventory-scanner.test.ts` | test | batch | `tests/unit/capture-scanner.test.ts` | exact |
 | `tests/unit/tool-metadata.test.ts` | test | transform | `tests/unit/tool-metadata.test.ts` | exact |
-| `tests/integration/inventory-summary.test.tsx` | test | event-driven | `tests/unit/config-first.test.ts` | role-match |
+| `tests/integration/config-first.test.ts` | test | event-driven | `tests/unit/config-first.test.ts` | role-match |
+| `tests/integration/wizard-flow.test.tsx` | test | event-driven | `tests/integration/wizard-flow.test.tsx` | exact |
 
 ## Pattern Assignments
 
@@ -800,7 +801,7 @@ describe('tool metadata registry', () => {
 
 ---
 
-### `tests/integration/inventory-summary.test.tsx` (test, event-driven)
+### `tests/integration/config-first.test.ts` (test, event-driven)
 
 **Analog:** `tests/unit/config-first.test.ts`
 
@@ -854,7 +855,17 @@ it('complete valid config → ConfigSummary rendered, no step components shown',
   expect(frame).toContain('personal');
 ```
 
-**Planner guidance:** assert that the concise inventory summary renders in config-first confirm mode and the wizard inventory step. Mock inventory reports directly rather than running real `brew` or filesystem scans in component tests.
+**Planner guidance:** extend this existing integration file for config-first confirmation ordering. Assert that the concise inventory summary renders before `Configuration Summary`, pass mocked `InventoryReport` fixtures directly, and do not run real `brew` or filesystem scans in component tests.
+
+---
+
+### `tests/integration/wizard-flow.test.tsx` (test, event-driven)
+
+**Analog:** `tests/integration/wizard-flow.test.tsx`
+
+**Wizard flow pattern:** keep wizard assertions in the existing integration flow file that already renders the Ink wizard and advances through steps. Reuse its module mock and stdin-driving style when asserting the renamed `Inventory` step, final summary lines, and scan-failure warning behavior.
+
+**Planner guidance:** extend this existing integration file for wizard inventory visibility and final summary assertions. Mock startup inventory data or scanner results, assert visible strings such as `Inventory`, `Inventory scan complete`, `Known installed tools:`, and `Homebrew formulae:`, and keep command/filesystem work mocked.
 
 ## Shared Patterns
 
