@@ -7,11 +7,11 @@
 
 ### Metadata Registry
 
-- [ ] **META-01**: Developer can define tool metadata in one shared location instead of duplicating step-specific maps.
-- [ ] **META-02**: Tool metadata can describe install method, package identifiers, plugin category, display label, supported platforms, config paths, and dotfile locations.
+- [x] **META-01**: Developer can define tool metadata in one shared location instead of duplicating step-specific maps.
+- [x] **META-02**: Tool metadata can describe install method, package identifiers, plugin category, display label, supported platforms, config paths, and dotfile locations.
 - [ ] **META-03**: Existing wizard steps can read metadata from the shared registry without changing their visible behavior.
-- [ ] **META-04**: Registry lookups can answer cross-step questions such as "which tools have dotfiles under ~/.config?".
-- [ ] **META-05**: Tests protect metadata loading, validation, and at least one existing step migration.
+- [x] **META-04**: Registry lookups can answer cross-step questions such as "which tools have dotfiles under ~/.config?".
+- [x] **META-05**: Tests protect metadata loading, validation, and at least one existing step migration.
 
 ### Machine Inventory
 
@@ -74,11 +74,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| META-01 | Phase 1 | Pending |
-| META-02 | Phase 1 | Pending |
+| META-01 | Phase 1 | Complete |
+| META-02 | Phase 1 | Complete |
 | META-03 | Phase 1 | Pending |
-| META-04 | Phase 1 | Pending |
-| META-05 | Phase 1 | Pending |
+| META-04 | Phase 1 | Complete |
+| META-05 | Phase 1 | Complete |
 | INV-01 | Phase 2 | Pending |
 | INV-02 | Phase 2 | Pending |
 | INV-03 | Phase 2 | Pending |
@@ -96,6 +96,7 @@
 | CONF-03 | Phase 5 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 20 total
 - Mapped to phases: 20
 - Unmapped: 0
