@@ -80,7 +80,7 @@ Plans:
 **Wave 2 (blocked on Wave 1 completion)**
 
 - [x] 02-03-PLAN.md - Wire startup inventory into the wizard and renamed InventoryStep.
-- [ ] 02-04-PLAN.md - Add Homebrew installed-on-request helper, classifier, scanner integration, and unit tests.
+- [x] 02-04-PLAN.md - Add Homebrew installed-on-request helper, classifier, scanner integration, and unit tests.
 
 **Wave 3 (blocked on Wave 2 completion)**
 
@@ -155,7 +155,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Tool Metadata Registry | 3/3 | Complete    | 2026-06-13 |
-| 2. Machine Inventory Scanner | 3/5 | In Progress|  |
+| 2. Machine Inventory Scanner | 4/5 | In Progress|  |
 | 3. Dotfiles Discovery Map | 0/2 | Not started | - |
 | 4. Provenance Summary | 0/2 | Not started | - |
 | 5. Config Discovery Polish | 0/1 | Not started | - |
