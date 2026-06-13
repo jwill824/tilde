@@ -11,7 +11,7 @@ This roadmap turns tilde from a setup wizard into a machine-aware setup assistan
 - Integer phases are planned milestone work.
 - Phase 1 is the immediate next milestone and covers GitHub issue #98.
 
-- [ ] **Phase 1: Tool Metadata Registry** - Create the shared data model and registry lookup layer for wizard tool metadata.
+- [x] **Phase 1: Tool Metadata Registry** - Create the shared data model and registry lookup layer for wizard tool metadata. (completed 2026-06-13)
 - [ ] **Phase 2: Machine Inventory Scanner** - Detect installed tools and Homebrew direct-vs-dependency provenance.
 - [ ] **Phase 3: Dotfiles Discovery Map** - Map known dotfiles and rc-file contents to tools.
 - [ ] **Phase 4: Provenance Summary** - Surface clear managed/already-installed/dependency/manual/unknown status to users.
@@ -46,7 +46,7 @@ Plans:
 
 **Wave 3 (blocked on Wave 2 completion)**
 
-- [ ] 01-03-PLAN.md - Harden registry validation and browser regression coverage.
+- [x] 01-03-PLAN.md - Harden registry validation and browser regression coverage.
 
 Cross-cutting constraints:
 
@@ -143,7 +143,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Tool Metadata Registry | 2/3 | In Progress|  |
+| 1. Tool Metadata Registry | 3/3 | Complete   | 2026-06-13 |
 | 2. Machine Inventory Scanner | 0/2 | Not started | - |
 | 3. Dotfiles Discovery Map | 0/2 | Not started | - |
 | 4. Provenance Summary | 0/2 | Not started | - |
