@@ -361,6 +361,9 @@ describe('Wizard flow integration', () => {
         matchedCasksCount: 0,
         unmatchedFormulaeCount: 0,
         unmatchedCasksCount: 0,
+        directFormulaeCount: 0,
+        dependencyFormulaeCount: 0,
+        unknownFormulaeCount: 0,
       },
       warnings: [
         {

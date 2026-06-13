@@ -116,11 +116,12 @@ describe('ConfigFirstMode integration', () => {
     expect(inventoryIndex).toBeGreaterThanOrEqual(0);
     expect(configIndex).toBeGreaterThanOrEqual(0);
     expect(inventoryIndex).toBeLessThan(configIndex);
-    expect(frame).toContain('Known installed tools: Homebrew');
-    expect(frame).toContain('Homebrew formulae: 1 direct, 1 dependencies, 0 unknown');
-    expect(frame).toContain('Warnings:');
-    expect(frame).toContain('Warning: Homebrew direct/dependency status is unavailable.');
-    expect(frame).not.toContain('ripgrep');
+    const inventoryBlock = frame.slice(inventoryIndex, configIndex);
+    expect(inventoryBlock).toContain('Known installed tools: Homebrew');
+    expect(inventoryBlock).toContain('Homebrew formulae: 1 direct, 1 dependencies, 0 unknown');
+    expect(inventoryBlock).toContain('Warnings:');
+    expect(inventoryBlock).toContain('Warning: Homebrew direct/dependency status is unavailable.');
+    expect(inventoryBlock).not.toContain('ripgrep');
   });
 
   it('calls installAll and writeAll after confirm selection', async () => {
