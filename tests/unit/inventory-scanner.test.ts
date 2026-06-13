@@ -34,6 +34,16 @@ vi.mock('../../src/utils/env-detection.js', () => ({
 vi.mock('../../src/tools/registry.js', () => ({
   allToolMetadata: [
     {
+      id: 'homebrew',
+      label: 'Homebrew',
+      category: 'package-manager',
+      supportedPlatforms: ['darwin'],
+      source: 'first-party',
+      install: {
+        manualNote: 'Install from https://brew.sh',
+      },
+    },
+    {
       id: 'test-cli',
       label: 'Test CLI',
       category: 'package-manager',
@@ -302,5 +312,53 @@ describe('inventory scanner', () => {
     expect(report.unmatchedHomebrew.formulae).toEqual([
       { id: 'ripgrep', requestStatus: 'unknown' },
     ]);
+  });
+
+  it('marks Homebrew installed when helper calls prove the brew command is available', async () => {
+    mockListInstalledFormulae.mockResolvedValueOnce([]);
+    mockListInstalledCasks.mockResolvedValueOnce([]);
+    mockListInstalledOnRequestFormulae.mockResolvedValueOnce([]);
+
+    const { scanInventory } = await import('../../src/inventory/scan.js');
+
+    const report = await scanInventory(tmpHome);
+
+    const homebrewFact = report.tools.find(tool => tool.toolId === 'homebrew');
+    expect(homebrewFact).toEqual(expect.objectContaining({
+      installed: 'installed',
+      evidence: expect.arrayContaining([
+        { type: 'command', command: 'brew', outcome: 'succeeded' },
+      ]),
+    }));
+  });
+
+  it('keeps Homebrew unknown with warning-backed evidence when helper calls fail', async () => {
+    mockListInstalledFormulae.mockRejectedValueOnce(new Error('formulae unavailable'));
+    mockListInstalledCasks.mockRejectedValueOnce(new Error('casks unavailable'));
+    mockListInstalledOnRequestFormulae.mockRejectedValueOnce(new Error('request state unavailable'));
+
+    const { scanInventory } = await import('../../src/inventory/scan.js');
+
+    const report = await scanInventory(tmpHome);
+
+    expect(report.warnings).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        source: 'homebrew',
+        severity: 'warning',
+      }),
+    ]));
+
+    const homebrewFact = report.tools.find(tool => tool.toolId === 'homebrew');
+    expect(homebrewFact).toEqual(expect.objectContaining({
+      installed: 'unknown',
+      warningIds: expect.arrayContaining([expect.any(String)]),
+      evidence: expect.arrayContaining([
+        expect.objectContaining({
+          type: 'inconclusive',
+          source: 'homebrew',
+          warningId: expect.any(String),
+        }),
+      ]),
+    }));
   });
 });
