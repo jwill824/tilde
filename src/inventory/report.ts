@@ -51,6 +51,7 @@ export interface InventoryHomebrewSummary {
 export interface InventoryEnvironmentSnapshot {
   homeDir: string;
   shell?: string;
+  rcFiles: Record<string, string>;
   detectedLanguages: DetectedLanguage[];
   detectedVersionManagers: DetectedVersionManager[];
 }
@@ -82,6 +83,7 @@ export function createEmptyInventoryReport(homeDir = process.env.HOME ?? '~'): I
     environment: {
       homeDir,
       shell: process.env.SHELL,
+      rcFiles: {},
       detectedLanguages: [],
       detectedVersionManagers: [],
     },

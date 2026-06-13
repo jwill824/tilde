@@ -6,8 +6,11 @@ export function getInstalledKnownToolFacts(report: InventoryReport): InventoryTo
 
 export function summarizeInventory(report: InventoryReport): string[] {
   const installedKnownTools = getInstalledKnownToolFacts(report);
+  const installedKnownToolSummary = installedKnownTools.length > 0
+    ? installedKnownTools.map(tool => tool.label).join(', ')
+    : 'none';
   const lines = [
-    `Known installed tools: ${installedKnownTools.length}`,
+    `Known installed tools: ${installedKnownToolSummary}`,
     `Homebrew formulae: ${report.homebrew.installedFormulaeCount} installed, ${report.homebrew.unmatchedFormulaeCount} unmatched`,
     `Homebrew casks: ${report.homebrew.installedCasksCount} installed, ${report.homebrew.unmatchedCasksCount} unmatched`,
   ];

@@ -1,4 +1,6 @@
 import { access } from 'node:fs/promises';
+import { createCaptureFilter, filterDotfiles } from '../capture/filter.js';
+import { scanDotfiles, scanRcFiles } from '../capture/scanner.js';
 import { allToolMetadata } from '../tools/registry.js';
 import type { ToolMetadata } from '../tools/metadata.js';
 import { listInstalledCasks, listInstalledFormulae } from '../utils/package-manager.js';
@@ -37,6 +39,7 @@ export async function scanInventory(homeDir?: string): Promise<InventoryReport> 
   report.environment = {
     homeDir: resolvedHome,
     shell: process.env.SHELL,
+    rcFiles: await scanEnvironmentRcFiles(resolvedHome, warnings),
     detectedLanguages: await scanDetectedLanguages(warnings),
     detectedVersionManagers: await scanDetectedVersionManagers(warnings),
   };
@@ -112,6 +115,18 @@ async function scanDetectedLanguages(warnings: InventoryWarning[]): Promise<Dete
   } catch {
     warnings.push(createWarning('environment', 'Language detection failed; core language facts may be unknown.'));
     return [];
+  }
+}
+
+async function scanEnvironmentRcFiles(homeDir: string, warnings: InventoryWarning[]): Promise<Record<string, string>> {
+  try {
+    const filter = createCaptureFilter();
+    const dotfiles = await scanDotfiles(homeDir);
+    const { included } = filterDotfiles(dotfiles, filter);
+    return await scanRcFiles(included);
+  } catch {
+    warnings.push(createWarning('environment', 'Shell and git rc files could not be read; related wizard defaults may be unavailable.'));
+    return {};
   }
 }
 
