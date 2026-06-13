@@ -413,17 +413,19 @@ export function summarizeInventory(report: InventoryReport): string[] {
 | A4 | Bounded timeout behavior can reuse or mirror current `tryRun()` style from env detection. | Common Pitfalls | Medium - `runBrew()` currently has no timeout parameter, so planner must decide whether to extend it or handle timeout only through existing `run()` paths. |
 | A5 | `brew list --installed-on-request --formula --full-name` is the intended command composition for requested formulae. | Code Examples | Medium - official docs list the options, but the exact combined invocation should be verified in tests/mocks before implementation locks it. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `capture/filter.ts` and `capture/parser.ts` be renamed in Phase 2?**
    - What we know: D-09 requires full rename/refactor away from environment-capture terminology where practical, and `src/steps/env-capture.tsx` plus scanner types are direct rename targets. [VERIFIED: .planning/phases/02-machine-inventory-scanner/02-CONTEXT.md]
    - What's unclear: Parser/filter modules may become Phase 3 dotfile work rather than Phase 2 inventory core. [ASSUMED]
    - Recommendation: Rename the step and scanner/report API in Phase 2; keep parser/filter unless touched by the report refactor, but update comments/tests that say env-capture if they describe the renamed flow. [ASSUMED]
+   - **RESOLVED:** Phase 2 should rename the primary scanner/report/UI boundary (`src/capture/scanner.ts`, `src/steps/env-capture.tsx`, and wizard/app usage) to inventory terminology. Keep `src/capture/parser.ts` and `src/capture/filter.ts` under `capture/` unless a planned task directly modifies their behavior; those modules are closer to Phase 3 dotfile parsing and secret filtering than the Phase 2 inventory boundary.
 
 2. **How broad should INV-01 metadata seeding be?**
    - What we know: Current registry has only browser and note-taking rows; INV-01 requires package managers, version managers, shells, editors, and core tools. [VERIFIED: src/tools/registry.ts] [VERIFIED: .planning/REQUIREMENTS.md]
    - What's unclear: Whether Phase 2 should add full metadata catalogs for all those categories or represent shell/core-tool facts as scanner-owned rows. [VERIFIED: .planning/phases/02-machine-inventory-scanner/02-CONTEXT.md]
    - Recommendation: Add minimal metadata rows for existing plugin-backed package-manager/version-manager/editor/core tools where install ids already exist, and use scanner-owned `shell`/`core-tool` facts only for categories not yet valid in `ToolCategorySchema`. [ASSUMED]
+   - **RESOLVED:** Seed only the minimal plugin-backed metadata rows needed for INV-01 where stable install identifiers already exist, including package manager, version manager, and editor tools. Do not build a broad catalog in this phase. Represent shells and core tools as scanner-owned facts (`shell` and `core-tool`) until the metadata schema intentionally grows those categories.
 
 ## Environment Availability
 
