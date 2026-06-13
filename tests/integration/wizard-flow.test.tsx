@@ -5,6 +5,15 @@ import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
+import type { InventoryReport } from '../../src/inventory/report.js';
+
+const { mockScanInventory } = vi.hoisted(() => ({
+  mockScanInventory: vi.fn(),
+}));
+
+vi.mock('../../src/inventory/scan.js', () => ({
+  scanInventory: mockScanInventory,
+}));
 
 // Mock filesystem operations that would write to disk
 vi.mock('../../src/config/writer.js', () => ({
@@ -33,6 +42,58 @@ vi.mock('node:fs/promises', async () => {
 });
 
 describe('Wizard flow integration', () => {
+  function createInventoryFixture(overrides: Partial<InventoryReport> = {}): InventoryReport {
+    return {
+      tools: [
+        {
+          toolId: 'homebrew',
+          label: 'Homebrew',
+          category: 'package-manager',
+          installed: 'installed',
+          evidence: [{ type: 'homebrew-formula', id: 'brew' }],
+          warningIds: [],
+        },
+        {
+          toolId: 'vscode',
+          label: 'Visual Studio Code',
+          category: 'editor',
+          installed: 'installed',
+          evidence: [{ type: 'homebrew-cask', id: 'visual-studio-code' }],
+          warningIds: [],
+        },
+      ],
+      unmatchedHomebrew: {
+        formulae: ['ripgrep'],
+        casks: [],
+      },
+      homebrew: {
+        installedFormulaeCount: 2,
+        installedCasksCount: 1,
+        matchedFormulaeCount: 1,
+        matchedCasksCount: 1,
+        unmatchedFormulaeCount: 1,
+        unmatchedCasksCount: 0,
+      },
+      warnings: [],
+      environment: {
+        homeDir: '~',
+        shell: '/bin/zsh',
+        detectedLanguages: [{ name: 'node', version: '22.0.0' }],
+        detectedVersionManagers: [{ name: 'vfox' }],
+      },
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => {
+    mockScanInventory.mockResolvedValue(createInventoryFixture());
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    mockScanInventory.mockReset();
+  });
+
   it('renders the wizard entry point without crashing', async () => {
     const { App } = await import('../../src/app.js');
     const { lastFrame } = render(React.createElement(App, { mode: 'wizard' }));
@@ -234,5 +295,59 @@ describe('Wizard flow integration', () => {
 
     const frame = lastFrame() ?? '';
     expect(frame).toContain('homebrew');
+  });
+
+  it('inventory wizard step uses inventory label and summarizes known installed tools', async () => {
+    const { Wizard } = await import('../../src/modes/wizard.js');
+
+    const { lastFrame } = render(
+      React.createElement(Wizard, {
+        initialStep: 1,
+        inventory: createInventoryFixture(),
+      } as React.ComponentProps<typeof Wizard> & { inventory: InventoryReport })
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Inventory');
+    expect(frame).not.toContain('Environment Capture');
+    expect(frame).toContain('Inventory scan complete');
+    expect(frame).toContain('Known installed tools:');
+  });
+
+  it('inventory wizard step shows startup scan failure warnings without blocking rendering', async () => {
+    const { Wizard } = await import('../../src/modes/wizard.js');
+    const fallbackInventory = createInventoryFixture({
+      tools: [],
+      homebrew: {
+        installedFormulaeCount: 0,
+        installedCasksCount: 0,
+        matchedFormulaeCount: 0,
+        matchedCasksCount: 0,
+        unmatchedFormulaeCount: 0,
+        unmatchedCasksCount: 0,
+      },
+      warnings: [
+        {
+          id: 'inventory-startup-failed',
+          source: 'scanner',
+          severity: 'warning',
+          message: 'Inventory scan failed; continuing with an empty report.',
+        },
+      ],
+    });
+
+    const { lastFrame } = render(
+      React.createElement(Wizard, {
+        initialStep: 1,
+        inventory: fallbackInventory,
+      } as React.ComponentProps<typeof Wizard> & { inventory: InventoryReport })
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Inventory');
+    expect(frame).toContain('Known installed tools:');
+    expect(frame).toContain('Warning: Inventory scan failed; continuing with an empty report.');
   });
 });
