@@ -7,9 +7,12 @@ import {
   allToolMetadata,
   getToolMetadata,
   getToolsByCategory,
+  getToolsByConfigPath,
+  getToolsByDotfilePath,
   getToolsByHomebrewCask,
   getToolsByPlatform,
   getToolsBySource,
+  getToolsByVariant,
   searchTools,
 } from '../../src/tools/registry.js';
 import { noteTakingToolMetadata } from '../../src/tools/note-taking-metadata.js';
@@ -112,6 +115,35 @@ describe('ToolMetadataSchema', () => {
       }).success).toBe(false);
     }
   });
+
+  it('META-05/T-01-03 rejects duplicate metadata ids with a descriptive aggregate error', () => {
+    expect(() => validateToolMetadata([
+      browserToolMetadata[0],
+      { ...browserToolMetadata[0] },
+    ])).toThrow(/Duplicate tool metadata id: "safari"/);
+  });
+
+  it('META-02/T-01-03 rejects invalid platforms, control-character labels, and blank fields', () => {
+    expect(ToolMetadataSchema.safeParse({
+      ...browserToolMetadata[1],
+      supportedPlatforms: ['darwin', 'plan9'],
+    }).success).toBe(false);
+    expect(ToolMetadataSchema.safeParse({
+      ...browserToolMetadata[1],
+      label: 'Bad\u0000Label',
+    }).success).toBe(false);
+    expect(ToolMetadataSchema.safeParse({
+      ...browserToolMetadata[1],
+      install: {
+        ...browserToolMetadata[1].install,
+        homebrew: { formula: '   ' },
+      },
+    }).success).toBe(false);
+    expect(ToolMetadataSchema.safeParse({
+      ...browserToolMetadata[1],
+      configPaths: ['~/Library/Application Support/Chrome', '\n'],
+    }).success).toBe(false);
+  });
 });
 
 describe('tool metadata registry', () => {
@@ -150,5 +182,22 @@ describe('tool metadata registry', () => {
     expect(getToolsBySource('first-party').map(tool => tool.id)).toEqual(allToolMetadata.map(tool => tool.id));
     expect(searchTools('CHROME').map(tool => tool.id)).toEqual(['chrome']);
     expect(searchTools('notion').map(tool => tool.id)).toEqual(['notion']);
+  });
+
+  it('META-04/D-14 matches exact and child config and dotfile paths', () => {
+    expect(getToolsByConfigPath('~/Library/Application Support/obsidian').map(tool => tool.id)).toEqual(['obsidian']);
+    expect(getToolsByConfigPath('~/Library/Application Support/obsidian/plugins').map(tool => tool.id)).toEqual(['obsidian']);
+    expect(getToolsByDotfilePath('~/.obsidian').map(tool => tool.id)).toEqual(['obsidian']);
+    expect(getToolsByDotfilePath('~/.obsidian/snippets/theme.css').map(tool => tool.id)).toEqual(['obsidian']);
+    expect(getToolsByConfigPath('~/Library/Application Support/missing')).toEqual([]);
+  });
+
+  it('META-04/D-14 handles variants, sources, blank search, and unmatched search deterministically', () => {
+    expect(getToolsByVariant('knowledge-base').map(tool => tool.id)).toEqual(['obsidian', 'notion']);
+    expect(getToolsByVariant('missing')).toEqual([]);
+    expect(getToolsBySource('local')).toEqual([]);
+    expect(searchTools('')).toEqual([]);
+    expect(searchTools('   ')).toEqual([]);
+    expect(searchTools('definitely-missing')).toEqual([]);
   });
 });
