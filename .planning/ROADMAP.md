@@ -32,9 +32,19 @@ This roadmap turns tilde from a setup wizard into a machine-aware setup assistan
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Define registry schema and seed metadata for existing core tools.
-- [ ] 01-02: Migrate one or two representative wizard steps to consume registry metadata.
-- [ ] 01-03: Add validation and tests for metadata loading, lookup, and migrated step behavior.
+**Wave 1**
+- [ ] 01-01-PLAN.md - Define and test the shared metadata registry slice for browser metadata.
+
+**Wave 2 (blocked on Wave 1 completion)**
+- [ ] 01-02-PLAN.md - Migrate BrowserStep and browser plugin fields to consume shared metadata.
+
+**Wave 3 (blocked on Wave 2 completion)**
+- [ ] 01-03-PLAN.md - Harden registry validation and browser regression coverage.
+
+Cross-cutting constraints:
+- Existing wizard tool metadata must live in one shared registry without user-visible behavior changes.
+- Registry validation must fail malformed required metadata before downstream use.
+- Browser command behavior must remain mocked in tests and outside registry helpers.
 
 ### Phase 2: Machine Inventory Scanner
 **Goal**: tilde can detect already-installed tools before interaction and distinguish direct Homebrew installs from dependency installs.
