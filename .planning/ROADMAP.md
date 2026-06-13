@@ -75,7 +75,7 @@ Plans:
 **Wave 1**
 
 - [x] 02-01-PLAN.md - Create inventory report, scanner, summary helpers, and mocked scanner tests.
-- [ ] 02-02-PLAN.md - Seed plugin-backed metadata rows and registry tests for inventory categories.
+- [x] 02-02-PLAN.md - Seed plugin-backed metadata rows and registry tests for inventory categories.
 
 **Wave 2 (blocked on Wave 1 completion)**
 
@@ -155,7 +155,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Tool Metadata Registry | 3/3 | Complete    | 2026-06-13 |
-| 2. Machine Inventory Scanner | 1/5 | In Progress|  |
+| 2. Machine Inventory Scanner | 2/5 | In Progress|  |
 | 3. Dotfiles Discovery Map | 0/2 | Not started | - |
 | 4. Provenance Summary | 0/2 | Not started | - |
 | 5. Config Discovery Polish | 0/1 | Not started | - |
