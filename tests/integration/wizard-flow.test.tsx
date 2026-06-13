@@ -122,8 +122,10 @@ describe('Wizard flow integration', () => {
     // Initially shows detecting spinner, then the selection
     await new Promise(resolve => setTimeout(resolve, 200));
     const frame = lastFrame() ?? '';
-    // After detection, should show browser options OR still loading
-    expect(typeof frame).toBe('string');
+    expect(frame).toContain('Browser Selection');
+    expect(frame).toContain('Google Chrome');
+    expect(frame).toContain('Safari');
+    expect(frame).toContain('Space to toggle, Enter to confirm');
   });
 
   it('ai tools step renders without crashing', async () => {
