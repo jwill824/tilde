@@ -1,5 +1,6 @@
 import type { DetectedLanguage, DetectedVersionManager } from '../utils/env-detection.js';
 import type { ToolCategory } from '../tools/metadata.js';
+import type { ClassifiedHomebrewCask, ClassifiedHomebrewFormula, HomebrewRequestStatus } from './homebrew.js';
 
 export type InventoryInstallState = 'installed' | 'missing' | 'unknown';
 
@@ -10,8 +11,8 @@ export type InventoryWarningSeverity = 'info' | 'warning' | 'error';
 export type InventoryWarningSource = 'homebrew' | 'environment' | 'app-path' | 'scanner';
 
 export type InventoryEvidence =
-  | { type: 'homebrew-formula'; id: string }
-  | { type: 'homebrew-cask'; id: string }
+  | { type: 'homebrew-formula'; id: string; requestStatus: HomebrewRequestStatus }
+  | { type: 'homebrew-cask'; id: string; requestStatus: Extract<HomebrewRequestStatus, 'direct'> }
   | { type: 'app-path'; path: string; exists: boolean }
   | { type: 'command'; command: string; outcome: 'succeeded' | 'failed' | 'unknown'; version?: string }
   | { type: 'shell'; name: string; source: 'process-env' | 'scanner' }
@@ -35,8 +36,8 @@ export interface InventoryWarning {
 }
 
 export interface InventoryHomebrewAudit {
-  formulae: string[];
-  casks: string[];
+  formulae: ClassifiedHomebrewFormula[];
+  casks: ClassifiedHomebrewCask[];
 }
 
 export interface InventoryHomebrewSummary {
@@ -46,6 +47,9 @@ export interface InventoryHomebrewSummary {
   matchedCasksCount: number;
   unmatchedFormulaeCount: number;
   unmatchedCasksCount: number;
+  directFormulaeCount: number;
+  dependencyFormulaeCount: number;
+  unknownFormulaeCount: number;
 }
 
 export interface InventoryEnvironmentSnapshot {
@@ -78,6 +82,9 @@ export function createEmptyInventoryReport(homeDir = process.env.HOME ?? '~'): I
       matchedCasksCount: 0,
       unmatchedFormulaeCount: 0,
       unmatchedCasksCount: 0,
+      directFormulaeCount: 0,
+      dependencyFormulaeCount: 0,
+      unknownFormulaeCount: 0,
     },
     warnings: [],
     environment: {

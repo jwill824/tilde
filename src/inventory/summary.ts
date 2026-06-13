@@ -11,7 +11,7 @@ export function summarizeInventory(report: InventoryReport): string[] {
     : 'none';
   const lines = [
     `Known installed tools: ${installedKnownToolSummary}`,
-    `Homebrew formulae: ${report.homebrew.installedFormulaeCount} installed, ${report.homebrew.unmatchedFormulaeCount} unmatched`,
+    `Homebrew formulae: ${report.homebrew.directFormulaeCount} direct, ${report.homebrew.dependencyFormulaeCount} dependencies, ${report.homebrew.unknownFormulaeCount} unknown`,
     `Homebrew casks: ${report.homebrew.installedCasksCount} installed, ${report.homebrew.unmatchedCasksCount} unmatched`,
   ];
 
