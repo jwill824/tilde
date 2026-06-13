@@ -1,4 +1,11 @@
 import { browserToolMetadata } from '../plugins/first-party/browser/metadata.js';
+import { cursorToolMetadata } from '../plugins/first-party/cursor/metadata.js';
+import { homebrewToolMetadata } from '../plugins/first-party/homebrew/metadata.js';
+import { jetbrainsToolMetadata } from '../plugins/first-party/jetbrains/metadata.js';
+import { neovimToolMetadata } from '../plugins/first-party/neovim/metadata.js';
+import { vfoxToolMetadata } from '../plugins/first-party/vfox/metadata.js';
+import { vscodeToolMetadata } from '../plugins/first-party/vscode/metadata.js';
+import { zedToolMetadata } from '../plugins/first-party/zed/metadata.js';
 import { noteTakingToolMetadata } from './note-taking-metadata.js';
 import {
   validateToolMetadata,
@@ -11,6 +18,13 @@ import {
 export const allToolMetadata = validateToolMetadata([
   ...browserToolMetadata,
   ...noteTakingToolMetadata,
+  ...homebrewToolMetadata,
+  ...vfoxToolMetadata,
+  ...vscodeToolMetadata,
+  ...neovimToolMetadata,
+  ...jetbrainsToolMetadata,
+  ...cursorToolMetadata,
+  ...zedToolMetadata,
 ]);
 
 export function getToolMetadata(id: string): ToolMetadata | undefined {
