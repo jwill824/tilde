@@ -11,6 +11,10 @@ const access = vi.fn().mockRejectedValue(new Error('ENOENT'));
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.doUnmock('../../src/tools/registry.js');
+  vi.doUnmock('../../src/utils/package-manager.js');
+  vi.doUnmock('node:fs/promises');
+  vi.doUnmock('execa');
   vi.resetModules();
   installCask.mockClear();
   execa.mockClear();
