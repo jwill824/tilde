@@ -1,8 +1,11 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render } from 'ink-testing-library';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
+import type { InventoryReport } from '../../src/inventory/report.js';
 
 vi.mock('../../src/utils/exec.js', () => ({
   run: vi.fn().mockResolvedValue({ stdout: 'git\nnodejs\nnpm\n', stderr: '', exitCode: 0 }),
@@ -104,5 +107,75 @@ describe('env-capture integration', () => {
 
     const includePaths = parseGitconfigIncludes(gitconfigContent);
     expect(includePaths).toContain('~/.gitconfig-work');
+  });
+});
+
+describe('inventory integration', () => {
+  function createInventoryFixture(): InventoryReport {
+    return {
+      tools: [
+        {
+          toolId: 'homebrew',
+          label: 'Homebrew',
+          category: 'package-manager',
+          installed: 'installed',
+          evidence: [{ type: 'homebrew-formula', id: 'brew' }],
+          warningIds: [],
+        },
+        {
+          toolId: 'vscode',
+          label: 'Visual Studio Code',
+          category: 'editor',
+          installed: 'installed',
+          evidence: [{ type: 'homebrew-cask', id: 'visual-studio-code' }],
+          warningIds: [],
+        },
+      ],
+      unmatchedHomebrew: {
+        formulae: ['ripgrep'],
+        casks: [],
+      },
+      homebrew: {
+        installedFormulaeCount: 2,
+        installedCasksCount: 1,
+        matchedFormulaeCount: 1,
+        matchedCasksCount: 1,
+        unmatchedFormulaeCount: 1,
+        unmatchedCasksCount: 0,
+      },
+      warnings: [
+        {
+          id: 'inventory-startup-failed',
+          source: 'scanner',
+          severity: 'warning',
+          message: 'Inventory scan failed; continuing with an empty report.',
+        },
+      ],
+      environment: {
+        homeDir: '~',
+        shell: '/bin/zsh',
+        detectedLanguages: [{ name: 'node', version: '22.0.0' }],
+        detectedVersionManagers: [{ name: 'vfox' }],
+      },
+    };
+  }
+
+  it('inventory step renders known installed tools and warnings from an InventoryReport', async () => {
+    const { InventoryStep } = await import('../../src/steps/inventory.js');
+    const onComplete = vi.fn();
+
+    const { lastFrame } = render(
+      React.createElement(InventoryStep, {
+        inventory: createInventoryFixture(),
+        onComplete,
+      })
+    );
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Inventory scan complete');
+    expect(frame).toContain('Known installed tools:');
+    expect(frame).toContain('Homebrew');
+    expect(frame).toContain('Visual Studio Code');
+    expect(frame).toContain('Warning: Inventory scan failed; continuing with an empty report.');
   });
 });
