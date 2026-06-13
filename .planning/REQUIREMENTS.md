@@ -15,10 +15,10 @@
 
 ### Machine Inventory
 
-- [ ] **INV-01**: tilde can detect already-installed package managers, version managers, shells, editors, and core tools before wizard interaction.
+- [x] **INV-01**: tilde can detect already-installed package managers, version managers, shells, editors, and core tools before wizard interaction.
 - [ ] **INV-02**: tilde can distinguish direct Homebrew installs from dependency installs using `brew list --installed-on-request`.
 - [ ] **INV-03**: Wizard or summary output can pre-highlight tools that are already installed.
-- [ ] **INV-04**: Inventory scans fail softly when an external command is missing, slow, or unavailable.
+- [x] **INV-04**: Inventory scans fail softly when an external command is missing, slow, or unavailable.
 
 ### Dotfiles Mapping
 
@@ -79,10 +79,10 @@
 | META-03 | Phase 1 | Complete |
 | META-04 | Phase 1 | Complete |
 | META-05 | Phase 1 | Complete |
-| INV-01 | Phase 2 | Pending |
+| INV-01 | Phase 2 | Complete |
 | INV-02 | Phase 2 | Pending |
 | INV-03 | Phase 2 | Pending |
-| INV-04 | Phase 2 | Pending |
+| INV-04 | Phase 2 | Complete |
 | DOT-01 | Phase 3 | Pending |
 | DOT-02 | Phase 3 | Pending |
 | DOT-03 | Phase 3 | Pending |
