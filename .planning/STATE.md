@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 2 context gathered
-last_updated: "2026-06-13T20:24:06.106Z"
-last_activity: 2026-06-13 -- Phase 02 planning complete
+last_updated: "2026-06-13T20:55:53.185Z"
+last_activity: 2026-06-13 -- Phase 02 execution started
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 8
+  completed_plans: 4
   percent: 20
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-12)
 
 **Core value:** tilde should explain a machine's developer setup clearly enough that users can trust what it will manage before it changes anything.
-**Current focus:** Phase 2: Machine Inventory Scanner
+**Current focus:** Phase 02 — machine-inventory-scanner
 
 ## Current Position
 
-Phase: 2 of 5 (Machine Inventory Scanner)
-Plan: Not started
+Phase: 02 (machine-inventory-scanner) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-06-13 -- Phase 02 planning complete
+Last activity: 2026-06-13 -- Phase 02 execution started
 
 Progress: [██████████] 100%
 
@@ -51,6 +51,8 @@ Progress: [██████████] 100%
 - Last 5 plans: 01-01, 01-02, 01-03
 - Trend: steady
 
+| Phase 02 P01 | 19 min | 2 tasks | 4 files |
+
 ## Accumulated Context
 
 ### Decisions
@@ -59,6 +61,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - Initialization: Start with #98 as the metadata foundation before scanner, dotfiles, provenance, and search work.
+- [Phase ?]: Represent inventory detection as evidence arrays with installed, missing, or unknown state rather than final provenance labels. — Phase 2 must avoid final provenance categories reserved for Phase 4.
+- [Phase ?]: Keep scanner-owned shell and core-tool categories local to inventory instead of widening ToolCategorySchema. — Shell and core tools are scanner-owned INV-01 facts, not shared metadata categories yet.
+- [Phase ?]: Use read-only fs access only for metadata-declared appPath values. — The scanner must stay non-destructive and persist only app path plus existence evidence.
 
 ### Pending Todos
 
@@ -78,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T17:53:27.286Z
+Last session: 2026-06-13T20:55:01.824Z
 Stopped at: Phase 2 context gathered
 Resume file: .planning/phases/02-machine-inventory-scanner/02-CONTEXT.md
