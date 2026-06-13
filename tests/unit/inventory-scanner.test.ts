@@ -7,12 +7,14 @@ import { randomUUID } from 'node:crypto';
 const {
   mockListInstalledFormulae,
   mockListInstalledCasks,
+  mockListInstalledOnRequestFormulae,
   mockDetectLanguages,
   mockDetectVersionManagers,
   mockAccess,
 } = vi.hoisted(() => ({
   mockListInstalledFormulae: vi.fn(),
   mockListInstalledCasks: vi.fn(),
+  mockListInstalledOnRequestFormulae: vi.fn(),
   mockDetectLanguages: vi.fn(),
   mockDetectVersionManagers: vi.fn(),
   mockAccess: vi.fn(),
@@ -21,6 +23,7 @@ const {
 vi.mock('../../src/utils/package-manager.js', () => ({
   listInstalledFormulae: mockListInstalledFormulae,
   listInstalledCasks: mockListInstalledCasks,
+  listInstalledOnRequestFormulae: mockListInstalledOnRequestFormulae,
 }));
 
 vi.mock('../../src/utils/env-detection.js', () => ({
@@ -97,6 +100,7 @@ describe('inventory scanner', () => {
 
     mockListInstalledFormulae.mockResolvedValue(['test-cli', 'ripgrep']);
     mockListInstalledCasks.mockResolvedValue(['test-cask', 'unknown-cask']);
+    mockListInstalledOnRequestFormulae.mockResolvedValue(['test-cli']);
     mockDetectLanguages.mockResolvedValue([
       { name: 'node', version: '22.0.0' },
       { name: 'git', version: '2.45.0' },
@@ -154,6 +158,28 @@ describe('inventory scanner', () => {
 
     expect(report.unmatchedHomebrew.formulae).toContain('ripgrep');
     expect(report.unmatchedHomebrew.casks).toContain('unknown-cask');
+  });
+
+  it('adds request status to known and unmatched Homebrew facts', async () => {
+    const { scanInventory } = await import('../../src/inventory/scan.js');
+
+    const report = await scanInventory(tmpHome);
+
+    const formulaFact = report.tools.find(tool => tool.toolId === 'test-cli');
+    expect(formulaFact?.evidence).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        type: 'homebrew-formula',
+        id: 'test-cli',
+        requestStatus: 'direct',
+      }),
+    ]));
+
+    expect(report.unmatchedHomebrew.formulae).toEqual([
+      { id: 'ripgrep', requestStatus: 'dependency' },
+    ]);
+    expect(report.unmatchedHomebrew.casks).toEqual([
+      { id: 'unknown-cask', requestStatus: 'direct' },
+    ]);
   });
 
   it('records app-path evidence for installed and missing metadata paths', async () => {
@@ -240,5 +266,37 @@ describe('inventory scanner', () => {
     }));
 
     expect(report.unmatchedHomebrew.formulae).toEqual([]);
+  });
+
+  it('keeps installed Homebrew facts and warns when request-state lookup fails', async () => {
+    mockListInstalledOnRequestFormulae.mockRejectedValueOnce(new Error('unsupported'));
+
+    const { scanInventory } = await import('../../src/inventory/scan.js');
+
+    const report = await scanInventory(tmpHome);
+
+    expect(report.warnings).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'homebrew-request-state-unavailable',
+        source: 'homebrew',
+        severity: 'warning',
+      }),
+    ]));
+
+    const formulaFact = report.tools.find(tool => tool.toolId === 'test-cli');
+    expect(formulaFact).toEqual(expect.objectContaining({
+      installed: 'installed',
+      evidence: expect.arrayContaining([
+        expect.objectContaining({
+          type: 'homebrew-formula',
+          id: 'test-cli',
+          requestStatus: 'unknown',
+        }),
+      ]),
+    }));
+
+    expect(report.unmatchedHomebrew.formulae).toEqual([
+      { id: 'ripgrep', requestStatus: 'unknown' },
+    ]);
   });
 });
