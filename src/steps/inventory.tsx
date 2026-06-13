@@ -24,7 +24,7 @@ export function InventoryStep({ inventory, onComplete, onBack, isOptional: _isOp
         {summarizeInventory(inventory).map(line => (
           <Text
             key={line}
-            color={line.startsWith('Warning:') ? 'yellow' : 'green'}
+            color={line.startsWith('Warning') ? 'yellow' : 'green'}
           >
             {line}
           </Text>

@@ -15,8 +15,11 @@ export function summarizeInventory(report: InventoryReport): string[] {
     `Homebrew casks: ${report.homebrew.installedCasksCount} installed, ${report.homebrew.unmatchedCasksCount} unmatched`,
   ];
 
-  for (const warning of report.warnings) {
-    lines.push(`Warning: ${warning.message}`);
+  if (report.warnings.length > 0) {
+    lines.push('Warnings:');
+    for (const warning of report.warnings) {
+      lines.push(`Warning: ${warning.message}`);
+    }
   }
 
   return lines;
