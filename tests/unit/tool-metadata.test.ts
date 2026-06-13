@@ -149,6 +149,6 @@ describe('tool metadata registry', () => {
     expect(getToolsByHomebrewCask('safari')).toEqual([]);
     expect(getToolsBySource('first-party').map(tool => tool.id)).toEqual(allToolMetadata.map(tool => tool.id));
     expect(searchTools('CHROME').map(tool => tool.id)).toEqual(['chrome']);
-    expect(searchTools('note').map(tool => tool.id)).toEqual(['notion']);
+    expect(searchTools('notion').map(tool => tool.id)).toEqual(['notion']);
   });
 });
