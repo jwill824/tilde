@@ -62,7 +62,7 @@ completed: 2026-06-13
 
 Each task was committed atomically:
 
-1. **Task 1: Harden metadata validation and lookup coverage** - `a6cf93d` (test), `0b22b26` (feat), `efee415` (fix)
+1. **Task 1: Harden metadata validation and lookup coverage** - `a6cf93d` (test), `0b22b26` (feat), `efee415` (fix), `f9656fb` (fix)
 2. **Task 2: Strengthen browser wizard regression coverage and phase gates** - `bc6a4fe` (test)
 
 ## Files Created/Modified
@@ -90,14 +90,23 @@ Each task was committed atomically:
 - **Verification:** `npm run lint` and `npm run test -- tests/unit/tool-metadata.test.ts` passed.
 - **Committed in:** `efee415`
 
+**2. [Rule 2 - Missing Critical] Rejected whitespace-padded Homebrew ids**
+- **Found during:** Code review pass after phase execution
+- **Issue:** The Homebrew identifier schema trimmed before regex validation, so leading/trailing whitespace could be accepted after transformation.
+- **Fix:** Removed the trim transform and added regression assertions for leading and trailing whitespace.
+- **Files modified:** `src/tools/metadata.ts`, `tests/unit/tool-metadata.test.ts`
+- **Verification:** Full phase gates passed.
+- **Committed in:** `f9656fb`
+
 ---
 
-**Total deviations:** 1 auto-fixed (1 blocking).
-**Impact on plan:** Validation behavior stayed the same; implementation became lint-compliant.
+**Total deviations:** 2 auto-fixed (1 blocking, 1 missing critical).
+**Impact on plan:** Validation is stricter and lint-compliant. No scope creep.
 
 ## Issues Encountered
 
 - The stronger Task 2 gates exposed the lint rule after metadata behavior was already correct. The fix was isolated to the validation helper implementation.
+- Code review found that Homebrew identifiers were trimmed before validation. The schema now rejects whitespace-padded identifiers directly.
 
 ## Verification
 
