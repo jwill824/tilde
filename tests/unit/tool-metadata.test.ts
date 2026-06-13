@@ -105,7 +105,7 @@ describe('ToolMetadataSchema', () => {
       },
     }).success).toBe(true);
 
-    for (const cask of ['', '   ', 'bad cask', 'bad;cask', 'bad$cask']) {
+    for (const cask of ['', '   ', ' google-chrome', 'google-chrome ', 'bad cask', 'bad;cask', 'bad$cask']) {
       expect(ToolMetadataSchema.safeParse({
         ...base,
         install: {

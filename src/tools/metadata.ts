@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 const HomebrewIdentifierSchema = z.string()
   .min(1)
-  .trim()
   .regex(/^[A-Za-z0-9][A-Za-z0-9._/@+-]*$/, 'Homebrew identifier contains unsupported characters');
 
 const NonBlankStringSchema = z.string().min(1).refine(value => value.trim().length > 0, {
