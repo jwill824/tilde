@@ -42,7 +42,7 @@ Plans:
 
 **Wave 2 (blocked on Wave 1 completion)**
 
-- [ ] 01-02-PLAN.md - Migrate BrowserStep and browser plugin fields to consume shared metadata.
+- [x] 01-02-PLAN.md - Migrate BrowserStep and browser plugin fields to consume shared metadata.
 
 **Wave 3 (blocked on Wave 2 completion)**
 
@@ -143,7 +143,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Tool Metadata Registry | 1/3 | In Progress|  |
+| 1. Tool Metadata Registry | 2/3 | In Progress|  |
 | 2. Machine Inventory Scanner | 0/2 | Not started | - |
 | 3. Dotfiles Discovery Map | 0/2 | Not started | - |
 | 4. Provenance Summary | 0/2 | Not started | - |
