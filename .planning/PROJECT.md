@@ -18,10 +18,10 @@ tilde should explain a machine's developer setup clearly enough that users can t
 - [x] First-party plugin registry exists - `src/plugins/registry.ts` registers current core first-party integrations.
 - [x] Environment capture exists - `src/capture/scanner.ts` scans dotfiles, Homebrew packages, rc files, language versions, and version managers.
 - [x] Dotfile writing exists - `src/dotfiles/writer.ts` writes managed shell and git config files idempotently.
+- [x] Shared tool metadata registry exists - Phase 1 added `src/tools/metadata.ts`, `src/tools/registry.ts`, browser metadata, note-taking metadata, and browser wizard regression coverage.
 
 ### Active
 
-- [ ] Milestone 1: Create a shared tool metadata registry for all wizard step maps. GitHub: #98.
 - [ ] Milestone 2: Detect installed tools and Homebrew direct-vs-dependency provenance. GitHub: #99, #112.
 - [ ] Milestone 3: Discover and map dotfiles and rc-file contents to known tools. GitHub: #104.
 - [ ] Milestone 4: Surface provenance summaries showing tilde-managed, already installed, dependency, manual, app-store, OS-provided, and unknown tools. GitHub: #73.
@@ -54,6 +54,7 @@ The current codebase is a Node.js/TypeScript ESM CLI with Ink/React UI, Zod sche
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Start with issue #98 as Milestone 1 | Inventory, dotfile mapping, provenance, and search all need one shared metadata model first. | Pending |
+| Browser and note-taking metadata seed the registry first | Browser is the first migrated plugin-backed wizard slice; note-taking proves non-plugin metadata support. | Validated in Phase 1 |
 | Treat machine inventory as read-first, write-later | Users need trust and auditability before tilde mutates the machine. | Pending |
 | Keep the milestone macOS-focused | Current product and code paths are macOS-first; cross-platform config can come after the model stabilizes. | Pending |
 | Defer the wrapper/search API | Issue #105 is too broad until the metadata registry can describe ecosystems consistently. | Pending |
@@ -76,4 +77,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state.
 
 ---
-*Last updated: 2026-06-12 after initialization*
+*Last updated: 2026-06-13 after Phase 1 completion*
