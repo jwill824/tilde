@@ -5,7 +5,7 @@ import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
-import type { InventoryReport } from '../../src/inventory/report.js';
+import { createEmptyInventoryReport, type InventoryReport } from '../../src/inventory/report.js';
 
 const { mockScanInventory } = vi.hoisted(() => ({
   mockScanInventory: vi.fn(),
@@ -44,13 +44,14 @@ vi.mock('node:fs/promises', async () => {
 describe('Wizard flow integration', () => {
   function createInventoryFixture(overrides: Partial<InventoryReport> = {}): InventoryReport {
     return {
+      ...createEmptyInventoryReport(),
       tools: [
         {
           toolId: 'homebrew',
           label: 'Homebrew',
           category: 'package-manager',
           installed: 'installed',
-          evidence: [{ type: 'homebrew-formula', id: 'brew' }],
+          evidence: [{ type: 'homebrew-formula', id: 'brew', requestStatus: 'direct' }],
           warningIds: [],
         },
         {
@@ -58,12 +59,12 @@ describe('Wizard flow integration', () => {
           label: 'Visual Studio Code',
           category: 'editor',
           installed: 'installed',
-          evidence: [{ type: 'homebrew-cask', id: 'visual-studio-code' }],
+          evidence: [{ type: 'homebrew-cask', id: 'visual-studio-code', requestStatus: 'direct' }],
           warningIds: [],
         },
       ],
       unmatchedHomebrew: {
-        formulae: ['ripgrep'],
+        formulae: [{ name: 'ripgrep', requestStatus: 'dependency' }],
         casks: [],
       },
       homebrew: {
@@ -73,6 +74,9 @@ describe('Wizard flow integration', () => {
         matchedCasksCount: 1,
         unmatchedFormulaeCount: 1,
         unmatchedCasksCount: 0,
+        directFormulaeCount: 1,
+        dependencyFormulaeCount: 1,
+        unknownFormulaeCount: 0,
       },
       warnings: [],
       environment: {
@@ -314,6 +318,36 @@ describe('Wizard flow integration', () => {
     expect(frame).not.toContain('Environment Capture');
     expect(frame).toContain('Inventory scan complete');
     expect(frame).toContain('Known installed tools:');
+  });
+
+  it('inventory wizard step summarizes Homebrew counts and warnings without unmatched names', async () => {
+    const { Wizard } = await import('../../src/modes/wizard.js');
+    const inventory = createInventoryFixture({
+      warnings: [
+        {
+          id: 'homebrew-request-state-unavailable',
+          source: 'homebrew',
+          severity: 'warning',
+          message: 'Homebrew direct/dependency status is unavailable.',
+        },
+      ],
+    });
+
+    const { lastFrame } = render(
+      React.createElement(Wizard, {
+        initialStep: 1,
+        inventory,
+      } as React.ComponentProps<typeof Wizard> & { inventory: InventoryReport })
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Inventory scan complete');
+    expect(frame).toContain('Known installed tools:');
+    expect(frame).toContain('Homebrew formulae: 1 direct, 1 dependencies, 0 unknown');
+    expect(frame).toContain('Warnings:');
+    expect(frame).toContain('Warning: Homebrew direct/dependency status is unavailable.');
+    expect(frame).not.toContain('ripgrep');
   });
 
   it('inventory wizard step shows startup scan failure warnings without blocking rendering', async () => {
