@@ -78,6 +78,7 @@ describe('Wizard flow integration', () => {
       environment: {
         homeDir: '~',
         shell: '/bin/zsh',
+        rcFiles: {},
         detectedLanguages: [{ name: 'node', version: '22.0.0' }],
         detectedVersionManagers: [{ name: 'vfox' }],
       },

@@ -10,6 +10,8 @@ import { captureEnvironment, type EnvironmentSnapshot } from './utils/environmen
 import { installAll } from './installer/index.js';
 import { writeAll } from './dotfiles/writer.js';
 import { pluginRegistry } from './plugins/registry.js';
+import { createEmptyInventoryReport, type InventoryReport } from './inventory/report.js';
+import { scanInventory } from './inventory/scan.js';
 
 export type AppMode = 'wizard' | 'config-first' | 'non-interactive';
 
@@ -63,6 +65,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
   const [splashDone, setSplashDone] = useState(false);
   const [done, setDone] = useState(false);
   const [configEditMode, setConfigEditMode] = useState<'apply' | 'edit' | 'start-over'>('apply');
+  const [inventory, setInventory] = useState<InventoryReport>(() => createEmptyInventoryReport());
   const [environment, setEnvironment] = useState<EnvironmentSnapshot>({
     os: 'macOS',
     arch: 'unknown',
@@ -80,6 +83,26 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
         // Fallback is already set above — never crash on detection failure
       });
     // mode and version are mount-time values that never change
+  }, []);
+
+  useEffect(() => {
+    if (mode === 'non-interactive') return;
+    scanInventory()
+      .then(setInventory)
+      .catch(() => {
+        setInventory({
+          ...createEmptyInventoryReport(),
+          warnings: [
+            {
+              id: 'inventory-startup-failed',
+              source: 'scanner',
+              severity: 'warning',
+              message: 'Inventory scan failed; continuing with an empty report.',
+            },
+          ],
+        });
+      });
+    // mode is a mount-time value that never changes
   }, []);
 
   // Non-interactive / CI mode skips the splash entirely
@@ -162,7 +185,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
       return (
         <Box flexDirection="column">
           {header}
-          <Wizard onComplete={() => setDone(true)} />
+          <Wizard inventory={inventory} onComplete={() => setDone(true)} />
         </Box>
       );
     }
@@ -201,6 +224,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
         </Box>
       ) : (
         <Wizard
+          inventory={inventory}
           onComplete={(_config: TildeConfig) => {
             setDone(true);
           }}
