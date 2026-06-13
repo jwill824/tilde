@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from 'ink-testing-library';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createEmptyInventoryReport, type InventoryReport } from '../../src/inventory/report.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const fixturePath = join(__dirname, '../fixtures/tilde.config.json');
@@ -24,6 +25,45 @@ vi.mock('../../src/plugins/registry.js', () => ({
 }));
 
 describe('ConfigFirstMode integration', () => {
+  function createInventoryFixture(): InventoryReport {
+    return {
+      ...createEmptyInventoryReport(),
+      tools: [
+        {
+          toolId: 'homebrew',
+          label: 'Homebrew',
+          category: 'package-manager',
+          installed: 'installed',
+          evidence: [{ type: 'homebrew-formula', id: 'brew', requestStatus: 'direct' }],
+          warningIds: [],
+        },
+      ],
+      unmatchedHomebrew: {
+        formulae: [{ name: 'ripgrep', requestStatus: 'dependency' }],
+        casks: [],
+      },
+      homebrew: {
+        installedFormulaeCount: 2,
+        installedCasksCount: 0,
+        matchedFormulaeCount: 1,
+        matchedCasksCount: 0,
+        unmatchedFormulaeCount: 1,
+        unmatchedCasksCount: 0,
+        directFormulaeCount: 1,
+        dependencyFormulaeCount: 1,
+        unknownFormulaeCount: 0,
+      },
+      warnings: [
+        {
+          id: 'homebrew-request-state-unavailable',
+          source: 'homebrew',
+          severity: 'warning',
+          message: 'Homebrew direct/dependency status is unavailable.',
+        },
+      ],
+    };
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -58,6 +98,29 @@ describe('ConfigFirstMode integration', () => {
     const frame = lastFrame() ?? '';
     expect(frame).toContain('Apply this configuration');
     expect(frame).toContain('Cancel');
+  });
+
+  it('renders inventory summary before configuration summary', async () => {
+    const { ConfigFirstMode } = await import('../../src/modes/config-first.js');
+    const onComplete = vi.fn();
+    const inventory = createInventoryFixture();
+    const { lastFrame } = render(
+      React.createElement(ConfigFirstMode, { configPath: fixturePath, onComplete, inventory })
+    );
+
+    await new Promise((r) => setTimeout(r, 300));
+
+    const frame = lastFrame() ?? '';
+    const inventoryIndex = frame.indexOf('Inventory scan complete');
+    const configIndex = frame.indexOf('Configuration Summary');
+    expect(inventoryIndex).toBeGreaterThanOrEqual(0);
+    expect(configIndex).toBeGreaterThanOrEqual(0);
+    expect(inventoryIndex).toBeLessThan(configIndex);
+    expect(frame).toContain('Known installed tools: Homebrew');
+    expect(frame).toContain('Homebrew formulae: 1 direct, 1 dependencies, 0 unknown');
+    expect(frame).toContain('Warnings:');
+    expect(frame).toContain('Warning: Homebrew direct/dependency status is unavailable.');
+    expect(frame).not.toContain('ripgrep');
   });
 
   it('calls installAll and writeAll after confirm selection', async () => {
