@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-06-13T22:05:34.078Z"
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-06-13T22:22:17.856Z"
 last_activity: 2026-06-13 -- Phase 02 execution started
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 8
-  completed_plans: 6
-  percent: 20
+  completed_plans: 7
+  percent: 88
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-12)
 ## Current Position
 
 Phase: 02 (machine-inventory-scanner) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
-Last activity: 2026-06-13 -- Phase 02 execution started
+Last activity: 2026-06-13 -- Completed 02-04-PLAN.md
 
-Progress: [██████░░░░] 63%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [██████░░░░] 63%
 | Phase 02 P01 | 19 min | 2 tasks | 4 files |
 | Phase 02 P02 | 10 min | 2 tasks | 9 files |
 | Phase 02 P03 | 54 min | 2 tasks | 10 files |
+| Phase 02 P04 | 14min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Recent decisions affecting current work:
 - [Phase 02]: Plugin-backed inventory metadata stays static and is aggregated through validateToolMetadata without broadening PluginRegistry; JetBrains coverage follows existing WebStorm and IntelliJ plugin IDs.
 - [Phase 02]: App startup owns inventory scanning and failure fallback; InventoryStep renders only supplied InventoryReport data.
 - [Phase 02]: Wizard defaults continue through inventory.environment, including rcFiles for git defaults and detectedLanguages for context suggestions.
+- [Phase 02]: Keep installed package facts when installed-on-request lookup fails and warn with homebrew-request-state-unavailable. — Plan 02-04 implements INV-04 and D-13 by separating installed package listing from request-state lookup.
+- [Phase 02]: Represent Homebrew direct/dependency as requestStatus evidence while preserving Phase 4 provenance labels for later. — Plan 02-04 implements D-02/D-10/D-13 without introducing final managed/manual provenance labels.
 
 ### Pending Todos
 
@@ -88,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T22:05:15.941Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-06-13T22:22:17.622Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None
