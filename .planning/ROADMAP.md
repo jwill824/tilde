@@ -33,7 +33,7 @@ This roadmap turns tilde from a setup wizard into a machine-aware setup assistan
 
 Plans:
 **Wave 1**
-- [ ] 01-01-PLAN.md - Define and test the shared metadata registry slice for browser metadata.
+- [ ] 01-01-PLAN.md - Define and test the shared metadata registry slice for browser plus non-plugin note-taking metadata.
 
 **Wave 2 (blocked on Wave 1 completion)**
 - [ ] 01-02-PLAN.md - Migrate BrowserStep and browser plugin fields to consume shared metadata.

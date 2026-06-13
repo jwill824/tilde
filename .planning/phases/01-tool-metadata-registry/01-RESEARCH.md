@@ -406,22 +406,21 @@ export function getToolsByDotfilePath(path: string) {
 | A4 | Registry helpers should not call command execution or filesystem APIs. | Don't Hand-Roll | Medium - if planner mixes detection into metadata, tests and inventory boundaries get harder. |
 | A5 | Install identifier validation should be conditional by install/discovery mode. | Common Pitfalls | Medium - too-loose validation could miss malformed installable tools; too-strict validation could reject Safari/manual apps. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should Phase 1 seed AI tool metadata beyond browser metadata?**
-   - What we know: `AI_TOOL_PLUGINS` already acts like a family catalog and is consumed by `AIToolsStep`. [VERIFIED: codebase grep]
-   - What's unclear: The phase plans say seed existing core tools, but success criteria only require at least one migrated wizard step. [VERIFIED: .planning/ROADMAP.md]
-   - Recommendation: Seed browser fully and add AI tools only if it does not expand migration scope; do not migrate `AIToolsStep` unless browser work is complete. [ASSUMED]
+1. **Phase 1 metadata seed scope**
+   - Decision: Phase 1 seeds browser metadata plus the small non-plugin note-taking slice required by D-03. The note-taking seed comes from `src/steps/tools.tsx` and includes Obsidian, Notion, and Bear. [VERIFIED: codebase grep]
+   - Decision: AI tool metadata stays out of Phase 1 unless an existing test needs to read it for comparison. `AIToolsStep` migration is not part of this phase. [VERIFIED: .planning/ROADMAP.md]
+   - Plan alignment: `01-01-PLAN.md` creates `browserToolMetadata`, `noteTakingToolMetadata`, and a central aggregate registry; later plans preserve the browser migration path. [VERIFIED: .planning/phases/01-tool-metadata-registry/01-01-PLAN.md]
 
-2. **How strict should Homebrew install identifier validation be?**
-   - What we know: Browser metadata includes casks except Safari; note-taking includes `bear` with no Homebrew cask. [VERIFIED: codebase grep]
-   - What's unclear: The exact condition for "install identifiers when applicable" is not formalized. [VERIFIED: .planning/phases/01-tool-metadata-registry/01-CONTEXT.md]
-   - Recommendation: Model `install.homebrew.formula` and `install.homebrew.cask` as optional but test that known Homebrew-installable entries include one. [ASSUMED]
+2. **Homebrew install identifier validation**
+   - Decision: Homebrew formula and cask ids are optional because some valid tools, such as Safari and Bear, are not represented by a Homebrew id in this phase. [VERIFIED: codebase grep]
+   - Decision: When a Homebrew id is present, validation should reject empty strings, whitespace, control characters, and shell metacharacters. It should allow valid formula/cask names containing slashes, dots, pluses, at signs, and hyphens. [ASSUMED]
+   - Plan alignment: `01-01-PLAN.md` directs `ToolInstallSchema` to enforce this strict-but-compatible shape and tests it in `tests/unit/tool-metadata.test.ts`. [VERIFIED: .planning/phases/01-tool-metadata-registry/01-01-PLAN.md]
 
-3. **Should `defaultBrowserId` live under `externalIds` or browser-specific metadata?**
-   - What we know: Phase context requires `defaultBrowserId`; it is currently browser-only. [VERIFIED: codebase grep]
-   - What's unclear: Later phases may need other external ids. [ASSUMED]
-   - Recommendation: Prefer `externalIds: { defaultbrowser?: string }` so lookup stays generic and browser-specific consumers can still map it. [ASSUMED]
+3. **Browser default identifier placement**
+   - Decision: Browser default identifiers live under generic `externalIds.defaultbrowser`, not a browser-only field. Browser consumers can map this generic external id back into the existing `defaultBrowserId` runtime field. [VERIFIED: codebase grep]
+   - Plan alignment: `01-01-PLAN.md` defines `externalIds.defaultbrowser`; `01-02-PLAN.md` preserves the browser migration path by mapping it into `BrowserStep` and `BROWSER_PLUGINS` behavior. [VERIFIED: .planning/phases/01-tool-metadata-registry/01-01-PLAN.md]
 
 ## Environment Availability
 
