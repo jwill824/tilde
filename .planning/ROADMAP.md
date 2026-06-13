@@ -72,8 +72,13 @@ Cross-cutting constraints:
 
 Plans:
 
-- [ ] 02-01: Extend scanner output with registry-aligned installed-tool facts.
-- [ ] 02-02: Add Homebrew direct/dependency classification and wizard summary integration.
+**Wave 1**
+
+- [ ] 02-01-PLAN.md - Extend scanner output with registry-aligned installed-tool facts and early wizard inventory summary.
+
+**Wave 2 (blocked on Wave 1 completion)**
+
+- [ ] 02-02-PLAN.md - Add Homebrew direct/dependency classification and wizard/config-first summary integration.
 
 ### Phase 3: Dotfiles Discovery Map
 
