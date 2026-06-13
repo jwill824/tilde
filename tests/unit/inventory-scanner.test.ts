@@ -156,8 +156,12 @@ describe('inventory scanner', () => {
       ]),
     }));
 
-    expect(report.unmatchedHomebrew.formulae).toContain('ripgrep');
-    expect(report.unmatchedHomebrew.casks).toContain('unknown-cask');
+    expect(report.unmatchedHomebrew.formulae).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'ripgrep' }),
+    ]));
+    expect(report.unmatchedHomebrew.casks).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'unknown-cask' }),
+    ]));
   });
 
   it('adds request status to known and unmatched Homebrew facts', async () => {

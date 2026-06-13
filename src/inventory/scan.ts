@@ -3,13 +3,14 @@ import { createCaptureFilter, filterDotfiles } from '../capture/filter.js';
 import { scanDotfiles, scanRcFiles } from '../capture/scanner.js';
 import { allToolMetadata } from '../tools/registry.js';
 import type { ToolMetadata } from '../tools/metadata.js';
-import { listInstalledCasks, listInstalledFormulae } from '../utils/package-manager.js';
+import { listInstalledCasks, listInstalledFormulae, listInstalledOnRequestFormulae } from '../utils/package-manager.js';
 import {
   detectLanguages,
   detectVersionManagers,
   type DetectedLanguage,
   type DetectedVersionManager,
 } from '../utils/env-detection.js';
+import { classifyHomebrewInventory, type ClassifiedHomebrewCask, type ClassifiedHomebrewFormula } from './homebrew.js';
 import {
   createEmptyInventoryReport,
   type InventoryEvidence,
@@ -21,8 +22,8 @@ import {
 } from './report.js';
 
 type HomebrewResult = {
-  formulae: string[] | null;
-  casks: string[] | null;
+  formulae: ClassifiedHomebrewFormula[] | null;
+  casks: ClassifiedHomebrewCask[] | null;
 };
 
 const CORE_TOOL_IDS = ['git', 'node', 'npm'] as const;
@@ -33,8 +34,12 @@ export async function scanInventory(homeDir?: string): Promise<InventoryReport> 
   const report = createEmptyInventoryReport(resolvedHome);
   const warnings = report.warnings;
   const homebrew = await scanHomebrew(warnings);
-  const formulaSet = homebrew.formulae === null ? null : new Set(homebrew.formulae);
-  const caskSet = homebrew.casks === null ? null : new Set(homebrew.casks);
+  const formulaMap = homebrew.formulae === null
+    ? null
+    : new Map(homebrew.formulae.map(formula => [formula.id, formula]));
+  const caskMap = homebrew.casks === null
+    ? null
+    : new Map(homebrew.casks.map(cask => [cask.id, cask]));
 
   report.environment = {
     homeDir: resolvedHome,
@@ -49,8 +54,8 @@ export async function scanInventory(homeDir?: string): Promise<InventoryReport> 
 
   for (const metadata of allToolMetadata) {
     const fact = await createMetadataFact(metadata, {
-      formulaSet,
-      caskSet,
+      formulaMap,
+      caskMap,
       warnings,
     });
 
@@ -71,9 +76,11 @@ export async function scanInventory(homeDir?: string): Promise<InventoryReport> 
   report.tools.push(...createCoreToolFacts(report.environment.detectedLanguages, report.environment.detectedVersionManagers));
 
   report.unmatchedHomebrew = {
-    formulae: homebrew.formulae?.filter(formula => !matchedFormulae.has(formula)) ?? [],
-    casks: homebrew.casks?.filter(cask => !matchedCasks.has(cask)) ?? [],
+    formulae: homebrew.formulae?.filter(formula => !matchedFormulae.has(formula.id)) ?? [],
+    casks: homebrew.casks?.filter(cask => !matchedCasks.has(cask.id)) ?? [],
   };
+
+  const requestStatusCounts = countFormulaRequestStatuses(homebrew.formulae ?? []);
 
   report.homebrew = {
     installedFormulaeCount: homebrew.formulae?.length ?? 0,
@@ -82,18 +89,39 @@ export async function scanInventory(homeDir?: string): Promise<InventoryReport> 
     matchedCasksCount: matchedCasks.size,
     unmatchedFormulaeCount: report.unmatchedHomebrew.formulae.length,
     unmatchedCasksCount: report.unmatchedHomebrew.casks.length,
+    directFormulaeCount: requestStatusCounts.direct,
+    dependencyFormulaeCount: requestStatusCounts.dependency,
+    unknownFormulaeCount: requestStatusCounts.unknown,
   };
 
   return report;
 }
 
 async function scanHomebrew(warnings: InventoryWarning[]): Promise<HomebrewResult> {
-  const [formulae, casks] = await Promise.all([
+  const [formulae, casks, installedOnRequestFormulae] = await Promise.all([
     scanHomebrewList('formulae', listInstalledFormulae, warnings),
     scanHomebrewList('casks', listInstalledCasks, warnings),
+    scanHomebrewRequestState(warnings),
   ]);
 
-  return { formulae, casks };
+  return {
+    formulae: formulae === null
+      ? null
+      : classifyHomebrewInventory({
+        formulae,
+        casks: casks ?? [],
+        installedOnRequestFormulae: installedOnRequestFormulae ?? [],
+        requestStatusAvailable: installedOnRequestFormulae !== null,
+      }).formulae,
+    casks: casks === null
+      ? null
+      : classifyHomebrewInventory({
+        formulae: formulae ?? [],
+        casks,
+        installedOnRequestFormulae: installedOnRequestFormulae ?? [],
+        requestStatusAvailable: installedOnRequestFormulae !== null,
+      }).casks,
+  };
 }
 
 async function scanHomebrewList(
@@ -105,6 +133,20 @@ async function scanHomebrewList(
     return await helper();
   } catch {
     warnings.push(createWarning('homebrew', `Homebrew ${name} could not be read; related inventory facts are unknown.`));
+    return null;
+  }
+}
+
+async function scanHomebrewRequestState(warnings: InventoryWarning[]): Promise<string[] | null> {
+  try {
+    return await listInstalledOnRequestFormulae();
+  } catch {
+    warnings.push(createWarning(
+      'homebrew',
+      'Homebrew direct/dependency request state could not be read; formula request status is unknown.',
+      undefined,
+      'homebrew-request-state-unavailable'
+    ));
     return null;
   }
 }
@@ -142,8 +184,8 @@ async function scanDetectedVersionManagers(warnings: InventoryWarning[]): Promis
 async function createMetadataFact(
   metadata: ToolMetadata,
   context: {
-    formulaSet: Set<string> | null;
-    caskSet: Set<string> | null;
+    formulaMap: Map<string, ClassifiedHomebrewFormula> | null;
+    caskMap: Map<string, ClassifiedHomebrewCask> | null;
     warnings: InventoryWarning[];
   }
 ): Promise<InventoryToolFact> {
@@ -156,7 +198,7 @@ async function createMetadataFact(
   let unknownEvidence = false;
 
   if (formula) {
-    if (context.formulaSet === null) {
+    if (context.formulaMap === null) {
       const warningId = firstWarningId(context.warnings, 'homebrew');
       warningIds.push(...optionalWarningId(warningId));
       evidence.push({
@@ -166,8 +208,13 @@ async function createMetadataFact(
         warningId,
       });
       unknownEvidence = true;
-    } else if (context.formulaSet.has(formula)) {
-      evidence.push({ type: 'homebrew-formula', id: formula });
+    } else if (context.formulaMap.has(formula)) {
+      const classifiedFormula = context.formulaMap.get(formula);
+      evidence.push({
+        type: 'homebrew-formula',
+        id: formula,
+        requestStatus: classifiedFormula?.requestStatus ?? 'unknown',
+      });
       installedEvidence = true;
     } else {
       missingEvidence = true;
@@ -175,7 +222,7 @@ async function createMetadataFact(
   }
 
   if (cask) {
-    if (context.caskSet === null) {
+    if (context.caskMap === null) {
       const warningId = firstWarningId(context.warnings, 'homebrew');
       warningIds.push(...optionalWarningId(warningId));
       evidence.push({
@@ -185,8 +232,8 @@ async function createMetadataFact(
         warningId,
       });
       unknownEvidence = true;
-    } else if (context.caskSet.has(cask)) {
-      evidence.push({ type: 'homebrew-cask', id: cask });
+    } else if (context.caskMap.has(cask)) {
+      evidence.push({ type: 'homebrew-cask', id: cask, requestStatus: 'direct' });
       installedEvidence = true;
     } else {
       missingEvidence = true;
@@ -305,9 +352,9 @@ function resolveInstallState(evidence: {
   return 'unknown';
 }
 
-function createWarning(source: InventoryWarningSource, message: string, toolId?: string): InventoryWarning {
+function createWarning(source: InventoryWarningSource, message: string, toolId?: string, id?: string): InventoryWarning {
   return {
-    id: `${source}:${message}`,
+    id: id ?? `${source}:${message}`,
     source,
     severity: 'warning',
     message,
@@ -331,4 +378,15 @@ function isMissingPathError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
   const code = (error as { code?: string }).code;
   return code === 'ENOENT' || code === 'ENOTDIR';
+}
+
+function countFormulaRequestStatuses(formulae: ClassifiedHomebrewFormula[]): Record<'direct' | 'dependency' | 'unknown', number> {
+  return formulae.reduce<Record<'direct' | 'dependency' | 'unknown', number>>((counts, formula) => {
+    counts[formula.requestStatus] += 1;
+    return counts;
+  }, {
+    direct: 0,
+    dependency: 0,
+    unknown: 0,
+  });
 }
