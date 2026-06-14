@@ -15,12 +15,13 @@ import { pluginRegistry } from '../plugins/registry.js';
 import { ConfigSummary } from '../ui/config-summary.js';
 import { ContextsStep } from '../steps/contexts.js';
 import { ShellStep } from '../steps/shell.js';
-import type { InventoryReport } from '../inventory/report.js';
+import type { InventoryReport, InventoryScanState } from '../inventory/report.js';
 import { summarizeInventory } from '../inventory/summary.js';
 
 interface Props {
   configPath: string;
   inventory?: InventoryReport;
+  inventoryState?: InventoryScanState;
   onComplete: () => void;
   onEdit?: () => void;
   onStartOver?: () => void;
@@ -67,7 +68,7 @@ function validateAndTransition(partial: Record<string, unknown>): Phase {
   return { type: 'error', message: validationError.message };
 }
 
-export function ConfigFirstMode({ configPath, inventory, onComplete, onEdit, onStartOver }: Props) {
+export function ConfigFirstMode({ configPath, inventory, inventoryState, onComplete, onEdit, onStartOver }: Props) {
   const [phase, setPhase] = useState<Phase>({ type: 'loading' });
 
   useEffect(() => {
@@ -160,6 +161,19 @@ export function ConfigFirstMode({ configPath, inventory, onComplete, onEdit, onS
   }
 
   if (phase.type === 'confirm') {
+    if (inventoryState?.status === 'loading') {
+      return (
+        <Box flexDirection="column">
+          <Text bold>Scanning inventory...</Text>
+          <Text dimColor>Apply choices will be available after the scan finishes.</Text>
+        </Box>
+      );
+    }
+
+    const inventoryReport = inventoryState?.report ?? inventory;
+    const inventoryHeading = inventoryState?.status === 'failed'
+      ? 'Inventory scan failed'
+      : 'Inventory scan complete';
     const items = [
       { label: 'Apply this configuration', value: 'apply' },
       ...(onEdit ? [{ label: 'Edit configuration', value: 'edit' }] : []),
@@ -168,11 +182,11 @@ export function ConfigFirstMode({ configPath, inventory, onComplete, onEdit, onS
     ];
     return (
       <Box flexDirection="column">
-        {inventory && (
+        {inventoryReport && (
           <Box flexDirection="column">
-            <Text bold>Inventory scan complete</Text>
+            <Text bold>{inventoryHeading}</Text>
             <Box marginTop={1} flexDirection="column">
-              {summarizeInventory(inventory).map(line => (
+              {summarizeInventory(inventoryReport).map(line => (
                 <Text
                   key={line}
                   color={line.startsWith('Warning') ? 'yellow' : 'green'}
