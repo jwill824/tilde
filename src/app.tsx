@@ -213,7 +213,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
         {header}
         <ConfigFirstMode
           configPath={configPath}
-          inventory={inventoryState.report}
+          inventoryState={inventoryState}
           onComplete={() => setDone(true)}
           onEdit={() => setConfigEditMode('edit')}
           onStartOver={() => setConfigEditMode('start-over')}
