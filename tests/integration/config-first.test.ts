@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from 'ink-testing-library';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createEmptyInventoryReport, type InventoryReport } from '../../src/inventory/report.js';
+import { createEmptyInventoryReport, type InventoryReport, type InventoryScanState } from '../../src/inventory/report.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const fixturePath = join(__dirname, '../fixtures/tilde.config.json');
@@ -103,9 +103,12 @@ describe('ConfigFirstMode integration', () => {
   it('renders inventory summary before configuration summary', async () => {
     const { ConfigFirstMode } = await import('../../src/modes/config-first.js');
     const onComplete = vi.fn();
-    const inventory = createInventoryFixture();
+    const inventoryState: InventoryScanState = {
+      status: 'ready',
+      report: createInventoryFixture(),
+    };
     const { lastFrame } = render(
-      React.createElement(ConfigFirstMode, { configPath: fixturePath, onComplete, inventory })
+      React.createElement(ConfigFirstMode, { configPath: fixturePath, onComplete, inventoryState })
     );
 
     await new Promise((r) => setTimeout(r, 300));
@@ -122,6 +125,66 @@ describe('ConfigFirstMode integration', () => {
     expect(inventoryBlock).toContain('Warnings:');
     expect(inventoryBlock).toContain('Warning: Homebrew direct/dependency status is unavailable.');
     expect(inventoryBlock).not.toContain('ripgrep');
+  });
+
+  it('withholds apply choices while inventory is loading', async () => {
+    const { ConfigFirstMode } = await import('../../src/modes/config-first.js');
+    const onComplete = vi.fn();
+    const inventoryState: InventoryScanState = {
+      status: 'loading',
+      report: createEmptyInventoryReport(),
+    };
+    const { lastFrame } = render(
+      React.createElement(ConfigFirstMode, {
+        configPath: fixturePath,
+        onComplete,
+        onEdit: vi.fn(),
+        onStartOver: vi.fn(),
+        inventoryState,
+      })
+    );
+
+    await new Promise((r) => setTimeout(r, 300));
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Scanning inventory...');
+    expect(frame).not.toContain('Apply this configuration');
+    expect(frame).not.toContain('Edit configuration');
+    expect(frame).not.toContain('Start over (run wizard)');
+    expect(frame).not.toContain('Cancel');
+  });
+
+  it('renders failed inventory warning before configuration summary', async () => {
+    const { ConfigFirstMode } = await import('../../src/modes/config-first.js');
+    const onComplete = vi.fn();
+    const inventoryState: InventoryScanState = {
+      status: 'failed',
+      report: {
+        ...createEmptyInventoryReport(),
+        warnings: [
+          {
+            id: 'inventory-startup-failed',
+            source: 'scanner',
+            severity: 'warning',
+            message: 'Inventory scan failed; continuing with an empty report.',
+          },
+        ],
+      },
+    };
+    const { lastFrame } = render(
+      React.createElement(ConfigFirstMode, { configPath: fixturePath, onComplete, inventoryState })
+    );
+
+    await new Promise((r) => setTimeout(r, 300));
+
+    const frame = lastFrame() ?? '';
+    const inventoryIndex = frame.indexOf('Inventory scan failed');
+    const configIndex = frame.indexOf('Configuration Summary');
+    expect(inventoryIndex).toBeGreaterThanOrEqual(0);
+    expect(configIndex).toBeGreaterThanOrEqual(0);
+    expect(inventoryIndex).toBeLessThan(configIndex);
+    expect(frame.slice(inventoryIndex, configIndex)).toContain('Warning: Inventory scan failed; continuing with an empty report.');
+    expect(frame).toContain('Apply this configuration');
   });
 
   it('calls installAll and writeAll after confirm selection', async () => {

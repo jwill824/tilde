@@ -1,11 +1,8 @@
 import React from 'react';
+import { Text } from 'ink';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from 'ink-testing-library';
-import { mkdir, rm } from 'node:fs/promises';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { randomUUID } from 'node:crypto';
-import { createEmptyInventoryReport, type InventoryReport } from '../../src/inventory/report.js';
+import { createEmptyInventoryReport, type InventoryReport, type InventoryScanState } from '../../src/inventory/report.js';
 
 const { mockScanInventory } = vi.hoisted(() => ({
   mockScanInventory: vi.fn(),
@@ -387,5 +384,128 @@ describe('Wizard flow integration', () => {
     expect(frame).toContain('Inventory');
     expect(frame).toContain('Known installed tools:');
     expect(frame).toContain('Warning: Inventory scan failed; continuing with an empty report.');
+  });
+
+  it('inventory wizard step blocks Continue while inventory is loading', async () => {
+    const { InventoryStep } = await import('../../src/steps/inventory.js');
+    const onComplete = vi.fn();
+    const inventoryState: InventoryScanState = {
+      status: 'loading',
+      report: createEmptyInventoryReport(),
+    };
+
+    const { lastFrame } = render(
+      React.createElement(InventoryStep, {
+        inventoryState,
+        onComplete,
+      } as React.ComponentProps<typeof InventoryStep>)
+    );
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Scanning inventory...');
+    expect(frame).not.toContain('Continue');
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it('keeps setup choices behind pending startup inventory scans', async () => {
+    mockScanInventory.mockReturnValue(new Promise(() => undefined));
+
+    const { App } = await import('../../src/app.js');
+    const { lastFrame, stdin } = render(React.createElement(App, { mode: 'wizard' }));
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    stdin.write('\r');
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const frame = lastFrame() ?? '';
+    expect(mockScanInventory).toHaveBeenCalled();
+    expect(frame).toContain('Scanning inventory...');
+    expect(frame).not.toContain('Continue');
+    expect(frame).not.toContain('Shell');
+  });
+
+  it('does not pass installed inventory metadata ids to ToolsStep defaultTools', async () => {
+    const observedDefaultTools: Array<string | undefined> = [];
+    vi.resetModules();
+    vi.doMock('../../src/steps/tools.js', () => ({
+      ToolsStep: (props: { defaultTools?: string }) => {
+        observedDefaultTools.push(props.defaultTools);
+        return React.createElement(Text, null, `mock tools default: ${props.defaultTools ?? '<unset>'}`);
+      },
+    }));
+    const { Wizard } = await import('../../src/modes/wizard.js');
+    const inventoryState: InventoryScanState = {
+      status: 'ready',
+      report: createInventoryFixture({
+        tools: [
+          {
+            toolId: 'homebrew',
+            label: 'Homebrew',
+            category: 'package-manager',
+            installed: 'installed',
+            evidence: [{ type: 'homebrew-formula', id: 'brew', requestStatus: 'direct' }],
+            warningIds: [],
+          },
+          {
+            toolId: 'vscode',
+            label: 'Visual Studio Code',
+            category: 'editor',
+            installed: 'installed',
+            evidence: [{ type: 'homebrew-cask', id: 'visual-studio-code', requestStatus: 'direct' }],
+            warningIds: [],
+          },
+          {
+            toolId: 'chrome',
+            label: 'Google Chrome',
+            category: 'browser',
+            installed: 'installed',
+            evidence: [{ type: 'homebrew-cask', id: 'google-chrome', requestStatus: 'direct' }],
+            warningIds: [],
+          },
+          {
+            toolId: 'vfox',
+            label: 'vfox',
+            category: 'version-manager',
+            installed: 'installed',
+            evidence: [{ type: 'command', command: 'vfox', outcome: 'succeeded' }],
+            warningIds: [],
+          },
+          {
+            toolId: 'obsidian',
+            label: 'Obsidian',
+            category: 'note-taking',
+            installed: 'installed',
+            evidence: [{ type: 'homebrew-cask', id: 'obsidian', requestStatus: 'direct' }],
+            warningIds: [],
+          },
+          {
+            toolId: 'shell:zsh',
+            label: 'zsh',
+            category: 'shell',
+            installed: 'installed',
+            evidence: [{ type: 'shell', name: 'zsh', source: 'scanner' }],
+            warningIds: [],
+          },
+          {
+            toolId: 'core-tool:node',
+            label: 'Node.js',
+            category: 'core-tool',
+            installed: 'installed',
+            evidence: [{ type: 'command', command: 'node', outcome: 'succeeded', version: '22.0.0' }],
+            warningIds: [],
+          },
+        ],
+      }),
+    };
+
+    render(
+      React.createElement(Wizard, {
+        initialStep: 6,
+        inventoryState,
+      } as React.ComponentProps<typeof Wizard>)
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    expect(observedDefaultTools[0] ?? '').toBe('');
   });
 });
