@@ -429,7 +429,10 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, invento
             onBack={onBack}
             isOptional={false}
             onComplete={(data) => {
-              setActiveInventoryState({ status: 'ready', report: data.inventory });
+              setActiveInventoryState({
+                status: activeInventoryState.status === 'failed' ? 'failed' : 'ready',
+                report: data.inventory,
+              });
               const shellName = data.inventory.environment.shell?.split('/').pop();
               const detectedShell =
                 shellName === 'zsh' || shellName === 'bash' || shellName === 'fish'

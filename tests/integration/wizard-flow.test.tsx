@@ -61,7 +61,7 @@ describe('Wizard flow integration', () => {
         },
       ],
       unmatchedHomebrew: {
-        formulae: [{ name: 'ripgrep', requestStatus: 'dependency' }],
+        formulae: [{ id: 'ripgrep', requestStatus: 'dependency' }],
         casks: [],
       },
       homebrew: {
@@ -507,5 +507,50 @@ describe('Wizard flow integration', () => {
 
     await new Promise(resolve => setTimeout(resolve, 100));
     expect(observedDefaultTools[0] ?? '').toBe('');
+  });
+
+  it('preserves failed inventory status after continuing and navigating back', async () => {
+    vi.resetModules();
+    vi.doMock('../../src/steps/shell.js', () => ({
+      ShellStep: (props: { onBack?: () => void }) => {
+        React.useEffect(() => {
+          props.onBack?.();
+        }, [props]);
+
+        return React.createElement(Text, null, 'mock shell step');
+      },
+    }));
+
+    const { Wizard } = await import('../../src/modes/wizard.js');
+    const inventoryState: InventoryScanState = {
+      status: 'failed',
+      report: createInventoryFixture({
+        tools: [],
+        warnings: [
+          {
+            id: 'inventory-startup-failed',
+            source: 'scanner',
+            severity: 'warning',
+            message: 'Inventory scan failed; continuing with an empty report.',
+          },
+        ],
+      }),
+    };
+
+    const { lastFrame, stdin } = render(
+      React.createElement(Wizard, {
+        initialStep: 1,
+        inventoryState,
+      } as React.ComponentProps<typeof Wizard>)
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    expect(lastFrame()).toContain('Inventory scan failed');
+
+    stdin.write('\r');
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    expect(lastFrame()).toContain('Inventory scan failed');
+    expect(lastFrame()).not.toContain('Inventory scan complete');
   });
 });

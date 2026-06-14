@@ -119,7 +119,7 @@ describe('inventory integration', () => {
           label: 'Homebrew',
           category: 'package-manager',
           installed: 'installed',
-          evidence: [{ type: 'homebrew-formula', id: 'brew' }],
+          evidence: [{ type: 'homebrew-formula', id: 'brew', requestStatus: 'direct' }],
           warningIds: [],
         },
         {
@@ -127,12 +127,12 @@ describe('inventory integration', () => {
           label: 'Visual Studio Code',
           category: 'editor',
           installed: 'installed',
-          evidence: [{ type: 'homebrew-cask', id: 'visual-studio-code' }],
+          evidence: [{ type: 'homebrew-cask', id: 'visual-studio-code', requestStatus: 'direct' }],
           warningIds: [],
         },
       ],
       unmatchedHomebrew: {
-        formulae: ['ripgrep'],
+        formulae: [{ id: 'ripgrep', requestStatus: 'dependency' }],
         casks: [],
       },
       homebrew: {
@@ -142,6 +142,9 @@ describe('inventory integration', () => {
         matchedCasksCount: 1,
         unmatchedFormulaeCount: 1,
         unmatchedCasksCount: 0,
+        directFormulaeCount: 1,
+        dependencyFormulaeCount: 1,
+        unknownFormulaeCount: 0,
       },
       warnings: [
         {
