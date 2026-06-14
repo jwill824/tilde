@@ -5,8 +5,8 @@ import type { TildeConfig } from '../config/schema.js';
 import { saveCheckpoint, loadCheckpoint, clearCheckpoint } from '../state/checkpoint.js';
 import { ConfigDetectionStep } from '../steps/config-detection.js';
 import { InventoryStep } from '../steps/inventory.js';
-import { createEmptyInventoryReport, type InventoryReport } from '../inventory/report.js';
-import { getInstalledKnownToolFacts, summarizeInventory } from '../inventory/summary.js';
+import { createEmptyInventoryReport, type InventoryReport, type InventoryScanState } from '../inventory/report.js';
+import { summarizeInventory } from '../inventory/summary.js';
 import { parseGitconfig } from '../capture/parser.js';
 import { ShellStep } from '../steps/shell.js';
 import { PackageManagerStep } from '../steps/package-manager.js';
@@ -170,6 +170,7 @@ interface WizardProps {
   initialStep?: number;
   initialConfig?: Partial<TildeConfig>;
   inventory?: InventoryReport;
+  inventoryState?: InventoryScanState;
   onComplete?: (config: TildeConfig) => void;
   onExit?: () => void;
 }
@@ -178,14 +179,19 @@ interface WizardProps {
 // Wizard component
 // ---------------------------------------------------------------------------
 
-export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onComplete, onExit }: WizardProps) {
+export function Wizard({ initialStep = 0, initialConfig = {}, inventory, inventoryState, onComplete, onExit }: WizardProps) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [config, setConfig] = useState<Partial<TildeConfig>>({
     ...initialConfig,
     os: (initialConfig.os ?? detectOS()) as 'macos',
   });
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
-  const [inventoryReport, setInventoryReport] = useState<InventoryReport>(() => inventory ?? createEmptyInventoryReport());
+  const [activeInventoryState, setActiveInventoryState] = useState<InventoryScanState>(() => (
+    inventoryState ?? {
+      status: 'ready',
+      report: inventory ?? createEmptyInventoryReport(),
+    }
+  ));
 
   // Navigation history stack (T007)
   const [history, setHistory] = useState<StepFrame[]>([]);
@@ -201,10 +207,15 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
   const [showFirstStepHint, setShowFirstStepHint] = useState(false);
 
   useEffect(() => {
-    if (inventory) {
-      setInventoryReport(inventory);
+    if (inventoryState) {
+      setActiveInventoryState(inventoryState);
+      return;
     }
-  }, [inventory]);
+
+    if (inventory) {
+      setActiveInventoryState({ status: 'ready', report: inventory });
+    }
+  }, [inventory, inventoryState]);
 
   useEffect(() => {
     loadCheckpoint().then((checkpoint) => {
@@ -301,6 +312,9 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
     ? poppedFrame
     : history.find(f => f.stepIndex === currentStep);
   const initialValues: Record<string, unknown> = prevFrame?.values ?? {};
+  const inventoryReport = activeInventoryState.report;
+  const setupBlockedByInventory = activeInventoryState.status === 'loading' && currentStep > 1;
+  const activeStep = setupBlockedByInventory ? 1 : currentStep;
 
   return (
     <Box flexDirection="column">
@@ -353,14 +367,17 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
 
       {resumeStatus === 'ready' && (() => {
         const completedStepSet = new Set(completedSteps.map(s => s.id));
+        const visibleSteps = activeInventoryState.status === 'loading'
+          ? STEP_REGISTRY.slice(0, 2)
+          : STEP_REGISTRY;
         return (
           <Box flexDirection="row" alignItems="flex-start">
 
             {/* ── Left: step progress sidebar ── */}
             <Box flexDirection="column" marginRight={3}>
-              {STEP_REGISTRY.map((step, idx) => {
+              {visibleSteps.map((step, idx) => {
                 const done = completedStepSet.has(idx);
-                const active = idx === currentStep;
+                const active = idx === activeStep;
                 const summary = completedSteps.find(s => s.id === idx)?.summary ?? [];
                 return (
                   <Box key={idx} flexDirection="column">
@@ -395,7 +412,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
         {showFirstStepHint && (
           <Text color="yellow">Already on the first step — press (q) to quit.</Text>
         )}
-        {currentStep === 0 && (
+        {activeStep === 0 && (
           <ConfigDetectionStep
             onBack={onBack}
             onExit={onExit}
@@ -406,13 +423,13 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
             )}
           />
         )}
-        {currentStep === 1 && (
+        {activeStep === 1 && (
           <InventoryStep
-            inventory={inventoryReport}
+            inventoryState={activeInventoryState}
             onBack={onBack}
             isOptional={false}
             onComplete={(data) => {
-              setInventoryReport(data.inventory);
+              setActiveInventoryState({ status: 'ready', report: data.inventory });
               const shellName = data.inventory.environment.shell?.split('/').pop();
               const detectedShell =
                 shellName === 'zsh' || shellName === 'bash' || shellName === 'fish'
@@ -425,7 +442,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
             }}
           />
         )}
-        {currentStep === 2 && (
+        {activeStep === 2 && (
           <ShellStep
             defaultShell={((initialValues.shell ?? config.shell) as 'zsh' | 'bash' | 'fish' | undefined) ?? 'zsh'}
             onBack={onBack}
@@ -437,7 +454,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
             )}
           />
         )}
-        {currentStep === 3 && (
+        {activeStep === 3 && (
           <PackageManagerStep
             onBack={onBack}
             isOptional={false}
@@ -448,7 +465,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
             )}
           />
         )}
-        {currentStep === 4 && (
+        {activeStep === 4 && (
           <VersionManagerStep
             onBack={onBack}
             isOptional={false}
@@ -459,7 +476,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
             )}
           />
         )}
-        {currentStep === 5 && (
+        {activeStep === 5 && (
           <ContextsStep
             defaultGitName={parseGitconfig(inventoryReport.environment.rcFiles['.gitconfig'] ?? '').name}
             defaultGitEmail={parseGitconfig(inventoryReport.environment.rcFiles['.gitconfig'] ?? '').email}
@@ -477,9 +494,8 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
             )}
           />
         )}
-        {currentStep === 6 && (
+        {activeStep === 6 && (
           <ToolsStep
-            defaultTools={getInstalledKnownToolFacts(inventoryReport).map(tool => tool.toolId).join(', ')}
             onBack={onBack}
             isOptional={false}
             initialValues={initialValues}
@@ -494,7 +510,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
             )}
           />
         )}
-        {currentStep === 7 && (
+        {activeStep === 7 && (
           <AppConfigStep
             onBack={onBack}
             isOptional={isCurrentOptional}
@@ -507,7 +523,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
             )}
           />
         )}
-        {currentStep === 8 && (
+        {activeStep === 8 && (
           <SecretsBackendStep
             onBack={onBack}
             isOptional={false}
@@ -518,7 +534,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
             )}
           />
         )}
-        {currentStep === 9 && (
+        {activeStep === 9 && (
           <BrowserStep
             onBack={onBack}
             isOptional={isCurrentOptional}
@@ -530,7 +546,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
             )}
           />
         )}
-        {currentStep === 10 && (
+        {activeStep === 10 && (
           <AIToolsStep
             onBack={onBack}
             isOptional={isCurrentOptional}
@@ -542,7 +558,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
             )}
           />
         )}
-        {currentStep === 11 && (
+        {activeStep === 11 && (
           <ConfigExportStep
             config={config as TildeConfig}
             onBack={onBack}
@@ -552,7 +568,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, onCompl
             }}
           />
         )}
-        {currentStep === 12 && (
+        {activeStep === 12 && (
           <ApplyStep
             config={config as TildeConfig}
             onBack={onBack}

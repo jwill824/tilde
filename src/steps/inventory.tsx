@@ -1,27 +1,46 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import SelectInput from 'ink-select-input';
-import type { InventoryReport } from '../inventory/report.js';
+import { createEmptyInventoryReport, type InventoryReport, type InventoryScanState } from '../inventory/report.js';
 import { summarizeInventory } from '../inventory/summary.js';
 
 interface Props {
-  inventory: InventoryReport;
+  inventory?: InventoryReport;
+  inventoryState?: InventoryScanState;
   onComplete: (data: { inventory: InventoryReport }) => void;
   onBack?: () => void;
   isOptional?: boolean;
 }
 
-export function InventoryStep({ inventory, onComplete, onBack, isOptional: _isOptional }: Props) {
+export function InventoryStep({ inventory, inventoryState, onComplete, onBack, isOptional: _isOptional }: Props) {
+  const scanState = inventoryState ?? {
+    status: 'ready' as const,
+    report: inventory ?? createEmptyInventoryReport(),
+  };
+  const report = scanState.report;
+
+  if (scanState.status === 'loading') {
+    return (
+      <Box flexDirection="column">
+        <Text bold>Scanning inventory...</Text>
+        <Text dimColor>Setup choices will be available after the scan finishes.</Text>
+      </Box>
+    );
+  }
+
   const confirmItems = [
     { label: 'Continue', value: 'continue' },
     ...(onBack ? [{ label: '← Back', value: 'back' }] : []),
   ];
+  const heading = scanState.status === 'failed'
+    ? 'Inventory scan failed'
+    : 'Inventory scan complete';
 
   return (
     <Box flexDirection="column">
-      <Text bold>Inventory scan complete</Text>
+      <Text bold>{heading}</Text>
       <Box marginTop={1} flexDirection="column">
-        {summarizeInventory(inventory).map(line => (
+        {summarizeInventory(report).map(line => (
           <Text
             key={line}
             color={line.startsWith('Warning') ? 'yellow' : 'green'}
@@ -39,7 +58,7 @@ export function InventoryStep({ inventory, onComplete, onBack, isOptional: _isOp
               return;
             }
 
-            onComplete({ inventory });
+            onComplete({ inventory: report });
           }}
         />
       </Box>
