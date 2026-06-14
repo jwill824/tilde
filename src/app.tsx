@@ -10,7 +10,7 @@ import { captureEnvironment, type EnvironmentSnapshot } from './utils/environmen
 import { installAll } from './installer/index.js';
 import { writeAll } from './dotfiles/writer.js';
 import { pluginRegistry } from './plugins/registry.js';
-import { createEmptyInventoryReport, type InventoryReport } from './inventory/report.js';
+import { createEmptyInventoryReport, type InventoryScanState } from './inventory/report.js';
 import { scanInventory } from './inventory/scan.js';
 
 export type AppMode = 'wizard' | 'config-first' | 'non-interactive';
@@ -65,7 +65,10 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
   const [splashDone, setSplashDone] = useState(false);
   const [done, setDone] = useState(false);
   const [configEditMode, setConfigEditMode] = useState<'apply' | 'edit' | 'start-over'>('apply');
-  const [inventory, setInventory] = useState<InventoryReport>(() => createEmptyInventoryReport());
+  const [inventoryState, setInventoryState] = useState<InventoryScanState>(() => ({
+    status: 'loading',
+    report: createEmptyInventoryReport(),
+  }));
   const [environment, setEnvironment] = useState<EnvironmentSnapshot>({
     os: 'macOS',
     arch: 'unknown',
@@ -88,18 +91,23 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
   useEffect(() => {
     if (mode === 'non-interactive') return;
     scanInventory()
-      .then(setInventory)
+      .then((report) => {
+        setInventoryState({ status: 'ready', report });
+      })
       .catch(() => {
-        setInventory({
-          ...createEmptyInventoryReport(),
-          warnings: [
-            {
-              id: 'inventory-startup-failed',
-              source: 'scanner',
-              severity: 'warning',
-              message: 'Inventory scan failed; continuing with an empty report.',
-            },
-          ],
+        setInventoryState({
+          status: 'failed',
+          report: {
+            ...createEmptyInventoryReport(),
+            warnings: [
+              {
+                id: 'inventory-startup-failed',
+                source: 'scanner',
+                severity: 'warning',
+                message: 'Inventory scan failed; continuing with an empty report.',
+              },
+            ],
+          },
         });
       });
     // mode is a mount-time value that never changes
@@ -185,7 +193,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
       return (
         <Box flexDirection="column">
           {header}
-          <Wizard inventory={inventory} onComplete={() => setDone(true)} />
+          <Wizard inventoryState={inventoryState} onComplete={() => setDone(true)} />
         </Box>
       );
     }
@@ -205,7 +213,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
         {header}
         <ConfigFirstMode
           configPath={configPath}
-          inventory={inventory}
+          inventory={inventoryState.report}
           onComplete={() => setDone(true)}
           onEdit={() => setConfigEditMode('edit')}
           onStartOver={() => setConfigEditMode('start-over')}
@@ -225,7 +233,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
         </Box>
       ) : (
         <Wizard
-          inventory={inventory}
+          inventoryState={inventoryState}
           onComplete={(_config: TildeConfig) => {
             setDone(true);
           }}

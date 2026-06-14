@@ -68,6 +68,13 @@ export interface InventoryReport {
   environment: InventoryEnvironmentSnapshot;
 }
 
+export type InventoryScanStatus = 'loading' | 'ready' | 'failed';
+
+export interface InventoryScanState {
+  status: InventoryScanStatus;
+  report: InventoryReport;
+}
+
 export function createEmptyInventoryReport(homeDir = process.env.HOME ?? '~'): InventoryReport {
   return {
     tools: [],
