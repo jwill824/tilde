@@ -39,7 +39,7 @@ describe('ConfigFirstMode integration', () => {
         },
       ],
       unmatchedHomebrew: {
-        formulae: [{ name: 'ripgrep', requestStatus: 'dependency' }],
+        formulae: [{ id: 'ripgrep', requestStatus: 'dependency' }],
         casks: [],
       },
       homebrew: {
