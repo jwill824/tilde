@@ -24,6 +24,7 @@ import {
 type HomebrewResult = {
   formulae: ClassifiedHomebrewFormula[] | null;
   casks: ClassifiedHomebrewCask[] | null;
+  available: boolean;
 };
 
 const CORE_TOOL_IDS = ['git', 'node', 'npm'] as const;
@@ -56,6 +57,7 @@ export async function scanInventory(homeDir?: string): Promise<InventoryReport> 
     const fact = await createMetadataFact(metadata, {
       formulaMap,
       caskMap,
+      homebrewAvailable: homebrew.available,
       warnings,
     });
 
@@ -103,8 +105,10 @@ async function scanHomebrew(warnings: InventoryWarning[]): Promise<HomebrewResul
     scanHomebrewList('casks', listInstalledCasks, warnings),
     scanHomebrewRequestState(warnings),
   ]);
+  const available = formulae !== null || casks !== null || installedOnRequestFormulae !== null;
 
   return {
+    available,
     formulae: formulae === null
       ? null
       : classifyHomebrewInventory({
@@ -186,6 +190,7 @@ async function createMetadataFact(
   context: {
     formulaMap: Map<string, ClassifiedHomebrewFormula> | null;
     caskMap: Map<string, ClassifiedHomebrewCask> | null;
+    homebrewAvailable: boolean;
     warnings: InventoryWarning[];
   }
 ): Promise<InventoryToolFact> {
@@ -196,6 +201,25 @@ async function createMetadataFact(
   let installedEvidence = false;
   let missingEvidence = false;
   let unknownEvidence = false;
+
+  if (metadata.id === 'homebrew') {
+    if (context.homebrewAvailable) {
+      evidence.push({ type: 'command', command: 'brew', outcome: 'succeeded' });
+      installedEvidence = true;
+    } else {
+      const warningId = firstWarningId(context.warnings, 'homebrew');
+      if (warningId) {
+        warningIds.push(warningId);
+        evidence.push({
+          type: 'inconclusive',
+          source: 'homebrew',
+          reason: 'Could not confirm Homebrew command availability from helper calls.',
+          warningId,
+        });
+        unknownEvidence = true;
+      }
+    }
+  }
 
   if (formula) {
     if (context.formulaMap === null) {
