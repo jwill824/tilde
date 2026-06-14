@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-05-PLAN.md
-last_updated: "2026-06-13T23:06:37.611Z"
-last_activity: 2026-06-13 -- Completed 02-05-PLAN.md
+stopped_at: Completed 02-06-PLAN.md
+last_updated: "2026-06-14T00:58:49.242Z"
+last_activity: 2026-06-13 -- Phase 02 execution started
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_plans: 10
+  completed_plans: 10
+  percent: 40
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-12)
 
 ## Current Position
 
-Phase: 02 (machine-inventory-scanner) — VERIFYING
-Plan: 5 of 5
+Phase: 02 (machine-inventory-scanner) — EXECUTING
+Plan: 2 of 7
 Status: Ready to execute
-Last activity: 2026-06-13 -- Completed 02-05-PLAN.md
+Last activity: 2026-06-13 -- Phase 02 execution started
 
 Progress: [██████████] 100%
 
@@ -56,6 +56,7 @@ Progress: [██████████] 100%
 | Phase 02 P03 | 54 min | 2 tasks | 10 files |
 | Phase 02 P04 | 14min | 2 tasks | 8 files |
 | Phase 02 P05 | 9min | 2 tasks | 6 files |
+| Phase 02 P06 | 36min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Recent decisions affecting current work:
 - [Phase 02]: Represent Homebrew direct/dependency as requestStatus evidence while preserving Phase 4 provenance labels for later. — Plan 02-04 implements D-02/D-10/D-13 without introducing final managed/manual provenance labels.
 - [Phase 02]: Config-first confirmation consumes the App startup InventoryReport via prop instead of running inventory scanning during render.
 - [Phase 02]: Inventory warning grouping is centralized in summarizeInventory so wizard and config-first output cannot drift.
+- [Phase 02]: Use InventoryScanState as the shared readiness contract for startup inventory. — This lets App distinguish pending scans from completed empty reports before wizard or config-first actions are shown.
+- [Phase 02]: Installed inventory facts stay out of ToolsStep.defaultTools. — Inventory facts are evidence for trust summaries and must not become generic package-manager install requests without explicit mapping.
 
 ### Pending Todos
 
@@ -94,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T22:35:08.436Z
-Stopped at: Completed 02-05-PLAN.md
+Last session: 2026-06-14T00:58:49.239Z
+Stopped at: Completed 02-06-PLAN.md
 Resume file: None
