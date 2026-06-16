@@ -1,7 +1,7 @@
 ---
 phase: 02-machine-inventory-scanner
 verified: 2026-06-14T01:21:46Z
-status: human_needed
+status: passed
 score: 5/5 must-haves verified
 overrides_applied: 0
 re_verification:
@@ -17,16 +17,20 @@ human_verification:
   - test: "Run the normal wizard path and confirm the Inventory step appears before shell/package/tool setup choices."
     expected: "The user sees inventory status or summary first; Continue is available only after the scan is ready or explicitly failed, and later setup choices are not reachable while inventory is loading."
     why_human: "Ink user-flow sequencing and terminal interaction feel need a real terminal pass even though integration tests cover rendered states."
+    status: passed
+    evidence: ".planning/phases/02-machine-inventory-scanner/02-UAT.md test 1"
   - test: "Run a config-first apply path with an existing config and inspect the confirmation screen."
     expected: "Inventory summary appears before Configuration Summary and Apply/Edit/Start over choices; loading inventory withholds apply choices."
     why_human: "This is a terminal UAT flow and the final on-screen order should be confirmed outside the test renderer."
+    status: passed
+    evidence: ".planning/phases/02-machine-inventory-scanner/02-UAT.md test 2"
 ---
 
 # Phase 2: Machine Inventory Scanner Verification Report
 
 **Phase Goal:** tilde can detect already-installed tools before interaction and distinguish direct Homebrew installs from dependency installs.
 **Verified:** 2026-06-14T01:21:46Z
-**Status:** human_needed
+**Status:** passed
 **Re-verification:** Yes - after gap closure plans 02-06 and 02-07
 
 ## MVP Mode Note
@@ -41,7 +45,7 @@ ROADMAP marks Phase 2 as `mode: mvp`, but the phase goal is not in canonical use
 | Wizard inventory gate | Setup choices are unavailable while inventory is loading | [src/modes/wizard.tsx](/Users/jeff.williams/Developer/personal/tilde/src/modes/wizard.tsx:316) redirects active setup back to inventory while loading; [src/steps/inventory.tsx](/Users/jeff.williams/Developer/personal/tilde/src/steps/inventory.tsx:22) renders loading text without `SelectInput`. | VERIFIED |
 | Config-first inventory gate | Apply choices are unavailable while inventory is loading | [src/modes/config-first.tsx](/Users/jeff.williams/Developer/personal/tilde/src/modes/config-first.tsx:163) returns loading inventory status before constructing apply/edit/cancel choices. | VERIFIED |
 | User-visible summary | Users see known installed tools, Homebrew counts, and warnings before decisions | [src/inventory/summary.ts](/Users/jeff.williams/Developer/personal/tilde/src/inventory/summary.ts:7) formats concise lines; [src/steps/inventory.tsx](/Users/jeff.williams/Developer/personal/tilde/src/steps/inventory.tsx:43) and [src/modes/config-first.tsx](/Users/jeff.williams/Developer/personal/tilde/src/modes/config-first.tsx:185) render them before later choices. | VERIFIED |
-| Outcome | Users can trust what tilde detected before setup/apply changes | Automated code and integration evidence verifies the flow; final terminal UAT remains required for the live Ink experience. | HUMAN CHECK |
+| Outcome | Users can trust what tilde detected before setup/apply changes | Automated code and integration evidence verifies the flow; terminal UAT passed in `02-UAT.md`. | VERIFIED |
 
 ## Goal Achievement
 
@@ -128,23 +132,27 @@ All Phase 02 requirement IDs from `.planning/REQUIREMENTS.md` are covered. No ad
 
 ### Human Verification Required
 
+Terminal UAT completed in `.planning/phases/02-machine-inventory-scanner/02-UAT.md` with 2/2 tests passed, 0 issues, 0 pending.
+
 ### 1. Wizard Inventory Flow
 
 **Test:** Run the normal wizard path and confirm the Inventory step appears before shell/package/tool setup choices.
 **Expected:** The user sees inventory status or summary first; Continue is available only after the scan is ready or explicitly failed, and later setup choices are not reachable while inventory is loading.
 **Why human:** Ink user-flow sequencing and terminal interaction feel need a real terminal pass even though integration tests cover rendered states.
+**Status:** Passed via `02-UAT.md` test 1.
 
 ### 2. Config-First Inventory Flow
 
 **Test:** Run a config-first apply path with an existing config and inspect the confirmation screen.
 **Expected:** Inventory summary appears before Configuration Summary and Apply/Edit/Start over choices; loading inventory withholds apply choices.
 **Why human:** This is a terminal UAT flow and the final on-screen order should be confirmed outside the test renderer.
+**Status:** Passed via `02-UAT.md` test 2.
 
 ### Gaps Summary
 
 No code gaps remain from the prior verification. The previous three blockers were closed by explicit loading/ready/failed inventory state, removal of broad inventory-derived `ToolsStep.defaultTools`, and Homebrew command evidence for metadata id `homebrew`.
 
-The phase goal is achieved in the codebase, pending the two concrete terminal UAT checks listed above. Because human verification items are present, the GSD status is `human_needed`, not `passed`.
+The phase goal is achieved in the codebase. The two concrete terminal UAT checks listed above passed, so the GSD status is `passed`.
 
 ---
 
