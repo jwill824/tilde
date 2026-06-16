@@ -8,7 +8,7 @@ on:
       - 'tests/**'
       - 'package.json'
       - 'package-lock.json'
-      - '.releaserc.json'
+      - 'release.config.cjs'
   workflow_dispatch:
 
 permissions:
@@ -19,6 +19,7 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  TILDE_NPM_PUBLISH: ${{ vars.TILDE_NPM_PUBLISH || 'false' }}
 
 jobs:
   release:
