@@ -41,6 +41,17 @@ export async function listInstalledCasks(): Promise<string[]> {
 }
 
 /**
+ * Returns installed Homebrew formulae that were explicitly requested by the user.
+ */
+export async function listInstalledOnRequestFormulae(): Promise<string[]> {
+  const output = await runBrew(['list', '--installed-on-request', '--formula', '--full-name']);
+  return output
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean);
+}
+
+/**
  * Install a Homebrew cask.
  * Throws on failure (including offline/network errors).
  */

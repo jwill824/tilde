@@ -1,10 +1,16 @@
 import React from 'react';
+import { Text } from 'ink';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from 'ink-testing-library';
-import { mkdir, rm } from 'node:fs/promises';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { randomUUID } from 'node:crypto';
+import { createEmptyInventoryReport, type InventoryReport, type InventoryScanState } from '../../src/inventory/report.js';
+
+const { mockScanInventory } = vi.hoisted(() => ({
+  mockScanInventory: vi.fn(),
+}));
+
+vi.mock('../../src/inventory/scan.js', () => ({
+  scanInventory: mockScanInventory,
+}));
 
 // Mock filesystem operations that would write to disk
 vi.mock('../../src/config/writer.js', () => ({
@@ -33,6 +39,63 @@ vi.mock('node:fs/promises', async () => {
 });
 
 describe('Wizard flow integration', () => {
+  function createInventoryFixture(overrides: Partial<InventoryReport> = {}): InventoryReport {
+    return {
+      ...createEmptyInventoryReport(),
+      tools: [
+        {
+          toolId: 'homebrew',
+          label: 'Homebrew',
+          category: 'package-manager',
+          installed: 'installed',
+          evidence: [{ type: 'homebrew-formula', id: 'brew', requestStatus: 'direct' }],
+          warningIds: [],
+        },
+        {
+          toolId: 'vscode',
+          label: 'Visual Studio Code',
+          category: 'editor',
+          installed: 'installed',
+          evidence: [{ type: 'homebrew-cask', id: 'visual-studio-code', requestStatus: 'direct' }],
+          warningIds: [],
+        },
+      ],
+      unmatchedHomebrew: {
+        formulae: [{ id: 'ripgrep', requestStatus: 'dependency' }],
+        casks: [],
+      },
+      homebrew: {
+        installedFormulaeCount: 2,
+        installedCasksCount: 1,
+        matchedFormulaeCount: 1,
+        matchedCasksCount: 1,
+        unmatchedFormulaeCount: 1,
+        unmatchedCasksCount: 0,
+        directFormulaeCount: 1,
+        dependencyFormulaeCount: 1,
+        unknownFormulaeCount: 0,
+      },
+      warnings: [],
+      environment: {
+        homeDir: '~',
+        shell: '/bin/zsh',
+        rcFiles: {},
+        detectedLanguages: [{ name: 'node', version: '22.0.0' }],
+        detectedVersionManagers: [{ name: 'vfox' }],
+      },
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => {
+    mockScanInventory.mockResolvedValue(createInventoryFixture());
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    mockScanInventory.mockReset();
+  });
+
   it('renders the wizard entry point without crashing', async () => {
     const { App } = await import('../../src/app.js');
     const { lastFrame } = render(React.createElement(App, { mode: 'wizard' }));
@@ -234,5 +297,260 @@ describe('Wizard flow integration', () => {
 
     const frame = lastFrame() ?? '';
     expect(frame).toContain('homebrew');
+  });
+
+  it('inventory wizard step uses inventory label and summarizes known installed tools', async () => {
+    const { Wizard } = await import('../../src/modes/wizard.js');
+
+    const { lastFrame } = render(
+      React.createElement(Wizard, {
+        initialStep: 1,
+        inventory: createInventoryFixture(),
+      } as React.ComponentProps<typeof Wizard> & { inventory: InventoryReport })
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Inventory');
+    expect(frame).not.toContain('Environment Capture');
+    expect(frame).toContain('Inventory scan complete');
+    expect(frame).toContain('Known installed tools:');
+  });
+
+  it('inventory wizard step summarizes Homebrew counts and warnings without unmatched names', async () => {
+    const { Wizard } = await import('../../src/modes/wizard.js');
+    const inventory = createInventoryFixture({
+      warnings: [
+        {
+          id: 'homebrew-request-state-unavailable',
+          source: 'homebrew',
+          severity: 'warning',
+          message: 'Homebrew direct/dependency status is unavailable.',
+        },
+      ],
+    });
+
+    const { lastFrame } = render(
+      React.createElement(Wizard, {
+        initialStep: 1,
+        inventory,
+      } as React.ComponentProps<typeof Wizard> & { inventory: InventoryReport })
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Inventory scan complete');
+    expect(frame).toContain('Known installed tools:');
+    expect(frame).toContain('Homebrew formulae: 1 direct, 1 dependencies, 0 unknown');
+    expect(frame).toContain('Warnings:');
+    expect(frame).toContain('Warning: Homebrew direct/dependency status is unavailable.');
+    expect(frame).not.toContain('ripgrep');
+  });
+
+  it('inventory wizard step shows startup scan failure warnings without blocking rendering', async () => {
+    const { Wizard } = await import('../../src/modes/wizard.js');
+    const fallbackInventory = createInventoryFixture({
+      tools: [],
+      homebrew: {
+        installedFormulaeCount: 0,
+        installedCasksCount: 0,
+        matchedFormulaeCount: 0,
+        matchedCasksCount: 0,
+        unmatchedFormulaeCount: 0,
+        unmatchedCasksCount: 0,
+        directFormulaeCount: 0,
+        dependencyFormulaeCount: 0,
+        unknownFormulaeCount: 0,
+      },
+      warnings: [
+        {
+          id: 'inventory-startup-failed',
+          source: 'scanner',
+          severity: 'warning',
+          message: 'Inventory scan failed; continuing with an empty report.',
+        },
+      ],
+    });
+
+    const { lastFrame } = render(
+      React.createElement(Wizard, {
+        initialStep: 1,
+        inventory: fallbackInventory,
+      } as React.ComponentProps<typeof Wizard> & { inventory: InventoryReport })
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Inventory');
+    expect(frame).toContain('Known installed tools:');
+    expect(frame).toContain('Warning: Inventory scan failed; continuing with an empty report.');
+  });
+
+  it('inventory wizard step blocks Continue while inventory is loading', async () => {
+    const { InventoryStep } = await import('../../src/steps/inventory.js');
+    const onComplete = vi.fn();
+    const inventoryState: InventoryScanState = {
+      status: 'loading',
+      report: createEmptyInventoryReport(),
+    };
+
+    const { lastFrame } = render(
+      React.createElement(InventoryStep, {
+        inventoryState,
+        onComplete,
+      } as React.ComponentProps<typeof InventoryStep>)
+    );
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Scanning inventory...');
+    expect(frame).not.toContain('Continue');
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it('keeps setup choices behind pending startup inventory scans', async () => {
+    mockScanInventory.mockReturnValue(new Promise(() => undefined));
+
+    const { App } = await import('../../src/app.js');
+    const { lastFrame, stdin } = render(React.createElement(App, { mode: 'wizard' }));
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    stdin.write('\r');
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const frame = lastFrame() ?? '';
+    expect(mockScanInventory).toHaveBeenCalled();
+    expect(frame).toContain('Scanning inventory...');
+    expect(frame).not.toContain('Continue');
+    expect(frame).not.toContain('Shell');
+  });
+
+  it('does not pass installed inventory metadata ids to ToolsStep defaultTools', async () => {
+    const observedDefaultTools: Array<string | undefined> = [];
+    vi.resetModules();
+    vi.doMock('../../src/steps/tools.js', () => ({
+      ToolsStep: (props: { defaultTools?: string }) => {
+        observedDefaultTools.push(props.defaultTools);
+        return React.createElement(Text, null, `mock tools default: ${props.defaultTools ?? '<unset>'}`);
+      },
+    }));
+    const { Wizard } = await import('../../src/modes/wizard.js');
+    const inventoryState: InventoryScanState = {
+      status: 'ready',
+      report: createInventoryFixture({
+        tools: [
+          {
+            toolId: 'homebrew',
+            label: 'Homebrew',
+            category: 'package-manager',
+            installed: 'installed',
+            evidence: [{ type: 'homebrew-formula', id: 'brew', requestStatus: 'direct' }],
+            warningIds: [],
+          },
+          {
+            toolId: 'vscode',
+            label: 'Visual Studio Code',
+            category: 'editor',
+            installed: 'installed',
+            evidence: [{ type: 'homebrew-cask', id: 'visual-studio-code', requestStatus: 'direct' }],
+            warningIds: [],
+          },
+          {
+            toolId: 'chrome',
+            label: 'Google Chrome',
+            category: 'browser',
+            installed: 'installed',
+            evidence: [{ type: 'homebrew-cask', id: 'google-chrome', requestStatus: 'direct' }],
+            warningIds: [],
+          },
+          {
+            toolId: 'vfox',
+            label: 'vfox',
+            category: 'version-manager',
+            installed: 'installed',
+            evidence: [{ type: 'command', command: 'vfox', outcome: 'succeeded' }],
+            warningIds: [],
+          },
+          {
+            toolId: 'obsidian',
+            label: 'Obsidian',
+            category: 'note-taking',
+            installed: 'installed',
+            evidence: [{ type: 'homebrew-cask', id: 'obsidian', requestStatus: 'direct' }],
+            warningIds: [],
+          },
+          {
+            toolId: 'shell:zsh',
+            label: 'zsh',
+            category: 'shell',
+            installed: 'installed',
+            evidence: [{ type: 'shell', name: 'zsh', source: 'scanner' }],
+            warningIds: [],
+          },
+          {
+            toolId: 'core-tool:node',
+            label: 'Node.js',
+            category: 'core-tool',
+            installed: 'installed',
+            evidence: [{ type: 'command', command: 'node', outcome: 'succeeded', version: '22.0.0' }],
+            warningIds: [],
+          },
+        ],
+      }),
+    };
+
+    render(
+      React.createElement(Wizard, {
+        initialStep: 6,
+        inventoryState,
+      } as React.ComponentProps<typeof Wizard>)
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    expect(observedDefaultTools[0] ?? '').toBe('');
+  });
+
+  it('preserves failed inventory status after continuing and navigating back', async () => {
+    vi.resetModules();
+    vi.doMock('../../src/steps/shell.js', () => ({
+      ShellStep: (props: { onBack?: () => void }) => {
+        React.useEffect(() => {
+          props.onBack?.();
+        }, [props]);
+
+        return React.createElement(Text, null, 'mock shell step');
+      },
+    }));
+
+    const { Wizard } = await import('../../src/modes/wizard.js');
+    const inventoryState: InventoryScanState = {
+      status: 'failed',
+      report: createInventoryFixture({
+        tools: [],
+        warnings: [
+          {
+            id: 'inventory-startup-failed',
+            source: 'scanner',
+            severity: 'warning',
+            message: 'Inventory scan failed; continuing with an empty report.',
+          },
+        ],
+      }),
+    };
+
+    const { lastFrame, stdin } = render(
+      React.createElement(Wizard, {
+        initialStep: 1,
+        inventoryState,
+      } as React.ComponentProps<typeof Wizard>)
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    expect(lastFrame()).toContain('Inventory scan failed');
+
+    stdin.write('\r');
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    expect(lastFrame()).toContain('Inventory scan failed');
+    expect(lastFrame()).not.toContain('Inventory scan complete');
   });
 });

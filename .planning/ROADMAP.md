@@ -12,7 +12,7 @@ This roadmap turns tilde from a setup wizard into a machine-aware setup assistan
 - Phase 1 is the immediate next milestone and covers GitHub issue #98.
 
 - [x] **Phase 1: Tool Metadata Registry** - Create the shared data model and registry lookup layer for wizard tool metadata. (completed 2026-06-13)
-- [ ] **Phase 2: Machine Inventory Scanner** - Detect installed tools and Homebrew direct-vs-dependency provenance.
+- [x] **Phase 2: Machine Inventory Scanner** - Detect installed tools and Homebrew direct-vs-dependency provenance. (completed 2026-06-13)
 - [ ] **Phase 3: Dotfiles Discovery Map** - Map known dotfiles and rc-file contents to tools.
 - [ ] **Phase 4: Provenance Summary** - Surface clear managed/already-installed/dependency/manual/unknown status to users.
 - [ ] **Phase 5: Config Discovery Polish** - Improve non-default config discovery and error messaging.
@@ -68,12 +68,23 @@ Cross-cutting constraints:
   3. Missing or failing external commands do not crash the wizard.
   4. Tests cover scanner success and failure paths with mocked command execution.
 
-**Plans**: 2 plans
+**Plans**: 5 plans
 
 Plans:
 
-- [ ] 02-01: Extend scanner output with registry-aligned installed-tool facts.
-- [ ] 02-02: Add Homebrew direct/dependency classification and wizard summary integration.
+**Wave 1**
+
+- [x] 02-01-PLAN.md - Create inventory report, scanner, summary helpers, and mocked scanner tests.
+- [x] 02-02-PLAN.md - Seed plugin-backed metadata rows and registry tests for inventory categories.
+
+**Wave 2 (blocked on Wave 1 completion)**
+
+- [x] 02-03-PLAN.md - Wire startup inventory into the wizard and renamed InventoryStep.
+- [x] 02-04-PLAN.md - Add Homebrew installed-on-request helper, classifier, scanner integration, and unit tests.
+
+**Wave 3 (blocked on Wave 2 completion)**
+
+- [x] 02-05-PLAN.md - Render final inventory summary in config-first and wizard confirmation paths.
 
 ### Phase 3: Dotfiles Discovery Map
 
@@ -144,7 +155,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Tool Metadata Registry | 3/3 | Complete    | 2026-06-13 |
-| 2. Machine Inventory Scanner | 0/2 | Not started | - |
+| 2. Machine Inventory Scanner | 7/7 | Complete   | 2026-06-14 |
 | 3. Dotfiles Discovery Map | 0/2 | Not started | - |
 | 4. Provenance Summary | 0/2 | Not started | - |
 | 5. Config Discovery Polish | 0/1 | Not started | - |

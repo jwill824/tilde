@@ -4,8 +4,9 @@ import SelectInput from 'ink-select-input';
 import type { TildeConfig } from '../config/schema.js';
 import { saveCheckpoint, loadCheckpoint, clearCheckpoint } from '../state/checkpoint.js';
 import { ConfigDetectionStep } from '../steps/config-detection.js';
-import { EnvCaptureStep } from '../steps/env-capture.js';
-import type { EnvironmentCaptureReport } from '../capture/scanner.js';
+import { InventoryStep } from '../steps/inventory.js';
+import { createEmptyInventoryReport, type InventoryReport, type InventoryScanState } from '../inventory/report.js';
+import { summarizeInventory } from '../inventory/summary.js';
 import { parseGitconfig } from '../capture/parser.js';
 import { ShellStep } from '../steps/shell.js';
 import { PackageManagerStep } from '../steps/package-manager.js';
@@ -80,7 +81,7 @@ export function getNextStep(step: number, config: Partial<TildeConfig>): number 
 // ---------------------------------------------------------------------------
 const STEP_REGISTRY: StepDefinition[] = [
   { id: 'config-detection',  label: 'Config Detection',    required: true  }, // 0
-  { id: 'env-capture',       label: 'Environment Capture', required: true  }, // 1
+  { id: 'inventory',         label: 'Inventory',           required: true  }, // 1
   { id: 'shell',             label: 'Shell',               required: true  }, // 2
   { id: 'package-manager',   label: 'Package Manager',     required: true  }, // 3
   { id: 'version-manager',   label: 'Version Manager',     required: true  }, // 4
@@ -168,6 +169,8 @@ export function extractStepValues(stepIdx: number, cfg: Partial<TildeConfig>): R
 interface WizardProps {
   initialStep?: number;
   initialConfig?: Partial<TildeConfig>;
+  inventory?: InventoryReport;
+  inventoryState?: InventoryScanState;
   onComplete?: (config: TildeConfig) => void;
   onExit?: () => void;
 }
@@ -176,14 +179,19 @@ interface WizardProps {
 // Wizard component
 // ---------------------------------------------------------------------------
 
-export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit }: WizardProps) {
+export function Wizard({ initialStep = 0, initialConfig = {}, inventory, inventoryState, onComplete, onExit }: WizardProps) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [config, setConfig] = useState<Partial<TildeConfig>>({
     ...initialConfig,
     os: (initialConfig.os ?? detectOS()) as 'macos',
   });
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
-  const [captureReport, setCaptureReport] = useState<EnvironmentCaptureReport | null>(null);
+  const [activeInventoryState, setActiveInventoryState] = useState<InventoryScanState>(() => (
+    inventoryState ?? {
+      status: 'ready',
+      report: inventory ?? createEmptyInventoryReport(),
+    }
+  ));
 
   // Navigation history stack (T007)
   const [history, setHistory] = useState<StepFrame[]>([]);
@@ -197,6 +205,17 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
 
   // First-step back-key hint (fires when user presses (b) on step 0)
   const [showFirstStepHint, setShowFirstStepHint] = useState(false);
+
+  useEffect(() => {
+    if (inventoryState) {
+      setActiveInventoryState(inventoryState);
+      return;
+    }
+
+    if (inventory) {
+      setActiveInventoryState({ status: 'ready', report: inventory });
+    }
+  }, [inventory, inventoryState]);
 
   useEffect(() => {
     loadCheckpoint().then((checkpoint) => {
@@ -293,6 +312,9 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
     ? poppedFrame
     : history.find(f => f.stepIndex === currentStep);
   const initialValues: Record<string, unknown> = prevFrame?.values ?? {};
+  const inventoryReport = activeInventoryState.report;
+  const setupBlockedByInventory = activeInventoryState.status === 'loading' && currentStep > 1;
+  const activeStep = setupBlockedByInventory ? 1 : currentStep;
 
   return (
     <Box flexDirection="column">
@@ -345,14 +367,17 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
 
       {resumeStatus === 'ready' && (() => {
         const completedStepSet = new Set(completedSteps.map(s => s.id));
+        const visibleSteps = activeInventoryState.status === 'loading'
+          ? STEP_REGISTRY.slice(0, 2)
+          : STEP_REGISTRY;
         return (
           <Box flexDirection="row" alignItems="flex-start">
 
             {/* ── Left: step progress sidebar ── */}
             <Box flexDirection="column" marginRight={3}>
-              {STEP_REGISTRY.map((step, idx) => {
+              {visibleSteps.map((step, idx) => {
                 const done = completedStepSet.has(idx);
-                const active = idx === currentStep;
+                const active = idx === activeStep;
                 const summary = completedSteps.find(s => s.id === idx)?.summary ?? [];
                 return (
                   <Box key={idx} flexDirection="column">
@@ -387,7 +412,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
         {showFirstStepHint && (
           <Text color="yellow">Already on the first step — press (q) to quit.</Text>
         )}
-        {currentStep === 0 && (
+        {activeStep === 0 && (
           <ConfigDetectionStep
             onBack={onBack}
             onExit={onExit}
@@ -398,29 +423,29 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 1 && (
-          <EnvCaptureStep
+        {activeStep === 1 && (
+          <InventoryStep
+            inventoryState={activeInventoryState}
             onBack={onBack}
             isOptional={false}
             onComplete={(data) => {
-              setCaptureReport(data.captureReport);
-              const rcFiles = data.captureReport.rcFiles;
+              setActiveInventoryState({
+                status: activeInventoryState.status === 'failed' ? 'failed' : 'ready',
+                report: data.inventory,
+              });
+              const shellName = data.inventory.environment.shell?.split('/').pop();
               const detectedShell =
-                rcFiles['.zshrc'] !== undefined ? 'zsh' :
-                rcFiles['.bash_profile'] !== undefined ? 'bash' : undefined;
+                shellName === 'zsh' || shellName === 'bash' || shellName === 'fish'
+                  ? shellName
+                  : undefined;
               advance(
                 detectedShell ? { shell: detectedShell } : {},
-                [
-                  `${data.captureReport.dotfiles.length} dotfiles, ${data.captureReport.brewPackages.length} brew pkgs`,
-                  ...(data.captureReport.detectedLanguages.length > 0
-                    ? [`${data.captureReport.detectedLanguages.length} languages`]
-                    : []),
-                ]
+                summarizeInventory(data.inventory)
               );
             }}
           />
         )}
-        {currentStep === 2 && (
+        {activeStep === 2 && (
           <ShellStep
             defaultShell={((initialValues.shell ?? config.shell) as 'zsh' | 'bash' | 'fish' | undefined) ?? 'zsh'}
             onBack={onBack}
@@ -432,7 +457,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 3 && (
+        {activeStep === 3 && (
           <PackageManagerStep
             onBack={onBack}
             isOptional={false}
@@ -443,7 +468,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 4 && (
+        {activeStep === 4 && (
           <VersionManagerStep
             onBack={onBack}
             isOptional={false}
@@ -454,12 +479,12 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 5 && (
+        {activeStep === 5 && (
           <ContextsStep
-            defaultGitName={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').name : undefined}
-            defaultGitEmail={captureReport ? parseGitconfig(captureReport.rcFiles['.gitconfig'] ?? '').email : undefined}
+            defaultGitName={parseGitconfig(inventoryReport.environment.rcFiles['.gitconfig'] ?? '').name}
+            defaultGitEmail={parseGitconfig(inventoryReport.environment.rcFiles['.gitconfig'] ?? '').email}
             initialContexts={canGoBack ? (config.contexts ?? []) : []}
-            detectedLanguages={captureReport?.detectedLanguages}
+            detectedLanguages={inventoryReport.environment.detectedLanguages}
             onBack={onBack}
             isOptional={false}
             initialValues={initialValues}
@@ -472,9 +497,8 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 6 && (
+        {activeStep === 6 && (
           <ToolsStep
-            defaultTools={captureReport ? captureReport.brewPackages.join(', ') : undefined}
             onBack={onBack}
             isOptional={false}
             initialValues={initialValues}
@@ -489,7 +513,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 7 && (
+        {activeStep === 7 && (
           <AppConfigStep
             onBack={onBack}
             isOptional={isCurrentOptional}
@@ -502,7 +526,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 8 && (
+        {activeStep === 8 && (
           <SecretsBackendStep
             onBack={onBack}
             isOptional={false}
@@ -513,7 +537,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 9 && (
+        {activeStep === 9 && (
           <BrowserStep
             onBack={onBack}
             isOptional={isCurrentOptional}
@@ -525,7 +549,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 10 && (
+        {activeStep === 10 && (
           <AIToolsStep
             onBack={onBack}
             isOptional={isCurrentOptional}
@@ -537,7 +561,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             )}
           />
         )}
-        {currentStep === 11 && (
+        {activeStep === 11 && (
           <ConfigExportStep
             config={config as TildeConfig}
             onBack={onBack}
@@ -547,7 +571,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, onComplete, onExit
             }}
           />
         )}
-        {currentStep === 12 && (
+        {activeStep === 12 && (
           <ApplyStep
             config={config as TildeConfig}
             onBack={onBack}
