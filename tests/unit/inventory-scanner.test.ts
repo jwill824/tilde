@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mkdir, rm } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
@@ -54,6 +54,7 @@ vi.mock('../../src/tools/registry.js', () => ({
           formula: 'test-cli',
         },
       },
+      configPaths: ['~/.config/test-cli'],
     },
     {
       id: 'test-editor-installed',
@@ -88,6 +89,22 @@ vi.mock('../../src/tools/registry.js', () => ({
       },
     },
   ],
+  getToolsByConfigPath: (path: string) => path === '~/.config/test-cli' || path.startsWith('~/.config/test-cli/')
+    ? [{
+      id: 'test-cli',
+      label: 'Test CLI',
+      category: 'package-manager',
+      supportedPlatforms: ['darwin'],
+      source: 'first-party',
+      install: {
+        homebrew: {
+          formula: 'test-cli',
+        },
+      },
+      configPaths: ['~/.config/test-cli'],
+    }]
+    : [],
+  getToolsByDotfilePath: () => [],
 }));
 
 vi.mock('node:fs/promises', async () => {
@@ -105,6 +122,9 @@ describe('inventory scanner', () => {
   beforeEach(async () => {
     tmpHome = join(tmpdir(), `tilde-inventory-test-${randomUUID()}`);
     await mkdir(tmpHome, { recursive: true });
+    await mkdir(join(tmpHome, '.config', 'test-cli'), { recursive: true });
+    await writeFile(join(tmpHome, '.config', 'test-cli', 'config.json'), '{}\n');
+    await writeFile(join(tmpHome, '.unknownrc'), 'custom=true\n');
     originalShell = process.env.SHELL;
     process.env.SHELL = '/bin/zsh';
 
@@ -146,6 +166,7 @@ describe('inventory scanner', () => {
       tools: expect.any(Array),
       unmatchedHomebrew: expect.any(Object),
       homebrew: expect.any(Object),
+      dotfiles: expect.any(Object),
       warnings: expect.any(Array),
       environment: expect.any(Object),
     }));
@@ -330,6 +351,34 @@ describe('inventory scanner', () => {
         { type: 'command', command: 'brew', outcome: 'succeeded' },
       ]),
     }));
+  });
+
+  it('attaches a dotfile map and includes concise aggregate dotfile summary output', async () => {
+    const { scanInventory } = await import('../../src/inventory/scan.js');
+    const { summarizeInventory } = await import('../../src/inventory/summary.js');
+
+    const report = await scanInventory(tmpHome);
+    const summary = summarizeInventory(report);
+
+    expect(report.dotfiles).toEqual(expect.objectContaining({
+      files: expect.arrayContaining([
+        expect.objectContaining({
+          path: join(tmpHome, '.config', 'test-cli', 'config.json'),
+          state: 'known',
+          toolIds: ['test-cli'],
+        }),
+        expect.objectContaining({
+          path: join(tmpHome, '.unknownrc'),
+          state: 'unknown',
+        }),
+      ]),
+      counts: expect.objectContaining({
+        knownFiles: 1,
+        unknownFiles: 1,
+      }),
+    }));
+    expect(summary).toContain('Dotfiles: 1 known, 1 unknown, 0 warnings');
+    expect(summary.some(line => line.includes(join(tmpHome, '.unknownrc')))).toBe(false);
   });
 
   it('keeps Homebrew unknown with warning-backed evidence when helper calls fail', async () => {
