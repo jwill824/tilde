@@ -16,6 +16,12 @@ export function summarizeInventory(report: InventoryReport): string[] {
     `Dotfiles: ${report.dotfiles.counts.knownFiles} known, ${report.dotfiles.counts.unknownFiles} unknown, ${report.dotfiles.counts.warnings} warnings`,
   ];
 
+  if (report.dotfiles.counts.knownFindingsCount > 0 || report.dotfiles.counts.unknownFindingsCount > 0) {
+    lines.push(
+      `Dotfile findings: ${report.dotfiles.counts.knownFindingsCount} known hooks, ${report.dotfiles.counts.unknownFindingsCount} unknown rc findings`
+    );
+  }
+
   if (report.warnings.length > 0) {
     lines.push('Warnings:');
     for (const warning of report.warnings) {
