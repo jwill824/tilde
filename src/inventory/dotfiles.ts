@@ -1,5 +1,5 @@
-import { lstat, open } from 'node:fs/promises';
-import { relative, resolve, sep } from 'node:path';
+import { lstat, readFile } from 'node:fs/promises';
+import { basename, relative, resolve, sep } from 'node:path';
 import fg from 'fast-glob';
 import { createCaptureFilter, filterDotfiles } from '../capture/filter.js';
 import { allToolMetadata, getToolsByConfigPath, getToolsByDotfilePath } from '../tools/registry.js';
@@ -64,6 +64,8 @@ export interface DotfileMap {
     mixedFiles: number;
     skippedFiles: number;
     warnings: number;
+    knownFindingsCount: number;
+    unknownFindingsCount: number;
   };
   warningIds: string[];
 }
@@ -119,6 +121,8 @@ export function createEmptyDotfileMap(homeDir = process.env.HOME ?? '~'): Dotfil
       mixedFiles: 0,
       skippedFiles: 0,
       warnings: 0,
+      knownFindingsCount: 0,
+      unknownFindingsCount: 0,
     },
     warningIds: [],
   };
@@ -154,6 +158,12 @@ export function parseShellRcFindings(filePath: string, content: string): Dotfile
       continue;
     }
 
+    const hookFinding = parseKnownHook(trimmed, filePath, index + 1);
+    if (hookFinding) {
+      findings.push(hookFinding);
+      continue;
+    }
+
     const aliasMatch = trimmed.match(/^alias\s+([^=\s]+)=/);
     if (aliasMatch) {
       findings.push(createRcFinding('alias', filePath, index + 1, {
@@ -170,6 +180,16 @@ export function parseShellRcFindings(filePath: string, content: string): Dotfile
       continue;
     }
 
+    const pathMatch = trimmed.match(/^(?:export\s+)?PATH(?:\+)?=(.+)$/);
+    if (pathMatch) {
+      findings.push(createRcFinding('path-edit', filePath, index + 1, {
+        name: 'PATH',
+        valueKind: classifyRcExportValue(pathMatch[1] ?? ''),
+        editKind: classifyPathEdit(pathMatch[1] ?? ''),
+      }));
+      continue;
+    }
+
     const exportMatch = trimmed.match(/^export\s+([A-Za-z_][A-Za-z0-9_]*)=?(.+)?$/);
     if (exportMatch) {
       findings.push(createRcFinding('export', filePath, index + 1, {
@@ -179,18 +199,9 @@ export function parseShellRcFindings(filePath: string, content: string): Dotfile
       continue;
     }
 
-    if (/^PATH=|^export\s+PATH=/.test(trimmed)) {
-      findings.push(createRcFinding('path-edit', filePath, index + 1, {
-        name: 'PATH',
-      }));
-      continue;
-    }
-
-    const sourceMatch = trimmed.match(/^(?:source|\.)\s+(.+)$/);
+    const sourceMatch = trimmed.match(/(?:^|&&\s*|\|\|\s*)(?:source|\.)\s+(.+)$/);
     if (sourceMatch) {
-      findings.push(createRcFinding('source', filePath, index + 1, {
-        sourceKind: sourceMatch[1].includes('$') ? 'reference' : 'literal',
-      }));
+      findings.push(createSourceFinding(filePath, index + 1, sourceMatch[1]));
     }
   }
 
@@ -364,9 +375,9 @@ async function summarizeCandidate(
     return undefined;
   }
 
+  let content: string;
   try {
-    const file = await open(candidate.path, 'r');
-    await file.close();
+    content = await readFile(candidate.path, 'utf-8');
   } catch {
     const warning = pushDotfileWarning(warnings, `Skipped unreadable dotfile candidate: ${candidate.path}`);
     return {
@@ -380,6 +391,10 @@ async function summarizeCandidate(
   }
 
   const findings = createMetadataFindings(candidate.queryPath);
+  if (isRcFile(candidate.path)) {
+    findings.push(...parseShellRcFindings(candidate.path, content));
+  }
+
   if (findings.length === 0) {
     findings.push({
       kind: 'unknown',
@@ -485,9 +500,52 @@ function buildDotfileMap(homeDir: string, files: DotfileFileSummary[], warnings:
       mixedFiles: files.filter(file => file.state === 'mixed').length,
       skippedFiles: files.filter(file => file.state === 'skipped').length,
       warnings: dotfileWarnings.length,
+      knownFindingsCount: files.reduce((count, file) => count + file.findings.filter(isKnownRcFinding).length, 0),
+      unknownFindingsCount: files.reduce((count, file) => count + file.findings.filter(isUnknownRcFinding).length, 0),
     },
     warningIds: dotfileWarnings.map(warning => warning.id),
   };
+}
+
+function parseKnownHook(trimmed: string, filePath: string, line: number): DotfileFinding | undefined {
+  const hook = knownHookForLine(trimmed);
+  if (!hook) {
+    return undefined;
+  }
+
+  return {
+    kind: 'tool-init-hook',
+    classification: 'known',
+    toolIds: [hook.toolId],
+    reason: 'rc-file-content',
+    confidence: 'high',
+    safeDetails: {
+      filePath,
+      line,
+      toolId: hook.toolId,
+      hookKind: hook.hookKind,
+    },
+  };
+}
+
+function knownHookForLine(trimmed: string): { toolId: string; hookKind: string } | undefined {
+  if (/\bdirenv\s+hook\b/.test(trimmed)) {
+    return { toolId: 'direnv', hookKind: 'shell-hook' };
+  }
+
+  if (/\bvfox\s+activate\b/.test(trimmed)) {
+    return { toolId: 'vfox', hookKind: 'shell-hook' };
+  }
+
+  if (/\bop\s+signin\b/.test(trimmed)) {
+    return { toolId: '1password', hookKind: 'runtime-init' };
+  }
+
+  if (/\bbrew\s+shellenv\b/.test(trimmed)) {
+    return { toolId: 'homebrew', hookKind: 'shellenv' };
+  }
+
+  return undefined;
 }
 
 function createRcFinding(
@@ -508,6 +566,65 @@ function createRcFinding(
       ...safeDetails,
     },
   };
+}
+
+function createSourceFinding(filePath: string, line: number, rawTarget: string): DotfileFinding {
+  const target = stripInlineComment(rawTarget).trim().replace(/^(['"])(.*)\1$/, '$2');
+  const sourceKind = classifySourceTarget(target);
+  const safeDetails: Record<string, string | number> = {
+    filePath,
+    line,
+    sourceKind,
+  };
+
+  if (sourceKind !== 'command-derived') {
+    safeDetails.target = target;
+  }
+
+  return {
+    kind: 'source',
+    classification: 'unknown',
+    toolIds: [],
+    reason: 'rc-file-content',
+    confidence: 'medium',
+    safeDetails,
+  };
+}
+
+function classifySourceTarget(target: string): 'literal' | 'reference' | 'command-derived' {
+  if (/\$\(|`/.test(target)) {
+    return 'command-derived';
+  }
+
+  if (/\$[A-Za-z_][A-Za-z0-9_]*|\$\{[^}]+}/.test(target)) {
+    return 'reference';
+  }
+
+  return 'literal';
+}
+
+function classifyPathEdit(value: string): 'assignment' | 'prepend' | 'append' | 'reference' {
+  const normalized = value.trim().replace(/^(['"])(.*)\1$/, '$2');
+  const pathRefIndex = normalized.indexOf('$PATH');
+
+  if (pathRefIndex === -1) {
+    return 'assignment';
+  }
+
+  if (pathRefIndex === 0) {
+    return 'append';
+  }
+
+  if (pathRefIndex > 0) {
+    return 'prepend';
+  }
+
+  return 'reference';
+}
+
+function stripInlineComment(value: string): string {
+  const commentIndex = value.indexOf(' #');
+  return commentIndex === -1 ? value : value.slice(0, commentIndex);
 }
 
 function classifyFileState(findings: DotfileFinding[]): DotfileFileState {
@@ -534,6 +651,20 @@ function pushDotfileWarning(warnings: InventoryWarning[], message: string): Inve
   };
   warnings.push(warning);
   return warning;
+}
+
+function isRcFile(filePath: string): boolean {
+  return HOME_RC_CANDIDATES.includes(basename(filePath) as typeof HOME_RC_CANDIDATES[number]);
+}
+
+function isKnownRcFinding(finding: DotfileFinding): boolean {
+  return finding.kind === 'tool-init-hook' && finding.classification === 'known';
+}
+
+function isUnknownRcFinding(finding: DotfileFinding): boolean {
+  return finding.classification === 'unknown' &&
+    finding.kind !== 'metadata-path' &&
+    finding.kind !== 'unknown';
 }
 
 function addCandidates(target: Map<string, DotfileCandidate>, candidates: DotfileCandidate[]): void {
