@@ -104,8 +104,13 @@ Plans:
 
 Plans:
 
-- [ ] 03-01: Add metadata-driven dotfile path discovery.
-- [ ] 03-02: Add rc-file parsing and structured dotfile map output.
+**Wave 1**
+
+- [ ] 03-01-PLAN.md - Add metadata-driven dotfile path discovery.
+
+**Wave 2 (blocked on Wave 1 completion)**
+
+- [ ] 03-02-PLAN.md - Add rc-file parsing and structured dotfile map output.
 
 ### Phase 4: Provenance Summary
 
