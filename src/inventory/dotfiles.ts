@@ -135,6 +135,7 @@ export async function scanDotfileMap(options: DotfileScanOptions = {}): Promise<
     homeDir,
     dotfilesRepo: options.dotfilesRepo,
     workspaceRoots: options.workspaceRoots ?? [],
+    warnings,
   });
 
   const files: DotfileFileSummary[] = [];
@@ -233,25 +234,40 @@ async function collectCandidates(options: {
   homeDir: string;
   dotfilesRepo?: string;
   workspaceRoots: string[];
+  warnings: InventoryWarning[];
 }): Promise<DotfileCandidate[]> {
   const candidates = new Map<string, DotfileCandidate>();
+  const filter = createCaptureFilter();
 
-  addCandidates(candidates, await collectMetadataCandidates(options.homeDir, 'home', options.homeDir));
-  addCandidates(candidates, await collectHomeDotfileCandidates(options.homeDir));
+  addCandidates(candidates, await collectSafely(options.warnings, 'home', () =>
+    collectMetadataCandidates(options.homeDir, 'home', options.homeDir, filter)
+  ));
+  addCandidates(candidates, await collectSafely(options.warnings, 'home', () =>
+    collectHomeDotfileCandidates(options.homeDir)
+  ));
 
   if (options.dotfilesRepo) {
     const dotfilesRepo = expandHomePath(options.dotfilesRepo, options.homeDir);
-    addCandidates(candidates, await collectRootAndShallowCandidates(dotfilesRepo, 'dotfiles-repo'));
+    addCandidates(candidates, await collectSafely(options.warnings, 'dotfiles-repo', () =>
+      collectRootAndShallowCandidates(dotfilesRepo, 'dotfiles-repo', filter)
+    ));
   }
 
   for (const workspaceRoot of options.workspaceRoots) {
-    addCandidates(candidates, await collectWorkspaceCandidates(workspaceRoot));
+    addCandidates(candidates, await collectSafely(options.warnings, 'workspace', () =>
+      collectWorkspaceCandidates(workspaceRoot, filter)
+    ));
   }
 
   return [...candidates.values()].sort((a, b) => a.path.localeCompare(b.path));
 }
 
-async function collectMetadataCandidates(homeDir: string, scope: DotfileScanScope, rootDir: string): Promise<DotfileCandidate[]> {
+async function collectMetadataCandidates(
+  homeDir: string,
+  scope: DotfileScanScope,
+  rootDir: string,
+  filter: ReturnType<typeof createCaptureFilter>
+): Promise<DotfileCandidate[]> {
   const candidates: DotfileCandidate[] = [];
   const metadataPaths = uniqueStrings(allToolMetadata.flatMap(metadata => [
     ...(metadata.configPaths ?? []),
@@ -266,6 +282,10 @@ async function collectMetadataCandidates(homeDir: string, scope: DotfileScanScop
     }
 
     if (stat.isFile() || stat.isSymbolicLink()) {
+      if (!shouldScanCandidate(absolutePath, rootDir, filter)) {
+        continue;
+      }
+
       candidates.push({
         path: absolutePath,
         scope,
@@ -285,6 +305,10 @@ async function collectMetadataCandidates(homeDir: string, scope: DotfileScanScop
       });
 
       for (const filePath of files) {
+        if (!shouldScanCandidate(filePath, rootDir, filter)) {
+          continue;
+        }
+
         candidates.push({
           path: filePath,
           scope,
@@ -317,7 +341,11 @@ async function collectHomeDotfileCandidates(homeDir: string): Promise<DotfileCan
   }));
 }
 
-async function collectRootAndShallowCandidates(rootDir: string, scope: DotfileScanScope): Promise<DotfileCandidate[]> {
+async function collectRootAndShallowCandidates(
+  rootDir: string,
+  scope: DotfileScanScope,
+  filter: ReturnType<typeof createCaptureFilter>
+): Promise<DotfileCandidate[]> {
   const files = await fg(['.*', '.config/*', '.vscode/*', '.github/*'], {
     cwd: rootDir,
     onlyFiles: true,
@@ -327,14 +355,19 @@ async function collectRootAndShallowCandidates(rootDir: string, scope: DotfileSc
     absolute: true,
   });
 
-  return files.map(filePath => ({
-    path: filePath,
-    scope,
-    queryPath: toRegistryQueryPath(filePath, rootDir),
-  }));
+  return files
+    .filter(filePath => shouldScanCandidate(filePath, rootDir, filter))
+    .map(filePath => ({
+      path: filePath,
+      scope,
+      queryPath: toRegistryQueryPath(filePath, rootDir),
+    }));
 }
 
-async function collectWorkspaceCandidates(workspaceRoot: string): Promise<DotfileCandidate[]> {
+async function collectWorkspaceCandidates(
+  workspaceRoot: string,
+  filter: ReturnType<typeof createCaptureFilter>
+): Promise<DotfileCandidate[]> {
   const files = await fg([...WORKSPACE_ROOT_PATTERNS, ...WORKSPACE_SHALLOW_PATTERNS], {
     cwd: workspaceRoot,
     onlyFiles: true,
@@ -343,11 +376,13 @@ async function collectWorkspaceCandidates(workspaceRoot: string): Promise<Dotfil
     absolute: true,
   });
 
-  return files.map(filePath => ({
-    path: filePath,
-    scope: 'workspace',
-    queryPath: toRegistryQueryPath(filePath, workspaceRoot),
-  }));
+  return files
+    .filter(filePath => shouldScanCandidate(filePath, workspaceRoot, filter))
+    .map(filePath => ({
+      path: filePath,
+      scope: 'workspace',
+      queryPath: toRegistryQueryPath(filePath, workspaceRoot),
+    }));
 }
 
 async function summarizeCandidate(
@@ -360,7 +395,7 @@ async function summarizeCandidate(
   }
 
   if (stat.isSymbolicLink()) {
-    const warning = pushDotfileWarning(warnings, `Skipped symlink dotfile candidate: ${candidate.path}`);
+    const warning = pushDotfileWarning(warnings, 'Skipped symlink dotfile candidate.');
     return {
       path: candidate.path,
       scope: candidate.scope,
@@ -379,7 +414,7 @@ async function summarizeCandidate(
   try {
     content = await readFile(candidate.path, 'utf-8');
   } catch {
-    const warning = pushDotfileWarning(warnings, `Skipped unreadable dotfile candidate: ${candidate.path}`);
+    const warning = pushDotfileWarning(warnings, 'Skipped unreadable dotfile candidate.');
     return {
       path: candidate.path,
       scope: candidate.scope,
@@ -529,19 +564,19 @@ function parseKnownHook(trimmed: string, filePath: string, line: number): Dotfil
 }
 
 function knownHookForLine(trimmed: string): { toolId: string; hookKind: string } | undefined {
-  if (/\bdirenv\s+hook\b/.test(trimmed)) {
+  if (/^eval\s+['"]?\$\(direnv\s+hook\s+[^)]+\)['"]?$/.test(trimmed)) {
     return { toolId: 'direnv', hookKind: 'shell-hook' };
   }
 
-  if (/\bvfox\s+activate\b/.test(trimmed)) {
+  if (/^eval\s+['"]?\$\(vfox\s+activate\s+[^)]+\)['"]?$/.test(trimmed)) {
     return { toolId: 'vfox', hookKind: 'shell-hook' };
   }
 
-  if (/\bop\s+signin\b/.test(trimmed)) {
+  if (/^eval\s+['"]?\$\(op\s+signin\)['"]?$/.test(trimmed)) {
     return { toolId: '1password', hookKind: 'runtime-init' };
   }
 
-  if (/\bbrew\s+shellenv\b/.test(trimmed)) {
+  if (/^eval\s+['"]?\$\([^)]*\bbrew\s+shellenv\)['"]?$/.test(trimmed)) {
     return { toolId: 'homebrew', hookKind: 'shellenv' };
   }
 
@@ -569,15 +604,14 @@ function createRcFinding(
 }
 
 function createSourceFinding(filePath: string, line: number, rawTarget: string): DotfileFinding {
-  const target = stripInlineComment(rawTarget).trim().replace(/^(['"])(.*)\1$/, '$2');
-  const sourceKind = classifySourceTarget(target);
+  const { sourceKind, target } = parseSourceTarget(rawTarget);
   const safeDetails: Record<string, string | number> = {
     filePath,
     line,
     sourceKind,
   };
 
-  if (sourceKind !== 'command-derived') {
+  if (target) {
     safeDetails.target = target;
   }
 
@@ -588,6 +622,26 @@ function createSourceFinding(filePath: string, line: number, rawTarget: string):
     reason: 'rc-file-content',
     confidence: 'medium',
     safeDetails,
+  };
+}
+
+function parseSourceTarget(rawTarget: string): {
+  sourceKind: 'literal' | 'reference' | 'command-derived';
+  target?: string;
+} {
+  const stripped = stripInlineComment(rawTarget).trim();
+  if (!stripped || /[;&|<>]/.test(stripped) || /\$\(|`/.test(stripped)) {
+    return { sourceKind: 'command-derived' };
+  }
+
+  const target = stripped.replace(/^(['"])(.*)\1$/, '$2');
+  if (!target || classifyRcExportValue(target) === 'secret-like') {
+    return { sourceKind: 'command-derived' };
+  }
+
+  return {
+    sourceKind: classifySourceTarget(target),
+    target,
   };
 }
 
@@ -673,6 +727,19 @@ function addCandidates(target: Map<string, DotfileCandidate>, candidates: Dotfil
   }
 }
 
+async function collectSafely(
+  warnings: InventoryWarning[],
+  scope: DotfileScanScope,
+  operation: () => Promise<DotfileCandidate[]>
+): Promise<DotfileCandidate[]> {
+  try {
+    return await operation();
+  } catch {
+    pushDotfileWarning(warnings, `Skipped ${scope} dotfile scan segment.`);
+    return [];
+  }
+}
+
 function expandHomePath(filePath: string, homeDir: string): string {
   if (filePath === '~') {
     return homeDir;
@@ -704,6 +771,24 @@ async function statIfExists(filePath: string) {
 
     throw error;
   }
+}
+
+function shouldScanCandidate(
+  filePath: string,
+  rootDir: string,
+  filter: ReturnType<typeof createCaptureFilter>
+): boolean {
+  const relativePath = toFilterPath(filePath, rootDir);
+  return !filter.ignores(basename(filePath)) && !filter.ignores(relativePath);
+}
+
+function toFilterPath(filePath: string, rootDir: string): string {
+  const relativePath = relative(rootDir, filePath);
+  if (!relativePath || relativePath.startsWith('..') || relativePath.split(sep).includes('..')) {
+    return basename(filePath);
+  }
+
+  return relativePath.split(sep).join('/');
 }
 
 function isMissingPathError(error: unknown): boolean {

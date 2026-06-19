@@ -47,11 +47,15 @@ describe('inventory dotfile scanner', () => {
     await mkdir(join(workspaceRoot, '.config', 'nvim', 'lua', 'plugins'), { recursive: true });
 
     await writeFile(join(tmpHome, '.config', 'nvim', 'init.lua'), '-- nvim\n');
+    await writeFile(join(tmpHome, '.config', 'nvim', '.env.local'), 'TOKEN=secret\n');
     await writeFile(join(tmpHome, '.obsidian', 'app.json'), '{}\n');
     await writeFile(join(tmpHome, '.customrc'), 'set unknown=true\n');
     await writeFile(join(tmpHome, '.zshrc'), rcFixture);
     await writeFile(join(dotfilesRepo, '.gitconfig'), '[user]\n  name = Test\n');
+    await writeFile(join(dotfilesRepo, '.env'), 'SECRET=true\n');
     await writeFile(join(workspaceRoot, '.config', 'nvim', 'init.lua'), '-- workspace nvim\n');
+    await writeFile(join(workspaceRoot, '.config', 'nvim', 'id_rsa.key'), 'private\n');
+    await writeFile(join(workspaceRoot, '.config', 'nvim', 'debug.log'), 'log\n');
     await writeFile(join(workspaceRoot, '.config', 'nvim', 'lua', 'plugins', 'nested.lua'), '-- nested\n');
   });
 
@@ -145,6 +149,10 @@ describe('inventory dotfile scanner', () => {
       state: 'known',
       toolIds: ['neovim'],
     }));
+    expect(fileByPath(map, join(tmpHome, '.config', 'nvim', '.env.local'))).toBeUndefined();
+    expect(fileByPath(map, join(dotfilesRepo, '.env'))).toBeUndefined();
+    expect(fileByPath(map, join(workspaceRoot, '.config', 'nvim', 'id_rsa.key'))).toBeUndefined();
+    expect(fileByPath(map, join(workspaceRoot, '.config', 'nvim', 'debug.log'))).toBeUndefined();
     expect(fileByPath(map, join(workspaceRoot, '.config', 'nvim', 'lua', 'plugins', 'nested.lua'))).toBeUndefined();
   });
 
@@ -182,6 +190,7 @@ describe('inventory dotfile scanner', () => {
         message: expect.stringContaining('Skipped symlink'),
       }),
     ]);
+    expect(warnings[0]?.message).not.toContain(tmpHome);
   });
 
   it('parses shell rc files into safe structured findings without raw values', () => {
@@ -262,6 +271,42 @@ describe('inventory dotfile scanner', () => {
     expect(serialized).not.toContain('op://Personal/item/field');
     expect(serialized).not.toContain('tool command');
     expect(serialized).not.toContain('/opt/homebrew/bin/brew shellenv');
+  });
+
+  it('sanitizes source targets and only recognizes real eval hook forms', () => {
+    const findings = parseShellRcFindings(join(tmpHome, '.zshrc'), [
+      'source ~/.aliases; export TOKEN=plainsecret',
+      '. "$HOME/.profile" && echo "$SECRET"',
+      'source ~/.private # token hint',
+      'source "$(secret command)"',
+      'alias explain="echo run direnv hook zsh"',
+      'echo "brew shellenv"',
+      'eval "$(direnv hook zsh)"',
+    ].join('\n'));
+    const serialized = JSON.stringify(findings);
+
+    expect(findings.filter(finding => finding.kind === 'tool-init-hook')).toEqual([
+      expect.objectContaining({
+        classification: 'known',
+        toolIds: ['direnv'],
+      }),
+    ]);
+    expect(serialized).not.toContain('plainsecret');
+    expect(serialized).not.toContain('echo "$SECRET"');
+    expect(serialized).not.toContain('token hint');
+    expect(serialized).not.toContain('secret command');
+    expect(serialized).not.toContain('echo run direnv hook zsh');
+    expect(serialized).not.toContain('brew shellenv');
+    expect(findings).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        kind: 'source',
+        safeDetails: expect.objectContaining({ sourceKind: 'command-derived' }),
+      }),
+      expect.objectContaining({
+        kind: 'source',
+        safeDetails: expect.objectContaining({ sourceKind: 'literal', target: '~/.private' }),
+      }),
+    ]));
   });
 
   it('integrates rc findings into dotfile map counts separately from path findings', async () => {
