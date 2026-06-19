@@ -13,6 +13,7 @@ export function summarizeInventory(report: InventoryReport): string[] {
     `Known installed tools: ${installedKnownToolSummary}`,
     `Homebrew formulae: ${report.homebrew.directFormulaeCount} direct, ${report.homebrew.dependencyFormulaeCount} dependencies, ${report.homebrew.unknownFormulaeCount} unknown`,
     `Homebrew casks: ${report.homebrew.installedCasksCount} installed, ${report.homebrew.unmatchedCasksCount} unmatched`,
+    `Dotfiles: ${report.dotfiles.counts.knownFiles} known, ${report.dotfiles.counts.unknownFiles} unknown, ${report.dotfiles.counts.warnings} warnings`,
   ];
 
   if (report.warnings.length > 0) {

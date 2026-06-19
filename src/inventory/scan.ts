@@ -11,6 +11,7 @@ import {
   type DetectedVersionManager,
 } from '../utils/env-detection.js';
 import { classifyHomebrewInventory, type ClassifiedHomebrewCask, type ClassifiedHomebrewFormula } from './homebrew.js';
+import { scanDotfileMap } from './dotfiles.js';
 import {
   createEmptyInventoryReport,
   type InventoryEvidence,
@@ -21,6 +22,11 @@ import {
   type InventoryWarningSource,
 } from './report.js';
 
+export interface InventoryScanOptions {
+  dotfilesRepo?: string;
+  workspaceRoots?: string[];
+}
+
 type HomebrewResult = {
   formulae: ClassifiedHomebrewFormula[] | null;
   casks: ClassifiedHomebrewCask[] | null;
@@ -30,7 +36,7 @@ type HomebrewResult = {
 const CORE_TOOL_IDS = ['git', 'node', 'npm'] as const;
 const SHELL_IDS = ['zsh', 'bash'] as const;
 
-export async function scanInventory(homeDir?: string): Promise<InventoryReport> {
+export async function scanInventory(homeDir?: string, options: InventoryScanOptions = {}): Promise<InventoryReport> {
   const resolvedHome = homeDir ?? process.env.HOME ?? '~';
   const report = createEmptyInventoryReport(resolvedHome);
   const warnings = report.warnings;
@@ -49,6 +55,12 @@ export async function scanInventory(homeDir?: string): Promise<InventoryReport> 
     detectedLanguages: await scanDetectedLanguages(warnings),
     detectedVersionManagers: await scanDetectedVersionManagers(warnings),
   };
+  report.dotfiles = await scanDotfileMap({
+    homeDir: resolvedHome,
+    dotfilesRepo: options.dotfilesRepo,
+    workspaceRoots: options.workspaceRoots,
+    warnings,
+  });
 
   const matchedFormulae = new Set<string>();
   const matchedCasks = new Set<string>();
