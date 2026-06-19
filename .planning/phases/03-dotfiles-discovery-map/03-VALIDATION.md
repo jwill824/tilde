@@ -21,16 +21,31 @@ created: 2026-06-19
 | **Config file** | `vitest.config.ts`, `vitest.integration.config.ts`, `vitest.contract.config.ts` |
 | **Quick run command** | `npm run test -- tests/unit/inventory-dotfiles.test.ts tests/unit/inventory-scanner.test.ts` |
 | **Full suite command** | `npm run lint && npm run build && npm test && npm run test:integration` |
-| **Estimated runtime** | ~120 seconds |
+| **Targeted task command latency** | < 30 seconds |
+| **Full suite estimated runtime** | ~120 seconds; wave/phase gate only |
 
 ---
 
 ## Sampling Rate
 
-- **After every task commit:** Run `npm run test -- tests/unit/inventory-dotfiles.test.ts tests/unit/inventory-scanner.test.ts`
+- **After every task commit:** Run the task-specific targeted command from the Per-Task Verification Map below; each task-level command must complete in under 30 seconds or be narrowed before continuing.
 - **After every plan wave:** Run `npm run lint && npm run build && npm test`
 - **Before `$gsd-verify-work`:** Full suite must be green
-- **Max feedback latency:** 120 seconds
+- **Max task feedback latency:** < 30 seconds
+- **Full-suite latency:** ~120 seconds, reserved for wave and phase gates
+
+---
+
+## Targeted Task Commands
+
+| Task ID | Targeted Command | Expected Latency | Gate |
+|---------|------------------|------------------|------|
+| 03-01-01 | `npm run test -- tests/unit/tool-metadata.test.ts tests/unit/inventory-dotfiles.test.ts` | < 30 seconds | task |
+| 03-01-02 | `npm run test -- tests/unit/inventory-dotfiles.test.ts tests/unit/inventory-scanner.test.ts` | < 30 seconds | task |
+| 03-02-01 | `npm run test -- tests/unit/inventory-dotfiles.test.ts` | < 30 seconds | task |
+| 03-02-02 | `npm run test -- tests/unit/inventory-dotfiles.test.ts tests/integration/wizard-flow.test.tsx -t inventory` | < 30 seconds | task |
+
+Full `lint`, `build`, `npm test`, and `test:integration` runs remain required at wave or phase gates, not as the primary task feedback loop.
 
 ---
 
@@ -68,7 +83,8 @@ All phase behaviors have automated verification.
 - [x] Sampling continuity: no 3 consecutive tasks without automated verify
 - [x] Wave 0 covers all MISSING references
 - [x] No watch-mode flags
-- [x] Feedback latency < 120s
+- [x] Task feedback latency < 30s
+- [x] Full suite reserved for wave/phase gates
 - [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** approved 2026-06-19

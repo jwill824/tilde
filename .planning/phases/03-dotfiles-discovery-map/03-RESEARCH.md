@@ -307,16 +307,16 @@ if (report.dotfiles) {
 | A1 | Known tool init hooks can start with a small curated set such as `direnv hook`, `vfox activate`, and editor/tool-specific source lines. [ASSUMED] | Architecture Patterns | Planner may need user confirmation or codebase-specific hook list before implementation. |
 | A2 | Workspace root scan should include common root files like `package.json` and `tsconfig.json` only if mapped through metadata or clearly useful for context. [ASSUMED] | Architecture Patterns | Planner could over-scan unless it keeps the allowlist conservative. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `dotfileMap` live directly on `InventoryReport` or under `environment`?**
    - What we know: `InventoryReport` already separates tools, Homebrew audit, warnings, and environment snapshot. [VERIFIED: src/inventory/report.ts]
-   - What's unclear: Whether planners prefer a top-level `dotfiles` section for Phase 4 consumption.
+   - RESOLVED: Store the map as a top-level `InventoryReport.dotfiles` field, with implementation names using `dotfiles`/`DotfileMap` rather than nesting it under `environment`.
    - Recommendation: Use a top-level `dotfiles` section because it is not just environment defaults; it is provenance evidence. [VERIFIED: .planning/phases/03-dotfiles-discovery-map/03-CONTEXT.md]
 
 2. **Which metadata rows should gain config paths in Plan 03-01?**
    - What we know: Current paths are sparse. [VERIFIED: src/plugins/first-party/neovim/metadata.ts] [VERIFIED: src/plugins/first-party/zed/metadata.ts] [VERIFIED: src/tools/note-taking-metadata.ts]
-   - What's unclear: Exact macOS config paths for every first-party tool were not externally verified before the orchestrator timeout.
+   - RESOLVED: No additional metadata rows are required to gain config paths in Plan 03-01. The path-mapping slice should consume and test the repo-backed rows already verified locally: `neovim.configPaths = ['~/.config/nvim']`, `zed.configPaths = ['~/.config/zed']`, `obsidian.configPaths = ['~/Library/Application Support/obsidian']`, and `obsidian.dotfilePaths = ['~/.obsidian']`. Do not add speculative paths for VS Code, Cursor, browsers, JetBrains, Notion, Bear, vfox, or Homebrew in Phase 3 unless implementation finds repo-local evidence and adds paired metadata tests in the same change.
    - Recommendation: Only add paths already known from code/docs or covered by tests; do not invent broad rows. [VERIFIED: AGENTS.md]
 
 ## Environment Availability
