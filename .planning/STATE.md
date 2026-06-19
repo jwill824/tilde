@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 context gathered
-last_updated: "2026-06-19T01:59:33.137Z"
-last_activity: 2026-06-13 -- Phase 02 execution started
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-06-19T22:37:01.155Z"
+last_activity: 2026-06-19 -- Phase 03 plan 02 completed
 progress:
   total_phases: 5
-  completed_phases: 2
-  total_plans: 10
-  completed_plans: 10
-  percent: 40
+  completed_phases: 3
+  total_plans: 12
+  completed_plans: 12
+  percent: 60
 ---
 
 # Project State
@@ -21,22 +21,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-12)
 
 **Core value:** tilde should explain a machine's developer setup clearly enough that users can trust what it will manage before it changes anything.
-**Current focus:** Phase 02 — machine-inventory-scanner
+**Current focus:** Phase 03 — dotfiles-discovery-map
 
 ## Current Position
 
-Phase: 02 (machine-inventory-scanner) — EXECUTING
-Plan: 2 of 7
-Status: Ready to execute
-Last activity: 2026-06-13 -- Phase 02 execution started
+Phase: 03 (dotfiles-discovery-map) — COMPLETE
+Plan: 2 of 2
+Status: Ready for next phase
+Last activity: 2026-06-19 -- Phase 03 plan 02 completed
 
-Progress: [██████████] 100%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 3
+- Total plans completed: 12
 - Average duration: 17 min
 - Total execution time: 50 min
 
@@ -57,6 +57,7 @@ Progress: [██████████] 100%
 | Phase 02 P04 | 14min | 2 tasks | 8 files |
 | Phase 02 P05 | 9min | 2 tasks | 6 files |
 | Phase 02 P06 | 36min | 3 tasks | 7 files |
+| Phase 03 P02 | 17min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Inventory warning grouping is centralized in summarizeInventory so wizard and config-first output cannot drift.
 - [Phase 02]: Use InventoryScanState as the shared readiness contract for startup inventory. — This lets App distinguish pending scans from completed empty reports before wizard or config-first actions are shown.
 - [Phase 02]: Installed inventory facts stay out of ToolsStep.defaultTools. — Inventory facts are evidence for trust summaries and must not become generic package-manager install requests without explicit mapping.
+- [Phase ?]: Rc parser output stores env names and value kinds only; raw values, command substitutions, and function bodies are not persisted.
+- [Phase ?]: Wizard and config-first output share the new Dotfile findings line from summarizeInventory().
+- [Phase ?]: Known rc hooks count as known tool findings while aliases, functions, exports, PATH edits, and source statements remain unknown rc evidence.
 
 ### Pending Todos
 
@@ -97,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-19T01:01:59.549Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-dotfiles-discovery-map/03-CONTEXT.md
+Last session: 2026-06-19T22:18:16.820Z
+Stopped at: Completed 03-02-PLAN.md
+Resume file: None
