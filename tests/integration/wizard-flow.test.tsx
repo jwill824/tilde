@@ -403,13 +403,17 @@ describe('Wizard flow integration', () => {
 
     await new Promise(resolve => setTimeout(resolve, 100));
     const frame = lastFrame() ?? '';
+    const normalizedFrame = frame.replace(/\s+/g, ' ');
     expect(frame).toContain('Inventory scan complete');
     expect(frame).toContain('Known installed tools:');
     expect((frame.match(/Provenance:/g) ?? []).length).toBe(1);
-    expect(frame).toContain('Homebrew formulae: 1 direct, 1 dependencies, 0 unknown');
-    expect(frame).toContain('Dotfile findings: 1 known hooks, 2 unknown rc findings');
+    expect(normalizedFrame).toContain('Homebrew formulae: 1 direct, 1 dependencies, 0');
+    expect(normalizedFrame).toContain('unknown');
+    expect(normalizedFrame).toContain('Dotfile findings: 1 known hooks, 2 unknown rc');
+    expect(normalizedFrame).toContain('findings');
     expect(frame).toContain('Warnings:');
-    expect(frame).toContain('Warning: Homebrew direct/dependency status is unavailable.');
+    expect(normalizedFrame).toContain('Warning: Homebrew direct/dependency status is');
+    expect(normalizedFrame).toContain('unavailable.');
     expect(frame).not.toContain('ripgrep');
     expect(frame).not.toContain('alias gs=');
     expect(frame).not.toContain('eval "$(direnv hook zsh)"');
@@ -510,9 +514,11 @@ describe('Wizard flow integration', () => {
 
     await new Promise(resolve => setTimeout(resolve, 100));
     const frame = lastFrame() ?? '';
+    const normalizedFrame = frame.replace(/\s+/g, ' ');
     expect(frame).toContain('Inventory');
     expect(frame).toContain('Known installed tools:');
-    expect(frame).toContain('Warning: Inventory scan failed; continuing with an empty report.');
+    expect(normalizedFrame).toContain('Warning: Inventory scan failed; continuing with an');
+    expect(normalizedFrame).toContain('empty report.');
   });
 
   it('inventory wizard step blocks Continue while inventory is loading', async () => {

@@ -15,7 +15,7 @@ This roadmap turns tilde from a setup wizard into a machine-aware setup assistan
 - [x] **Phase 2: Machine Inventory Scanner** - Detect installed tools and Homebrew direct-vs-dependency provenance. (completed 2026-06-13)
 - [x] **Phase 3: Dotfiles Discovery Map** - Map known dotfiles and rc-file contents to tools. (completed 2026-06-19)
 - [x] **Phase 4: Provenance Summary** - Surface clear managed/already-installed/dependency/manual/unknown status to users. (completed 2026-06-20)
-- [ ] **Phase 5: Config Discovery Polish** - Improve non-default config discovery and error messaging.
+- [x] **Phase 5: Config Discovery Polish** - Improve non-default config discovery and error messaging. (completed 2026-06-20)
 
 ## Phase Details
 
@@ -152,10 +152,9 @@ Plans:
   3. Explicit `--config` and `TILDE_CONFIG` override all auto-discovery behavior.
 
 **Plans**: 1 plan
-
 Plans:
 
-- [ ] 05-01: Improve discovery paths, error messaging, and tests for non-default config locations.
+- [x] 05-01-PLAN.md - Improve discovery paths, error messaging, and tests for non-default config locations.
 
 ## Progress
 
@@ -168,4 +167,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Machine Inventory Scanner | 7/7 | Complete   | 2026-06-14 |
 | 3. Dotfiles Discovery Map | 2/2 | Complete    | 2026-06-19 |
 | 4. Provenance Summary | 2/2 | Complete    | 2026-06-20 |
-| 5. Config Discovery Polish | 0/1 | Not started | - |
+| 5. Config Discovery Polish | 1/1 | Complete    | 2026-06-20 |

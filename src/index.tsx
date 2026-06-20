@@ -11,7 +11,12 @@ import { App } from './app.js';
 import { loadConfig } from './config/reader.js';
 import { pluginRegistry } from './plugins/registry.js';
 import { run } from './utils/exec.js';
-import { discoverConfig, formatNoConfigError } from './utils/config-discovery.js';
+import {
+  formatConfigLoadError,
+  resolveConfigPath,
+  type ConfigCommandContext,
+  type ResolvedConfigPath,
+} from './utils/config-resolution.js';
 import type { PluginCategory, AccountConnectorPlugin } from './plugins/api.js';
 
 export function readPackageVersion(): string {
@@ -33,6 +38,82 @@ export function readPackageVersion(): string {
 }
 
 const VERSION = readPackageVersion();
+
+interface ConfigPathInputs {
+  flagConfigPath?: string;
+  envConfigPath?: string;
+}
+
+const COMMAND_CONTEXTS = {
+  install: {
+    command: 'install',
+    configExample: 'tilde install --config <path>',
+  },
+  update: {
+    command: 'update',
+    configExample: 'tilde update <resource> --config <path>',
+  },
+  ci: {
+    command: 'ci',
+    configExample: 'tilde --ci --config <path>',
+  },
+  reconfigure: {
+    command: 'reconfigure',
+    configExample: 'tilde --reconfigure --config <path>',
+  },
+} satisfies Record<string, ConfigCommandContext>;
+
+function configCommandContext(sub: string): ConfigCommandContext {
+  return {
+    command: `config ${sub}`,
+    configExample: `tilde config ${sub} --config <path>`,
+  };
+}
+
+function contextCommandContext(sub: string): ConfigCommandContext {
+  if (sub === 'switch') {
+    return {
+      command: 'context switch',
+      configExample: 'tilde context switch <label> --config <path>',
+    };
+  }
+
+  return {
+    command: `context ${sub}`,
+    configExample: `tilde context ${sub} --config <path>`,
+  };
+}
+
+async function resolveRequiredConfigPath(
+  inputs: ConfigPathInputs & { positionalConfigPath?: string; context: ConfigCommandContext; exitCode: number }
+): Promise<ResolvedConfigPath> {
+  const resolution = await resolveConfigPath({
+    flagConfigPath: inputs.flagConfigPath,
+    envConfigPath: inputs.envConfigPath,
+    positionalConfigPath: inputs.positionalConfigPath,
+    command: inputs.context,
+  });
+
+  if (!resolution.found) {
+    process.stderr.write(resolution.message + '\n');
+    process.exit(inputs.exitCode);
+  }
+
+  return resolution.resolved;
+}
+
+async function loadResolvedConfig<TExitCode extends number>(
+  resolved: ResolvedConfigPath,
+  context: ConfigCommandContext,
+  exitCode: TExitCode
+) {
+  try {
+    return await loadConfig(resolved.path);
+  } catch (err) {
+    process.stderr.write(formatConfigLoadError(resolved, err as Error & { code?: string }, context) + '\n');
+    process.exit(exitCode);
+  }
+}
 
 function parseCliArgs() {
   // Check env vars first
@@ -105,6 +186,8 @@ Environment variables:
   }
 
   return {
+    flagConfigPath: args.config as string | undefined,
+    envConfigPath: envConfig,
     configPath: (args.config as string | undefined) ?? envConfig,
     ci: Boolean(args.yes || args.ci || envCi),
     reconfigure: Boolean(args.reconfigure),
@@ -116,16 +199,14 @@ Environment variables:
   };
 }
 
-async function handleContextSubcommand(sub: string, label: string | undefined, configPath: string | undefined) {
-  const cwdConfig = resolve(process.cwd(), 'tilde.config.json');
-  const cfgPath = configPath || (existsSync(cwdConfig) ? cwdConfig : 'tilde.config.json');
-  let config;
-  try {
-    config = await loadConfig(cfgPath);
-  } catch (err) {
-    process.stderr.write(`Error loading config: ${(err as Error).message}\n`);
-    process.exit(1);
-  }
+async function handleContextSubcommand(
+  sub: string,
+  label: string | undefined,
+  configInputs: ConfigPathInputs
+) {
+  const context = contextCommandContext(sub);
+  const resolved = await resolveRequiredConfigPath({ ...configInputs, context, exitCode: 1 });
+  const config = await loadResolvedConfig(resolved, context, 1);
 
   if (sub === 'list') {
     for (const ctx of config.contexts) {
@@ -201,35 +282,35 @@ async function handlePluginSubcommand(sub: string, name: string | undefined) {
   process.exit(1);
 }
 
-async function handleConfigSubcommand(sub: string, pathArg: string | undefined, configPath: string | undefined) {
-  const cwdConfig = resolve(process.cwd(), 'tilde.config.json');
-  const cfgPath = pathArg || configPath || (existsSync(cwdConfig) ? cwdConfig : 'tilde.config.json');
+async function handleConfigSubcommand(
+  sub: string,
+  pathArg: string | undefined,
+  configInputs: ConfigPathInputs
+) {
+  const context = configCommandContext(sub);
+  const resolved = await resolveRequiredConfigPath({
+    ...configInputs,
+    positionalConfigPath: pathArg,
+    context,
+    exitCode: 2,
+  });
 
   if (sub === 'validate') {
-    try {
-      await loadConfig(cfgPath);
-      process.stdout.write('✓ Config is valid\n');
-    } catch (err) {
-      process.stderr.write(`${(err as Error).message}\n`);
-      process.exit(2);
-    }
+    await loadResolvedConfig(resolved, context, 2);
+    process.stdout.write('✓ Config is valid\n');
     process.exit(0);
   }
 
   if (sub === 'show') {
-    try {
-      const config = await loadConfig(cfgPath);
-      process.stdout.write(JSON.stringify(config, null, 2) + '\n');
-    } catch (err) {
-      process.stderr.write(`${(err as Error).message}\n`);
-      process.exit(1);
-    }
+    const config = await loadResolvedConfig(resolved, context, 1);
+    process.stdout.write(JSON.stringify(config, null, 2) + '\n');
     process.exit(0);
   }
 
   if (sub === 'edit') {
+    await loadResolvedConfig(resolved, context, 1);
     const editor = process.env.EDITOR || 'vim';
-    await run(editor, [cfgPath]);
+    await run(editor, [resolved.path]);
     process.exit(0);
   }
 
@@ -250,13 +331,24 @@ export async function main() {
     process.env.FORCE_COLOR = '0';
   }
 
-  const { configPath, ci, reconfigure, resume, noResume, dryRun, positionals } = parseCliArgs();
+  const {
+    flagConfigPath,
+    envConfigPath,
+    configPath,
+    ci,
+    reconfigure,
+    resume,
+    noResume,
+    dryRun,
+    positionals,
+  } = parseCliArgs();
+  const configInputs = { flagConfigPath, envConfigPath };
 
   // Handle subcommands before rendering
   const [subcommand, sub, arg] = positionals;
 
   if (subcommand === 'context') {
-    await handleContextSubcommand(sub ?? 'list', arg, configPath);
+    await handleContextSubcommand(sub ?? 'list', arg, configInputs);
     return;
   }
 
@@ -266,27 +358,22 @@ export async function main() {
   }
 
   if (subcommand === 'config') {
-    await handleConfigSubcommand(sub ?? 'show', arg, configPath);
+    await handleConfigSubcommand(sub ?? 'show', arg, configInputs);
     return;
   }
 
   // T016: tilde update <resource> subcommand
   if (subcommand === 'update' || subcommand === 'install') {
-    // Both 'install' and 'update' require a discoverable config
-    const resolvedForCmd = configPath ?? await discoverConfig();
-
-    if (!resolvedForCmd) {
-      // T013: config-required error — do NOT launch wizard
-      process.stderr.write((await formatNoConfigError(subcommand)) + '\n');
-      process.exit(2);
-    }
+    const context = subcommand === 'update' ? COMMAND_CONTEXTS.update : COMMAND_CONTEXTS.install;
+    const resolved = await resolveRequiredConfigPath({ ...configInputs, context, exitCode: 2 });
 
     if (subcommand === 'update') {
+      await loadResolvedConfig(resolved, context, 3);
       const resource = sub;
       const { UpdateCommand } = await import('./modes/update.js');
       render(React.createElement(UpdateCommand, {
         resource: resource ?? '',
-        configPath: resolvedForCmd,
+        configPath: resolved.path,
       }));
       return;
     }
@@ -296,7 +383,7 @@ export async function main() {
     const { App: AppForInstall } = await import('./app.js');
     render(React.createElement(AppForInstall, {
       mode: 'config-first',
-      configPath: resolvedForCmd,
+      configPath: resolved.path,
       dryRun,
       resume: false,
       reconfigure: false,
@@ -305,39 +392,50 @@ export async function main() {
     return;
   }
 
-  // Platform check
-  try {
-    assertMacOS();
-  } catch (err) {
-    process.stderr.write(`\n${(err as Error).message}\n`);
-    process.exit(1);
-  }
-
-  // Auto-discover tilde.config.json using standard search order (T012)
-  let resolvedConfigPath = configPath;
-  if (!resolvedConfigPath) {
-    resolvedConfigPath = await discoverConfig() ?? undefined;
-  }
+  const startupContext = ci
+    ? COMMAND_CONTEXTS.ci
+    : reconfigure
+      ? COMMAND_CONTEXTS.reconfigure
+      : { command: 'startup', configExample: 'tilde --config <path>' };
+  const startupResolution = await resolveConfigPath({
+    ...configInputs,
+    command: startupContext,
+  });
 
   // Determine mode
   let mode: 'wizard' | 'config-first' | 'non-interactive';
   if (ci) {
-    if (!resolvedConfigPath) {
-      process.stderr.write('Error: --ci/--yes requires --config <path>\n');
+    if (!startupResolution.found) {
+      process.stderr.write(startupResolution.message + '\n');
       process.exit(3);
     }
+    await loadResolvedConfig(startupResolution.resolved, startupContext, 3);
     mode = 'non-interactive';
-  } else if (resolvedConfigPath) {
+  } else if (reconfigure && !startupResolution.found) {
+    process.stderr.write(startupResolution.message + '\n');
+    process.exit(2);
+  } else if (startupResolution.found) {
     mode = 'config-first';
   } else {
     mode = 'wizard';
   }
+
+  const resolvedConfigPath = startupResolution.found ? startupResolution.resolved.path : configPath;
 
   // Guard: Ink requires a TTY for raw mode. When tilde is invoked from a piped
   // install script (curl | bash), stdin is not a TTY — exit cleanly with a message.
   if (!process.stdin.isTTY && mode !== 'non-interactive') {
     process.stdout.write('✓ tilde is installed — open a new terminal and run: tilde\n');
     process.exit(0);
+  }
+
+  if (mode !== 'non-interactive') {
+    try {
+      assertMacOS();
+    } catch (err) {
+      process.stderr.write(`\n${(err as Error).message}\n`);
+      process.exit(1);
+    }
   }
 
   render(
@@ -351,4 +449,3 @@ export async function main() {
     })
   );
 }
-

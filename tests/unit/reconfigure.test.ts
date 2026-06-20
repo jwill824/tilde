@@ -80,7 +80,7 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
   it('renders wizard with pre-populated defaults from existing config', async () => {
     const mockAtomicWriteConfig = vi.fn().mockResolvedValue(undefined);
     const mockLoadConfig = vi.fn().mockResolvedValue(VALID_CONFIG);
-    const WizardMock = makeWizardMock();
+    const WizardMock = makeWizardMock(() => undefined);
 
     vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
     vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
@@ -140,7 +140,7 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     const mockAtomicWriteConfig = vi.fn().mockResolvedValue(undefined);
     const notFoundError = Object.assign(new Error('not found'), { code: 'ENOENT' });
     const mockLoadConfig = vi.fn().mockRejectedValue(notFoundError);
-    const WizardMock = makeWizardMock();
+    const WizardMock = makeWizardMock(() => undefined);
 
     vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
     vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
@@ -160,25 +160,72 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
 
     const frame = lastFrame() ?? '';
     expect(frame).toContain('not found');
+    expect(frame).not.toContain('Searched:');
     expect(WizardMock).not.toHaveBeenCalled();
     expect(mockAtomicWriteConfig).not.toHaveBeenCalled();
+  });
+
+  it('shows shared wizard-first guidance when no config path is available', async () => {
+    const mockAtomicWriteConfig = vi.fn().mockResolvedValue(undefined);
+    const mockLoadConfig = vi.fn().mockResolvedValue(VALID_CONFIG);
+    const WizardMock = makeWizardMock(() => undefined);
+
+    vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
+    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
+    vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
+    vi.doMock('../../src/utils/config-discovery.js', () => ({
+      formatNoConfigError: vi.fn().mockResolvedValue(
+        [
+          'Error: tilde requires a config file to run reconfigure.',
+          'Run the wizard to create one: tilde',
+          'Searched:',
+          '  /tmp/project/tilde.config.json',
+          'Example locations:',
+          '  ~/.tilde/tilde.config.json',
+          '  ~/.config/tilde/tilde.config.json',
+          '  ~/tilde.config.json',
+          'Or specify: tilde --reconfigure --config <path>',
+        ].join('\n')
+      ),
+    }));
+
+    const { ReconfigureMode } = await import('../../src/modes/reconfigure.js');
+    const { lastFrame } = render(
+      React.createElement(ReconfigureMode, {
+        configPath: '',
+        environment: {} as never,
+        onComplete: vi.fn(),
+      })
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Run the wizard to create one: tilde');
+    expect(frame).toContain('Searched:');
+    expect(frame).toContain('~/.config/tilde/tilde.config.json');
+    expect(frame).toContain('tilde --reconfigure --config <path>');
+    expect(mockLoadConfig).not.toHaveBeenCalled();
+    expect(WizardMock).not.toHaveBeenCalled();
   });
 
   it('launches wizard with partial values and warning when config has validation errors', async () => {
     const mockAtomicWriteConfig = vi.fn().mockResolvedValue(undefined);
     const validationError = new Error('Config validation failed: shell is required');
     const mockLoadConfig = vi.fn().mockRejectedValue(validationError);
+    const WizardMock = makeWizardMock(() => undefined);
 
     vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
     vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
     vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
-    vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: makeWizardMock() }));
+    vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
     vi.doMock('node:fs/promises', async () => {
       const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
       return {
         ...actual,
         readFile: vi.fn().mockResolvedValue(
-          JSON.stringify({ ...VALID_CONFIG, shell: undefined })
+          JSON.stringify({ ...VALID_CONFIG, shell: undefined, tools: 'cursor' })
         ),
       };
     });
@@ -195,7 +242,136 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     await new Promise(resolve => setTimeout(resolve, 200));
 
     const frame = lastFrame() ?? '';
-    expect(frame).toBeDefined();
-    expect(frame!.length).toBeGreaterThan(0);
+    expect(frame).toContain('Config has invalid fields');
+    expect(frame).toContain('shell');
+    expect(frame).toContain('tools');
+    expect(WizardMock).toHaveBeenCalled();
+    const props = WizardMock.mock.calls[0][0];
+    expect(props.initialConfig).toMatchObject({
+      packageManagers: ['homebrew'],
+      workspaceRoot: '~/Developer',
+      configurations: VALID_CONFIG.configurations,
+    });
+    expect(props.initialConfig.shell).toBeUndefined();
+    expect(props.initialConfig.tools).toBeUndefined();
+    expect(mockAtomicWriteConfig).not.toHaveBeenCalled();
+  });
+
+  it('shows an error for malformed JSON instead of launching a blank wizard', async () => {
+    const mockAtomicWriteConfig = vi.fn().mockResolvedValue(undefined);
+    const validationError = new Error('Failed to parse config as JSON: Unexpected token');
+    const mockLoadConfig = vi.fn().mockRejectedValue(validationError);
+    const WizardMock = makeWizardMock();
+
+    vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
+    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
+    vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
+    vi.doMock('node:fs/promises', async () => {
+      const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
+      return {
+        ...actual,
+        readFile: vi.fn().mockResolvedValue('{ invalid json'),
+      };
+    });
+
+    const { ReconfigureMode } = await import('../../src/modes/reconfigure.js');
+    const { lastFrame } = render(
+      React.createElement(ReconfigureMode, {
+        configPath: CONFIG_PATH,
+        environment: {} as never,
+        onComplete: vi.fn(),
+      })
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Failed to parse config');
+    expect(frame).toMatch(/original file was[\s\S]*not modified/);
+    expect(WizardMock).not.toHaveBeenCalled();
+    expect(mockAtomicWriteConfig).not.toHaveBeenCalled();
+  });
+
+  it('omits schema-invalid nested contexts during partial recovery', async () => {
+    const mockAtomicWriteConfig = vi.fn().mockResolvedValue(undefined);
+    const validationError = new Error('Config validation failed: envVar value must be a backend reference');
+    const mockLoadConfig = vi.fn().mockRejectedValue(validationError);
+    const WizardMock = makeWizardMock(() => undefined);
+
+    vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
+    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
+    vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
+    vi.doMock('node:fs/promises', async () => {
+      const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
+      return {
+        ...actual,
+        readFile: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            ...VALID_CONFIG,
+            contexts: [
+              {
+                ...VALID_CONFIG.contexts[0],
+                envVars: [{ key: 'TOKEN', value: 'ghp_rawsecret' }],
+              },
+            ],
+          })
+        ),
+      };
+    });
+
+    const { ReconfigureMode } = await import('../../src/modes/reconfigure.js');
+    render(
+      React.createElement(ReconfigureMode, {
+        configPath: CONFIG_PATH,
+        environment: {} as never,
+        onComplete: vi.fn(),
+      })
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    expect(WizardMock).toHaveBeenCalled();
+    const props = WizardMock.mock.calls[0][0];
+    expect(props.initialConfig.contexts).toBeUndefined();
+    expect(props.initialConfig.packageManagers).toEqual(['homebrew']);
+    expect(mockAtomicWriteConfig).not.toHaveBeenCalled();
+  });
+
+  it('validates wizard output before saving reconfigured config', async () => {
+    const mockAtomicWriteConfig = vi.fn().mockResolvedValue(undefined);
+    const mockLoadConfig = vi.fn().mockResolvedValue(VALID_CONFIG);
+    const WizardMock = makeWizardMock((props) => {
+      props.onComplete({
+        ...VALID_CONFIG,
+        contexts: [
+          {
+            ...VALID_CONFIG.contexts[0],
+            envVars: [{ key: 'TOKEN', value: 'ghp_rawsecret' }],
+          },
+        ],
+      });
+    });
+
+    vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
+    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
+    vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
+
+    const { ReconfigureMode } = await import('../../src/modes/reconfigure.js');
+    const { lastFrame } = render(
+      React.createElement(ReconfigureMode, {
+        configPath: CONFIG_PATH,
+        environment: {} as never,
+        onComplete: vi.fn(),
+      })
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    expect(lastFrame()).toContain('Failed to save config');
+    expect(lastFrame()).toContain('envVar value must be a backend reference');
+    expect(mockAtomicWriteConfig).not.toHaveBeenCalled();
   });
 });
