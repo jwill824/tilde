@@ -160,8 +160,54 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
 
     const frame = lastFrame() ?? '';
     expect(frame).toContain('not found');
+    expect(frame).not.toContain('Searched:');
     expect(WizardMock).not.toHaveBeenCalled();
     expect(mockAtomicWriteConfig).not.toHaveBeenCalled();
+  });
+
+  it('shows shared wizard-first guidance when no config path is available', async () => {
+    const mockAtomicWriteConfig = vi.fn().mockResolvedValue(undefined);
+    const mockLoadConfig = vi.fn().mockResolvedValue(VALID_CONFIG);
+    const WizardMock = makeWizardMock();
+
+    vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
+    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
+    vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
+    vi.doMock('../../src/utils/config-discovery.js', () => ({
+      formatNoConfigError: vi.fn().mockResolvedValue(
+        [
+          'Error: tilde requires a config file to run reconfigure.',
+          'Run the wizard to create one: tilde',
+          'Searched:',
+          '  /tmp/project/tilde.config.json',
+          'Example locations:',
+          '  ~/.tilde/tilde.config.json',
+          '  ~/.config/tilde/tilde.config.json',
+          '  ~/tilde.config.json',
+          'Or specify: tilde --reconfigure --config <path>',
+        ].join('\n')
+      ),
+    }));
+
+    const { ReconfigureMode } = await import('../../src/modes/reconfigure.js');
+    const { lastFrame } = render(
+      React.createElement(ReconfigureMode, {
+        configPath: '',
+        environment: {} as never,
+        onComplete: vi.fn(),
+      })
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Run the wizard to create one: tilde');
+    expect(frame).toContain('Searched:');
+    expect(frame).toContain('~/.config/tilde/tilde.config.json');
+    expect(frame).toContain('tilde --reconfigure --config <path>');
+    expect(mockLoadConfig).not.toHaveBeenCalled();
+    expect(WizardMock).not.toHaveBeenCalled();
   });
 
   it('launches wizard with partial values and warning when config has validation errors', async () => {
