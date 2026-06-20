@@ -130,8 +130,13 @@ Plans:
 
 Plans:
 
-- [ ] 04-01: Define provenance categories and derivation rules.
-- [ ] 04-02: Render provenance in wizard/config summary output.
+**Wave 1**
+
+- [ ] 04-01-PLAN.md - Define provenance categories and derivation rules.
+
+**Wave 2 (blocked on Wave 1 completion)**
+
+- [ ] 04-02-PLAN.md - Render provenance in wizard/config summary output.
 
 ### Phase 5: Config Discovery Polish
 
