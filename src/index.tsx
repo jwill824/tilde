@@ -392,14 +392,6 @@ export async function main() {
     return;
   }
 
-  // Platform check
-  try {
-    assertMacOS();
-  } catch (err) {
-    process.stderr.write(`\n${(err as Error).message}\n`);
-    process.exit(1);
-  }
-
   const startupContext = ci
     ? COMMAND_CONTEXTS.ci
     : reconfigure
@@ -435,6 +427,15 @@ export async function main() {
   if (!process.stdin.isTTY && mode !== 'non-interactive') {
     process.stdout.write('✓ tilde is installed — open a new terminal and run: tilde\n');
     process.exit(0);
+  }
+
+  if (mode !== 'non-interactive') {
+    try {
+      assertMacOS();
+    } catch (err) {
+      process.stderr.write(`\n${(err as Error).message}\n`);
+      process.exit(1);
+    }
   }
 
   render(
