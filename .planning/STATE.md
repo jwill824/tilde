@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready for next phase
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-06-19T22:56:18.841Z"
-last_activity: 2026-06-19
+status: executing
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-06-20T01:09:24.675Z"
+last_activity: 2026-06-20 -- Phase 04 execution started
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 14
+  completed_plans: 13
   percent: 60
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-12)
 
 **Core value:** tilde should explain a machine's developer setup clearly enough that users can trust what it will manage before it changes anything.
-**Current focus:** Phase 03 — dotfiles-discovery-map
+**Current focus:** Phase 04 — provenance-summary
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
-Status: Ready for next phase
-Last activity: 2026-06-19
+Phase: 04 (provenance-summary) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-06-20 -- Phase 04 execution started
 
 Progress: [██████░░░░] 60%
 
@@ -59,6 +59,7 @@ Progress: [██████░░░░] 60%
 | Phase 02 P05 | 9min | 2 tasks | 6 files |
 | Phase 02 P06 | 36min | 3 tasks | 7 files |
 | Phase 03 P02 | 17min | 2 tasks | 5 files |
+| Phase 04 P01 | 6 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-19T22:18:16.820Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-06-20T01:09:24.665Z
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None
