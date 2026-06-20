@@ -152,7 +152,6 @@ Plans:
   3. Explicit `--config` and `TILDE_CONFIG` override all auto-discovery behavior.
 
 **Plans**: 1 plan
-
 Plans:
 
 - [ ] 05-01-PLAN.md - Improve discovery paths, error messaging, and tests for non-default config locations.
