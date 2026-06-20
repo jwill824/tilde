@@ -5,6 +5,7 @@ import { loadConfig } from '../config/reader.js';
 import { atomicWriteConfig } from '../config/writer.js';
 import { CURRENT_SCHEMA_VERSION } from '../config/migrations/runner.js';
 import { Wizard } from './wizard.js';
+import { formatNoConfigError } from '../utils/config-discovery.js';
 import type { TildeConfig } from '../config/schema.js';
 import type { EnvironmentSnapshot } from '../utils/environment.js';
 
@@ -31,8 +32,10 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
       if (!configPath) {
         setPhase({
           type: 'error',
-          message:
-            'No config file found. Run `tilde` (without --reconfigure) to create your initial configuration.',
+          message: await formatNoConfigError({
+            command: 'reconfigure',
+            configExample: 'tilde --reconfigure --config <path>',
+          }),
         });
         return;
       }
