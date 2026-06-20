@@ -14,7 +14,7 @@ This roadmap turns tilde from a setup wizard into a machine-aware setup assistan
 - [x] **Phase 1: Tool Metadata Registry** - Create the shared data model and registry lookup layer for wizard tool metadata. (completed 2026-06-13)
 - [x] **Phase 2: Machine Inventory Scanner** - Detect installed tools and Homebrew direct-vs-dependency provenance. (completed 2026-06-13)
 - [x] **Phase 3: Dotfiles Discovery Map** - Map known dotfiles and rc-file contents to tools. (completed 2026-06-19)
-- [ ] **Phase 4: Provenance Summary** - Surface clear managed/already-installed/dependency/manual/unknown status to users.
+- [x] **Phase 4: Provenance Summary** - Surface clear managed/already-installed/dependency/manual/unknown status to users. (completed 2026-06-20)
 - [ ] **Phase 5: Config Discovery Polish** - Improve non-default config discovery and error messaging.
 
 ## Phase Details
@@ -136,7 +136,7 @@ Plans:
 
 **Wave 2 (blocked on Wave 1 completion)**
 
-- [ ] 04-02-PLAN.md - Render provenance in wizard/config summary output.
+- [x] 04-02-PLAN.md - Render provenance in wizard/config summary output.
 
 ### Phase 5: Config Discovery Polish
 
@@ -167,5 +167,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Tool Metadata Registry | 3/3 | Complete    | 2026-06-13 |
 | 2. Machine Inventory Scanner | 7/7 | Complete   | 2026-06-14 |
 | 3. Dotfiles Discovery Map | 2/2 | Complete    | 2026-06-19 |
-| 4. Provenance Summary | 1/2 | In Progress|  |
+| 4. Provenance Summary | 2/2 | Complete   | 2026-06-20 |
 | 5. Config Discovery Polish | 0/1 | Not started | - |
