@@ -22,7 +22,13 @@ Thumbs.db
 
 # Editor
 .vscode/settings.json
+.vscode/mcp.json
 .idea/
+
+# Local agent/tooling state
+.bg-shell/
+.codex/
+.mcp.json
 
 # Tilde state (never commit user state)
 ~/.tilde/
