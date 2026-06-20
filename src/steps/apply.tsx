@@ -17,16 +17,19 @@ import { ConfigSummary } from '../ui/config-summary.js';
 import { installAll } from '../installer/index.js';
 import { writeAll } from '../dotfiles/writer.js';
 import { pluginRegistry } from '../plugins/registry.js';
+import type { InventoryReport } from '../inventory/report.js';
+import { summarizeInventory } from '../inventory/summary.js';
 
 interface Props {
   config: TildeConfig;
+  inventory?: InventoryReport;
   onComplete: () => void;
   onBack?: () => void;
 }
 
 type Phase = 'confirm' | 'applying' | 'done' | 'error';
 
-export function ApplyStep({ config, onComplete, onBack }: Props) {
+export function ApplyStep({ config, inventory, onComplete, onBack }: Props) {
   const [phase, setPhase] = useState<Phase>('confirm');
   const [progress, setProgress] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
@@ -107,6 +110,18 @@ export function ApplyStep({ config, onComplete, onBack }: Props) {
     <Box flexDirection="column">
       <Text bold>Apply Configuration</Text>
       <Text dimColor>Review your setup before tilde applies it to this machine</Text>
+      {inventory && (
+        <Box marginTop={1} flexDirection="column">
+          {summarizeInventory(inventory, config).map(line => (
+            <Text
+              key={line}
+              color={line.startsWith('Warning') ? 'yellow' : 'green'}
+            >
+              {line}
+            </Text>
+          ))}
+        </Box>
+      )}
       <Box marginTop={1}>
         <ConfigSummary config={config} />
       </Box>

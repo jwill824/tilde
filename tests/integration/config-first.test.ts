@@ -181,15 +181,16 @@ describe('ConfigFirstMode integration', () => {
     expect(inventoryIndex).toBeLessThan(configIndex);
     const inventoryBlock = frame.slice(inventoryIndex, configIndex);
     expect(inventoryBlock).toContain('Known installed tools: Homebrew');
+    expect(inventoryBlock).toContain('Provenance: tilde-managed 3 (Homebrew, ripgrep, fd)');
     expect(inventoryBlock).toContain('Homebrew formulae: 1 direct, 1 dependencies, 0 unknown');
     expect(inventoryBlock).toContain('Dotfiles:');
     expect(inventoryBlock).toContain('Dotfile findings: 1 known hooks, 2 unknown rc findings');
     expect(inventoryBlock).toContain('Warnings:');
     expect(inventoryBlock).toContain('Warning: Homebrew direct/dependency status is unavailable.');
-    expect(inventoryBlock).not.toContain('ripgrep');
     expect(inventoryBlock).not.toContain('alias gs=');
     expect(inventoryBlock).not.toContain('eval "$(direnv hook zsh)"');
     expect(inventoryBlock).not.toContain('~/.private-aliases');
+    expect((inventoryBlock.match(/Provenance:/g) ?? []).length).toBe(1);
   });
 
   it('withholds apply choices while inventory is loading', async () => {

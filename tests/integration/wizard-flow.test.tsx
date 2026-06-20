@@ -3,6 +3,7 @@ import { Text } from 'ink';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from 'ink-testing-library';
 import { createEmptyInventoryReport, type InventoryReport, type InventoryScanState } from '../../src/inventory/report.js';
+import type { TildeConfig } from '../../src/config/schema.js';
 
 const { mockScanInventory } = vi.hoisted(() => ({
   mockScanInventory: vi.fn(),
@@ -375,6 +376,8 @@ describe('Wizard flow integration', () => {
     expect(frame).not.toContain('Environment Capture');
     expect(frame).toContain('Inventory scan complete');
     expect(frame).toContain('Known installed tools:');
+    expect(frame).toContain('Provenance: already installed');
+    expect(frame).not.toContain('tilde-managed');
     expect(frame).toContain('Dotfiles:');
   });
 
@@ -402,6 +405,7 @@ describe('Wizard flow integration', () => {
     const frame = lastFrame() ?? '';
     expect(frame).toContain('Inventory scan complete');
     expect(frame).toContain('Known installed tools:');
+    expect((frame.match(/Provenance:/g) ?? []).length).toBe(1);
     expect(frame).toContain('Homebrew formulae: 1 direct, 1 dependencies, 0 unknown');
     expect(frame).toContain('Dotfile findings: 1 known hooks, 2 unknown rc findings');
     expect(frame).toContain('Warnings:');
@@ -410,6 +414,66 @@ describe('Wizard flow integration', () => {
     expect(frame).not.toContain('alias gs=');
     expect(frame).not.toContain('eval "$(direnv hook zsh)"');
     expect(frame).not.toContain('~/.private-aliases');
+  });
+
+  it('final apply confirmation renders config-aware inventory provenance before choices', async () => {
+    const { ApplyStep } = await import('../../src/steps/apply.js');
+    const onComplete = vi.fn();
+    const onBack = vi.fn();
+    const config: TildeConfig = {
+      $schema: 'https://thingstead.io/tilde/config-schema/v1.json',
+      version: '1',
+      schemaVersion: '1.6',
+      os: 'macos',
+      shell: 'zsh',
+      packageManagers: ['homebrew'],
+      versionManagers: [],
+      languages: [],
+      workspaceRoot: '~/Developer',
+      dotfilesRepo: '~/Developer/personal/dotfiles',
+      contexts: [{
+        label: 'personal',
+        path: '~/Developer/personal',
+        git: { name: 'Test User', email: 'test@example.com' },
+        authMethod: 'gh-cli',
+        envVars: [],
+        languageBindings: [],
+      }],
+      tools: ['unknown-selected-tool'],
+      configurations: {
+        git: true,
+        vscode: false,
+        aliases: false,
+        osDefaults: false,
+        direnv: true,
+      },
+      accounts: [],
+      secretsBackend: '1password',
+      browser: { selected: [], default: null },
+      editors: { primary: 'vscode', additional: [] },
+      aiTools: [],
+    };
+
+    const { lastFrame } = render(
+      React.createElement(ApplyStep, {
+        config,
+        inventory: createInventoryFixture(),
+        onComplete,
+        onBack,
+      } as React.ComponentProps<typeof ApplyStep>)
+    );
+
+    const frame = lastFrame() ?? '';
+    const provenanceIndex = frame.indexOf('Provenance:');
+    const configIndex = frame.indexOf('Configuration Summary');
+    const choicesIndex = frame.indexOf('Apply & Finish');
+
+    expect(provenanceIndex).toBeGreaterThanOrEqual(0);
+    expect(configIndex).toBeGreaterThan(provenanceIndex);
+    expect(choicesIndex).toBeGreaterThan(configIndex);
+    expect(frame).toContain('tilde-managed 3 (Homebrew, Visual Studio Code, unknown-selected-tool)');
+    expect(frame).toContain('Apply & Finish');
+    expect(frame).toContain('Finish');
   });
 
   it('inventory wizard step shows startup scan failure warnings without blocking rendering', async () => {
