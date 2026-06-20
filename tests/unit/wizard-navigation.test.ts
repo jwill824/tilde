@@ -223,7 +223,7 @@ describe('Wizard navigation state machine', () => {
 });
 
 // T050: getNextStep() logic tree unit tests
-import { getNextStep } from '../../src/modes/wizard.js';
+import { getNextStep, truncateSidebarSummary } from '../../src/modes/wizard.js';
 
 describe('getNextStep()', () => {
   it('defaults to step+1 for unhandled steps', () => {
@@ -251,6 +251,19 @@ describe('getNextStep()', () => {
   it('step 5 (contexts) → always goes to step 6', () => {
     expect(getNextStep(5, {})).toBe(6);
     expect(getNextStep(5, { contexts: [] })).toBe(6);
+  });
+});
+
+describe('truncateSidebarSummary()', () => {
+  it('keeps completed-step summary lines within the sidebar width', () => {
+    const line = 'Known installed tools: Safari, Google Chrome, Microsoft Edge, Obsidian, Homebrew, vfox';
+
+    expect(truncateSidebarSummary(line, 24)).toBe('Known installed tools: …');
+    expect(truncateSidebarSummary(line, 24)).toHaveLength(24);
+  });
+
+  it('leaves short sidebar summary lines unchanged', () => {
+    expect(truncateSidebarSummary('homebrew', 24)).toBe('homebrew');
   });
 });
 

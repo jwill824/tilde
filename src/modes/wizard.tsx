@@ -96,6 +96,14 @@ const STEP_REGISTRY: StepDefinition[] = [
 ];
 
 const LAST_STEP = STEP_REGISTRY.length - 1; // index of final step
+const SIDEBAR_WIDTH = 46;
+const SIDEBAR_SUMMARY_WIDTH = SIDEBAR_WIDTH - 4;
+
+export function truncateSidebarSummary(line: string, maxWidth = SIDEBAR_SUMMARY_WIDTH): string {
+  if (line.length <= maxWidth) return line;
+  if (maxWidth <= 1) return '…';
+  return `${line.slice(0, maxWidth - 1)}…`;
+}
 
 // ---------------------------------------------------------------------------
 // Component types
@@ -374,7 +382,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, invento
           <Box flexDirection="row" alignItems="flex-start">
 
             {/* ── Left: step progress sidebar ── */}
-            <Box flexDirection="column" marginRight={3}>
+            <Box flexDirection="column" width={SIDEBAR_WIDTH} flexShrink={0} marginRight={2}>
               {visibleSteps.map((step, idx) => {
                 const done = completedStepSet.has(idx);
                 const active = idx === activeStep;
@@ -395,8 +403,8 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, invento
                       {!step.required && !done && <Text> (opt)</Text>}
                     </Box>
                     {done && summary.map((line, i) => (
-                      <Box key={i} marginLeft={2}>
-                        <Text dimColor>{line}</Text>
+                      <Box key={i} marginLeft={2} width={SIDEBAR_SUMMARY_WIDTH}>
+                        <Text dimColor wrap="truncate">{truncateSidebarSummary(line)}</Text>
                       </Box>
                     ))}
                   </Box>
@@ -408,7 +416,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, invento
             </Box>
 
             {/* ── Right: active step content ── */}
-            <Box flexDirection="column" flexGrow={1}>
+            <Box flexDirection="column" flexGrow={1} flexShrink={1} minWidth={24}>
         {showFirstStepHint && (
           <Text color="yellow">Already on the first step — press (q) to quit.</Text>
         )}
