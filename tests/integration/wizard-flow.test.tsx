@@ -173,7 +173,7 @@ describe('Wizard flow integration', () => {
     const { lastFrame } = render(React.createElement(ConfigDetectionStep, { onComplete, onExit }));
 
     // Wait for async config scan
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     // Should NOT have auto-advanced — should show a prompt
     expect(onComplete).not.toHaveBeenCalled();
