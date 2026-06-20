@@ -61,9 +61,8 @@ describe('getDiscoveryPaths()', () => {
   it('omits git root path when it equals cwd (no duplication)', async () => {
     mockExeca.mockResolvedValue({ exitCode: 0, stdout: process.cwd() } as never);
     const paths = await getDiscoveryPaths();
-    const configPaths = paths.filter(p => !p.startsWith(homedir()));
     const cwdPath = join(process.cwd(), 'tilde.config.json');
-    expect(configPaths.filter(p => p === cwdPath).length).toBe(1);
+    expect(paths.filter(p => p === cwdPath).length).toBe(1);
     expect(paths.length).toBe(4); // cwd + home candidates (no git root duplicate)
   });
 
