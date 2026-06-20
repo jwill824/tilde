@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 5 planned
-last_updated: "2026-06-20T03:41:54.829Z"
-last_activity: 2026-06-20 -- Phase 05 planned
+status: complete
+stopped_at: Phase 05 verified complete
+last_updated: "2026-06-20T14:14:45Z"
+last_activity: 2026-06-20 -- Phase 05 verified complete
 progress:
   total_phases: 5
-  completed_phases: 4
-  total_plans: 14
-  completed_plans: 14
-  percent: 80
+  completed_phases: 5
+  total_plans: 15
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-12)
 
 **Core value:** tilde should explain a machine's developer setup clearly enough that users can trust what it will manage before it changes anything.
-**Current focus:** Phase 05 — config-discovery-polish
+**Current focus:** Milestone v1.0 complete
 
 ## Current Position
 
-Phase: 05 — CONFIG DISCOVERY POLISH
-Plan: 05-01 ready
-Status: Ready to execute
-Last activity: 2026-06-20 -- Phase 05 planned
+Phase: 05 (config-discovery-polish) — COMPLETE
+Plan: 1 of 1 complete
+Status: Phase 05 verified complete
+Last activity: 2026-06-20 -- Phase 05 verified complete
 
-Progress: [██████░░░░] 60%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
