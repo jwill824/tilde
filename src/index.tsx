@@ -366,9 +366,9 @@ export async function main() {
   if (subcommand === 'update' || subcommand === 'install') {
     const context = subcommand === 'update' ? COMMAND_CONTEXTS.update : COMMAND_CONTEXTS.install;
     const resolved = await resolveRequiredConfigPath({ ...configInputs, context, exitCode: 2 });
-    await loadResolvedConfig(resolved, context, 3);
 
     if (subcommand === 'update') {
+      await loadResolvedConfig(resolved, context, 3);
       const resource = sub;
       const { UpdateCommand } = await import('./modes/update.js');
       render(React.createElement(UpdateCommand, {
@@ -423,9 +423,6 @@ export async function main() {
     process.stderr.write(startupResolution.message + '\n');
     process.exit(2);
   } else if (startupResolution.found) {
-    if (flagConfigPath || envConfigPath) {
-      await loadResolvedConfig(startupResolution.resolved, startupContext, 3);
-    }
     mode = 'config-first';
   } else {
     mode = 'wizard';

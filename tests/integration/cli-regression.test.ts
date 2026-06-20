@@ -51,6 +51,26 @@ async function writeConfig(path: string, overrides: Partial<typeof VALID_CONFIG>
   );
 }
 
+async function writePartialConfig(path: string) {
+  await writeFile(
+    path,
+    JSON.stringify({
+      $schema: VALID_CONFIG.$schema,
+      schemaVersion: VALID_CONFIG.schemaVersion,
+      os: VALID_CONFIG.os,
+      packageManagers: VALID_CONFIG.packageManagers,
+      versionManagers: [],
+      languages: [],
+      workspaceRoot: VALID_CONFIG.workspaceRoot,
+      dotfilesRepo: VALID_CONFIG.dotfilesRepo,
+      configurations: VALID_CONFIG.configurations,
+      accounts: [],
+      secretsBackend: VALID_CONFIG.secretsBackend,
+    }, null, 2) + '\n',
+    'utf-8'
+  );
+}
+
 async function runCli(args: string[], options: { cwd: string; env: NodeJS.ProcessEnv }) {
   return execa('node', [BIN, ...args], {
     cwd: options.cwd,
@@ -200,6 +220,23 @@ describe('CLI config discovery and override behavior', () => {
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr).toContain(invalid);
     expect(result.stderr).toContain('Failed to parse config as JSON');
+    expect(result.stderr).not.toContain('Searched:');
+  });
+
+  it.each([
+    ['startup --config', ['--config']],
+    ['reconfigure --config', ['--reconfigure', '--config']],
+  ])('%s with a partial config reaches interactive recovery instead of schema preflight', async (_name, args) => {
+    const { dir, env } = await makeTempProject();
+    const partial = join(dir, 'partial.json');
+    await writePartialConfig(partial);
+
+    const result = await runCli([...args, partial], { cwd: dir, env });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('open a new terminal and run: tilde');
+    expect(result.stderr).not.toContain('Invalid config');
+    expect(result.stderr).not.toContain('Required');
     expect(result.stderr).not.toContain('Searched:');
   });
 });
