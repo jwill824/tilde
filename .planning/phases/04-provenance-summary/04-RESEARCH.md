@@ -346,17 +346,19 @@ All claims in this research were verified against local project files, Phase con
 |---|-------|---------|---------------|
 | N/A | N/A | N/A | N/A |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Where should config-aware wizard provenance render?**
    - What we know: early `InventoryStep` runs before wizard selections, while `ApplyStep` receives completed `TildeConfig`. [VERIFIED: src/modes/wizard.tsx] [VERIFIED: src/steps/apply.tsx]
    - What's unclear: Phase 04 context says shared summary output in wizard inventory and config-first confirmation, but PROV-03 needs selected/skipped explanations that early inventory cannot know. [VERIFIED: .planning/phases/04-provenance-summary/04-CONTEXT.md] [VERIFIED: .planning/REQUIREMENTS.md]
    - Recommendation: Plan evidence-only provenance in early wizard inventory and config-aware selected provenance in final wizard confirmation plus config-first confirmation. [VERIFIED: src/modes/wizard.tsx] [VERIFIED: src/modes/config-first.tsx]
+   - RESOLVED: Plan 04-02 renders evidence-oriented provenance in early `InventoryStep`, config-aware provenance in config-first confirmation via `summarizeInventory(inventoryReport, phase.config)`, and config-aware wizard provenance in final `ApplyStep` by passing the startup inventory report from `Wizard`. [VERIFIED: .planning/phases/04-provenance-summary/04-02-PLAN.md]
 
 2. **Should the internal `ProvenanceLabel` union include `homebrew-direct`?**
    - What we know: current partial code includes `homebrew-direct`, but PROV-01 names "already installed" and separately names Homebrew dependency. [VERIFIED: src/inventory/provenance.ts] [VERIFIED: .planning/REQUIREMENTS.md]
    - What's unclear: The internal type can keep evidence-specific labels, but the user-facing output must match phase semantics. [VERIFIED: .planning/phases/04-provenance-summary/04-CONTEXT.md]
    - Recommendation: Prefer user-facing provenance labels for `provenance` and store direct/dependency/manual evidence in `detail` or a structured evidence summary. [VERIFIED: .planning/phases/04-provenance-summary/04-CONTEXT.md]
+   - RESOLVED: Plan 04-01 requires user-facing `ProvenanceLabel` values and explicitly removes `homebrew-direct` as a primary provenance label; direct Homebrew evidence remains structured evidence/detail, while unselected direct installs render as `already-installed` and dependencies render as `homebrew-dependency`. [VERIFIED: .planning/phases/04-provenance-summary/04-01-PLAN.md]
 
 ## Environment Availability
 
