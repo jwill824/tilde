@@ -155,7 +155,7 @@ Plans:
 
 Plans:
 
-- [ ] 05-01: Improve discovery paths, error messaging, and tests for non-default config locations.
+- [ ] 05-01-PLAN.md - Improve discovery paths, error messaging, and tests for non-default config locations.
 
 ## Progress
 
