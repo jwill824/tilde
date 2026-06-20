@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready for next phase
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-06-19T22:56:18.841Z"
-last_activity: 2026-06-19
+status: completed
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-06-20T01:15:46.834Z"
+last_activity: 2026-06-20 -- Phase 04 marked complete
 progress:
   total_phases: 5
-  completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
-  percent: 60
+  completed_phases: 4
+  total_plans: 14
+  completed_plans: 14
+  percent: 80
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-12)
 
 **Core value:** tilde should explain a machine's developer setup clearly enough that users can trust what it will manage before it changes anything.
-**Current focus:** Phase 03 — dotfiles-discovery-map
+**Current focus:** Phase 04 — provenance-summary
 
 ## Current Position
 
-Phase: 4
+Phase: 04 — COMPLETE
 Plan: Not started
-Status: Ready for next phase
-Last activity: 2026-06-19
+Status: Phase 04 complete
+Last activity: 2026-06-20 -- Phase 04 marked complete
 
 Progress: [██████░░░░] 60%
 
@@ -36,7 +36,7 @@ Progress: [██████░░░░] 60%
 
 **Velocity:**
 
-- Total plans completed: 14
+- Total plans completed: 16
 - Average duration: 17 min
 - Total execution time: 50 min
 
@@ -46,6 +46,7 @@ Progress: [██████░░░░] 60%
 |-------|-------|-------|----------|
 | 01 | 3 | 50 min | 17 min |
 | 03 | 2 | - | - |
+| 04 | 2 | - | - |
 
 **Recent Trend:**
 
@@ -59,6 +60,8 @@ Progress: [██████░░░░] 60%
 | Phase 02 P05 | 9min | 2 tasks | 6 files |
 | Phase 02 P06 | 36min | 3 tasks | 7 files |
 | Phase 03 P02 | 17min | 2 tasks | 5 files |
+| Phase 04 P01 | 6 min | 2 tasks | 2 files |
+| Phase 04 P02 | 4 min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -102,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-19T22:18:16.820Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-06-20T01:12:46.707Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None

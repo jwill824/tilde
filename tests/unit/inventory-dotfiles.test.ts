@@ -334,4 +334,110 @@ describe('inventory dotfile scanner', () => {
     expect(serialized).not.toContain('op://Personal/item/field');
     expect(serialized).not.toContain('tool command');
   });
+
+  it('parses shell rc files into safe structured findings without raw values', () => {
+    const findings = parseShellRcFindings(join(tmpHome, '.zshrc'), rcFixture);
+    const serialized = JSON.stringify(findings);
+
+    expect(findings).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        kind: 'alias',
+        classification: 'unknown',
+        safeDetails: expect.objectContaining({ name: 'gs' }),
+      }),
+      expect.objectContaining({
+        kind: 'function',
+        classification: 'unknown',
+        safeDetails: expect.objectContaining({ name: 'workon' }),
+      }),
+      expect.objectContaining({
+        kind: 'export',
+        classification: 'unknown',
+        safeDetails: expect.objectContaining({ name: 'EDITOR', valueKind: 'literal' }),
+      }),
+      expect.objectContaining({
+        kind: 'path-edit',
+        classification: 'unknown',
+        safeDetails: expect.objectContaining({ name: 'PATH', valueKind: 'reference' }),
+      }),
+      expect.objectContaining({
+        kind: 'export',
+        classification: 'unknown',
+        safeDetails: expect.objectContaining({ name: 'GH_TOKEN', valueKind: 'secret-like' }),
+      }),
+      expect.objectContaining({
+        kind: 'export',
+        classification: 'unknown',
+        safeDetails: expect.objectContaining({ name: 'OP_REF', valueKind: 'secret-like' }),
+      }),
+      expect.objectContaining({
+        kind: 'export',
+        classification: 'unknown',
+        safeDetails: expect.objectContaining({ name: 'GENERATED', valueKind: 'command-derived' }),
+      }),
+      expect.objectContaining({
+        kind: 'source',
+        classification: 'unknown',
+        safeDetails: expect.objectContaining({ target: '~/.aliases' }),
+      }),
+      expect.objectContaining({
+        kind: 'tool-init-hook',
+        classification: 'known',
+        toolIds: ['direnv'],
+        safeDetails: expect.objectContaining({ toolId: 'direnv' }),
+      }),
+      expect.objectContaining({
+        kind: 'tool-init-hook',
+        classification: 'known',
+        toolIds: ['vfox'],
+        safeDetails: expect.objectContaining({ toolId: 'vfox' }),
+      }),
+      expect.objectContaining({
+        kind: 'tool-init-hook',
+        classification: 'known',
+        toolIds: ['1password'],
+        safeDetails: expect.objectContaining({ toolId: '1password' }),
+      }),
+      expect.objectContaining({
+        kind: 'tool-init-hook',
+        classification: 'known',
+        toolIds: ['homebrew'],
+        safeDetails: expect.objectContaining({ toolId: 'homebrew' }),
+      }),
+    ]));
+
+    expect(serialized).not.toContain('git status');
+    expect(serialized).not.toContain('cd ~/work');
+    expect(serialized).not.toContain('nvim');
+    expect(serialized).not.toContain('ghp_secret');
+    expect(serialized).not.toContain('op://Personal/item/field');
+    expect(serialized).not.toContain('tool command');
+    expect(serialized).not.toContain('/opt/homebrew/bin/brew shellenv');
+  });
+
+  it('integrates rc findings into dotfile map counts separately from path findings', async () => {
+    const map = await scanDotfileMap({ homeDir: tmpHome, warnings });
+    const zshrc = fileByPath(map, join(tmpHome, '.zshrc'));
+
+    expect(zshrc).toEqual(expect.objectContaining({
+      state: 'mixed',
+      toolIds: ['1password', 'direnv', 'homebrew', 'vfox'],
+      findings: expect.arrayContaining([
+        expect.objectContaining({ kind: 'alias', classification: 'unknown' }),
+        expect.objectContaining({ kind: 'function', classification: 'unknown' }),
+        expect.objectContaining({ kind: 'source', classification: 'unknown' }),
+        expect.objectContaining({ kind: 'tool-init-hook', classification: 'known', toolIds: ['direnv'] }),
+      ]),
+    }));
+    expect(map.counts).toEqual(expect.objectContaining({
+      knownFindingsCount: 4,
+      unknownFindingsCount: expect.any(Number),
+    }));
+    expect((map.counts as { unknownFindingsCount?: number }).unknownFindingsCount).toBeGreaterThanOrEqual(8);
+
+    const serialized = JSON.stringify(map);
+    expect(serialized).not.toContain('ghp_secret');
+    expect(serialized).not.toContain('op://Personal/item/field');
+    expect(serialized).not.toContain('tool command');
+  });
 });

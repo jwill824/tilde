@@ -3,7 +3,7 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
-import type { InventoryReport } from '../../src/inventory/report.js';
+import { createEmptyInventoryReport, type InventoryReport } from '../../src/inventory/report.js';
 
 vi.mock('../../src/utils/exec.js', () => ({
   run: vi.fn().mockResolvedValue({ stdout: 'git\nnodejs\nnpm\n', stderr: '', exitCode: 0 }),
@@ -111,6 +111,7 @@ describe('env-capture integration', () => {
 describe('inventory integration', () => {
   function createInventoryFixture(): InventoryReport {
     return {
+      ...createEmptyInventoryReport(),
       tools: [
         {
           toolId: 'homebrew',

@@ -32,7 +32,15 @@ vi.mock('../../src/utils/env-detection.js', () => ({
 }));
 
 vi.mock('../../src/tools/registry.js', () => ({
-  allToolMetadata: [
+  allToolMetadata: MOCK_TOOL_METADATA,
+  getToolMetadata: (id: string) => MOCK_TOOL_METADATA.find(tool => tool.id === id),
+  getToolsByConfigPath: (path: string) => path === '~/.config/test-cli' || path.startsWith('~/.config/test-cli/')
+    ? [MOCK_TOOL_METADATA.find(tool => tool.id === 'test-cli')]
+    : [],
+  getToolsByDotfilePath: () => [],
+}));
+
+const MOCK_TOOL_METADATA = [
     {
       id: 'homebrew',
       label: 'Homebrew',
@@ -88,24 +96,7 @@ vi.mock('../../src/tools/registry.js', () => ({
         },
       },
     },
-  ],
-  getToolsByConfigPath: (path: string) => path === '~/.config/test-cli' || path.startsWith('~/.config/test-cli/')
-    ? [{
-      id: 'test-cli',
-      label: 'Test CLI',
-      category: 'package-manager',
-      supportedPlatforms: ['darwin'],
-      source: 'first-party',
-      install: {
-        homebrew: {
-          formula: 'test-cli',
-        },
-      },
-      configPaths: ['~/.config/test-cli'],
-    }]
-    : [],
-  getToolsByDotfilePath: () => [],
-}));
+  ];
 
 vi.mock('node:fs/promises', async () => {
   const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
