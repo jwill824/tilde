@@ -186,7 +186,7 @@ export function ConfigFirstMode({ configPath, inventory, inventoryState, onCompl
           <Box flexDirection="column">
             <Text bold>{inventoryHeading}</Text>
             <Box marginTop={1} flexDirection="column">
-              {summarizeInventory(inventoryReport).map(line => (
+              {summarizeInventory(inventoryReport, phase.config).map(line => (
                 <Text
                   key={line}
                   color={line.startsWith('Warning') ? 'yellow' : 'green'}

@@ -574,6 +574,7 @@ export function Wizard({ initialStep = 0, initialConfig = {}, inventory, invento
         {activeStep === 12 && (
           <ApplyStep
             config={config as TildeConfig}
+            inventory={inventoryReport}
             onBack={onBack}
             onComplete={() => void advance({}, [])}
           />
