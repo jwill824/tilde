@@ -58,6 +58,7 @@ completed: 2026-06-20
 ## Task Commits
 
 1. **Task 1 and Task 2: Rendering tests and shared wiring** - `8d2cce4` (feat)
+2. **Verification fixture stabilization** - `2000c4c` (test)
 
 **Plan metadata:** pending docs commit
 
@@ -78,7 +79,7 @@ completed: 2026-06-20
 
 ## Deviations from Plan
 
-The scanner unit test mock was updated because `summarizeInventory()` now calls the provenance helper, which uses `getToolMetadata()`. This is a test-support change caused by the shared derivation boundary, not a production scope change.
+The scanner unit test mock was updated because `summarizeInventory()` now calls the provenance helper, which uses `getToolMetadata()`. Full integration also exposed two older fixture assumptions: one hand-built inventory fixture lacked dotfile counts, and one async config-detection assertion needed a longer settle time. These are test-support changes caused by the shared summary boundary and full-suite timing, not production scope changes.
 
 **Total deviations:** 1 test-support adjustment.
 **Impact on plan:** Required to keep existing scanner summary coverage compatible with the shared helper.
