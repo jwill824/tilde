@@ -30,7 +30,7 @@
 ### Provenance Summary
 
 - [x] **PROV-01**: tilde can label tools as tilde-managed, already installed, Homebrew dependency, manually installed, app-store/manual GUI install, OS-provided, or unknown.
-- [ ] **PROV-02**: Wizard and/or config summary output shows provenance without overwhelming the user.
+- [x] **PROV-02**: Wizard and/or config summary output shows provenance without overwhelming the user.
 - [x] **PROV-03**: Provenance can explain why tilde selected or skipped a tool.
 - [x] **PROV-04**: Provenance data is derived from scanner output and metadata rather than hardcoded per-step text.
 
@@ -88,7 +88,7 @@
 | DOT-03 | Phase 3 | Complete |
 | DOT-04 | Phase 3 | Complete |
 | PROV-01 | Phase 4 | Complete |
-| PROV-02 | Phase 4 | Pending |
+| PROV-02 | Phase 4 | Complete |
 | PROV-03 | Phase 4 | Complete |
 | PROV-04 | Phase 4 | Complete |
 | CONF-01 | Phase 5 | Pending |
