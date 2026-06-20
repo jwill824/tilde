@@ -26,6 +26,65 @@ vi.mock('../../src/plugins/registry.js', () => ({
 
 describe('ConfigFirstMode integration', () => {
   function createInventoryFixture(): InventoryReport {
+    const dotfiles = {
+      ...createEmptyInventoryReport().dotfiles,
+      files: [
+        {
+          path: '/Users/test/.zshrc',
+          scope: 'home' as const,
+          state: 'mixed' as const,
+          toolIds: ['direnv'],
+          warningIds: [],
+          findings: [
+            {
+              kind: 'tool-init-hook' as const,
+              classification: 'known' as const,
+              toolIds: ['direnv'],
+              reason: 'rc-file-content',
+              confidence: 'high' as const,
+              safeDetails: { toolId: 'direnv', sourceLine: 'eval "$(direnv hook zsh)"' },
+            },
+            {
+              kind: 'alias' as const,
+              classification: 'unknown' as const,
+              toolIds: [],
+              reason: 'rc-file-content',
+              confidence: 'medium' as const,
+              safeDetails: { name: 'gs', sourceLine: 'alias gs="git status"' },
+            },
+            {
+              kind: 'source' as const,
+              classification: 'unknown' as const,
+              toolIds: [],
+              reason: 'rc-file-content',
+              confidence: 'medium' as const,
+              safeDetails: { target: '~/.private-aliases' },
+            },
+          ],
+        },
+      ],
+      tools: [
+        {
+          toolId: 'direnv',
+          label: 'direnv',
+          category: 'env-loader',
+          knownFileCount: 1,
+          findingCount: 1,
+          paths: ['/Users/test/.zshrc'],
+        },
+      ],
+      counts: {
+        totalFiles: 1,
+        knownFiles: 0,
+        unknownFiles: 0,
+        mixedFiles: 1,
+        skippedFiles: 0,
+        warnings: 0,
+        knownFindingsCount: 1,
+        unknownFindingsCount: 2,
+      },
+    };
+
     return {
       ...createEmptyInventoryReport(),
       tools: [
@@ -53,6 +112,7 @@ describe('ConfigFirstMode integration', () => {
         dependencyFormulaeCount: 1,
         unknownFormulaeCount: 0,
       },
+      dotfiles,
       warnings: [
         {
           id: 'homebrew-request-state-unavailable',
@@ -122,9 +182,14 @@ describe('ConfigFirstMode integration', () => {
     const inventoryBlock = frame.slice(inventoryIndex, configIndex);
     expect(inventoryBlock).toContain('Known installed tools: Homebrew');
     expect(inventoryBlock).toContain('Homebrew formulae: 1 direct, 1 dependencies, 0 unknown');
+    expect(inventoryBlock).toContain('Dotfiles:');
+    expect(inventoryBlock).toContain('Dotfile findings: 1 known hooks, 2 unknown rc findings');
     expect(inventoryBlock).toContain('Warnings:');
     expect(inventoryBlock).toContain('Warning: Homebrew direct/dependency status is unavailable.');
     expect(inventoryBlock).not.toContain('ripgrep');
+    expect(inventoryBlock).not.toContain('alias gs=');
+    expect(inventoryBlock).not.toContain('eval "$(direnv hook zsh)"');
+    expect(inventoryBlock).not.toContain('~/.private-aliases');
   });
 
   it('withholds apply choices while inventory is loading', async () => {

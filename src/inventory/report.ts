@@ -1,6 +1,7 @@
 import type { DetectedLanguage, DetectedVersionManager } from '../utils/env-detection.js';
 import type { ToolCategory } from '../tools/metadata.js';
 import type { ClassifiedHomebrewCask, ClassifiedHomebrewFormula, HomebrewRequestStatus } from './homebrew.js';
+import { createEmptyDotfileMap, type DotfileMap } from './dotfiles.js';
 
 export type InventoryInstallState = 'installed' | 'missing' | 'unknown';
 
@@ -8,7 +9,7 @@ export type InventoryToolCategory = ToolCategory | 'shell' | 'core-tool';
 
 export type InventoryWarningSeverity = 'info' | 'warning' | 'error';
 
-export type InventoryWarningSource = 'homebrew' | 'environment' | 'app-path' | 'scanner';
+export type InventoryWarningSource = 'homebrew' | 'environment' | 'app-path' | 'scanner' | 'dotfiles';
 
 export type InventoryEvidence =
   | { type: 'homebrew-formula'; id: string; requestStatus: HomebrewRequestStatus }
@@ -64,6 +65,7 @@ export interface InventoryReport {
   tools: InventoryToolFact[];
   unmatchedHomebrew: InventoryHomebrewAudit;
   homebrew: InventoryHomebrewSummary;
+  dotfiles: DotfileMap;
   warnings: InventoryWarning[];
   environment: InventoryEnvironmentSnapshot;
 }
@@ -93,6 +95,7 @@ export function createEmptyInventoryReport(homeDir = process.env.HOME ?? '~'): I
       dependencyFormulaeCount: 0,
       unknownFormulaeCount: 0,
     },
+    dotfiles: createEmptyDotfileMap(homeDir),
     warnings: [],
     environment: {
       homeDir,

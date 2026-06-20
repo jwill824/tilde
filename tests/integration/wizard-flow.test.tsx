@@ -40,6 +40,65 @@ vi.mock('node:fs/promises', async () => {
 
 describe('Wizard flow integration', () => {
   function createInventoryFixture(overrides: Partial<InventoryReport> = {}): InventoryReport {
+    const dotfiles = {
+      ...createEmptyInventoryReport().dotfiles,
+      files: [
+        {
+          path: '/Users/test/.zshrc',
+          scope: 'home' as const,
+          state: 'mixed' as const,
+          toolIds: ['direnv', 'vfox'],
+          warningIds: [],
+          findings: [
+            {
+              kind: 'tool-init-hook' as const,
+              classification: 'known' as const,
+              toolIds: ['direnv'],
+              reason: 'rc-file-content',
+              confidence: 'high' as const,
+              safeDetails: { toolId: 'direnv', sourceLine: 'eval "$(direnv hook zsh)"' },
+            },
+            {
+              kind: 'alias' as const,
+              classification: 'unknown' as const,
+              toolIds: [],
+              reason: 'rc-file-content',
+              confidence: 'medium' as const,
+              safeDetails: { name: 'gs', sourceLine: 'alias gs="git status"' },
+            },
+            {
+              kind: 'source' as const,
+              classification: 'unknown' as const,
+              toolIds: [],
+              reason: 'rc-file-content',
+              confidence: 'medium' as const,
+              safeDetails: { target: '~/.private-aliases' },
+            },
+          ],
+        },
+      ],
+      tools: [
+        {
+          toolId: 'direnv',
+          label: 'direnv',
+          category: 'env-loader',
+          knownFileCount: 1,
+          findingCount: 1,
+          paths: ['/Users/test/.zshrc'],
+        },
+      ],
+      counts: {
+        totalFiles: 1,
+        knownFiles: 0,
+        unknownFiles: 0,
+        mixedFiles: 1,
+        skippedFiles: 0,
+        warnings: 0,
+        knownFindingsCount: 1,
+        unknownFindingsCount: 2,
+      },
+    };
+
     return {
       ...createEmptyInventoryReport(),
       tools: [
@@ -75,6 +134,7 @@ describe('Wizard flow integration', () => {
         dependencyFormulaeCount: 1,
         unknownFormulaeCount: 0,
       },
+      dotfiles,
       warnings: [],
       environment: {
         homeDir: '~',
@@ -315,6 +375,7 @@ describe('Wizard flow integration', () => {
     expect(frame).not.toContain('Environment Capture');
     expect(frame).toContain('Inventory scan complete');
     expect(frame).toContain('Known installed tools:');
+    expect(frame).toContain('Dotfiles:');
   });
 
   it('inventory wizard step summarizes Homebrew counts and warnings without unmatched names', async () => {
@@ -342,9 +403,13 @@ describe('Wizard flow integration', () => {
     expect(frame).toContain('Inventory scan complete');
     expect(frame).toContain('Known installed tools:');
     expect(frame).toContain('Homebrew formulae: 1 direct, 1 dependencies, 0 unknown');
+    expect(frame).toContain('Dotfile findings: 1 known hooks, 2 unknown rc findings');
     expect(frame).toContain('Warnings:');
     expect(frame).toContain('Warning: Homebrew direct/dependency status is unavailable.');
     expect(frame).not.toContain('ripgrep');
+    expect(frame).not.toContain('alias gs=');
+    expect(frame).not.toContain('eval "$(direnv hook zsh)"');
+    expect(frame).not.toContain('~/.private-aliases');
   });
 
   it('inventory wizard step shows startup scan failure warnings without blocking rendering', async () => {

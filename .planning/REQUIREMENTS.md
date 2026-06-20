@@ -22,10 +22,10 @@
 
 ### Dotfiles Mapping
 
-- [ ] **DOT-01**: tilde can map known dotfile paths to related tools using the shared metadata registry.
-- [ ] **DOT-02**: tilde can parse common shell rc files for aliases, environment variables, plugin references, and PATH modifications.
-- [ ] **DOT-03**: tilde can look for tool config files in home and workspace context locations without mutating them.
-- [ ] **DOT-04**: Dotfile discovery output identifies unknown files separately from known tool-owned files.
+- [x] **DOT-01**: tilde can map known dotfile paths to related tools using the shared metadata registry.
+- [x] **DOT-02**: tilde can parse common shell rc files for aliases, environment variables, plugin references, and PATH modifications.
+- [x] **DOT-03**: tilde can look for tool config files in home and workspace context locations without mutating them.
+- [x] **DOT-04**: Dotfile discovery output identifies unknown files separately from known tool-owned files.
 
 ### Provenance Summary
 
@@ -83,10 +83,10 @@
 | INV-02 | Phase 2 | Complete |
 | INV-03 | Phase 2 | Complete |
 | INV-04 | Phase 2 | Complete |
-| DOT-01 | Phase 3 | Pending |
-| DOT-02 | Phase 3 | Pending |
-| DOT-03 | Phase 3 | Pending |
-| DOT-04 | Phase 3 | Pending |
+| DOT-01 | Phase 3 | Complete |
+| DOT-02 | Phase 3 | Complete |
+| DOT-03 | Phase 3 | Complete |
+| DOT-04 | Phase 3 | Complete |
 | PROV-01 | Phase 4 | Pending |
 | PROV-02 | Phase 4 | Pending |
 | PROV-03 | Phase 4 | Pending |
