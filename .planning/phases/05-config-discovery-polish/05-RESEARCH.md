@@ -359,17 +359,15 @@ vi.mock('execa', () => ({
 | A1 | Exact ordering of `~/.config/tilde/tilde.config.json` versus `~/tilde.config.json` is planner discretion after cwd, git root, and canonical home anchors. [ASSUMED] | Standard Stack / Architecture Patterns | A different ordering could surprise users with multiple config copies; mitigate with explicit unit tests and documented order. |
 | A2 | CLI regression tests can use built `dist/bin/tilde.js` after `npm run build` in the same pattern as existing `cli-regression.test.ts`. [ASSUMED] | Validation Architecture | If build artifacts are stale during targeted test runs, planner must add a build step before integration commands. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should invalid auto-discovered configs stop search or be skipped?**
+1. **RESOLVED: Invalid auto-discovered configs stop search at the first accessible path.**
    - What we know: Context leaves this to planner discretion. [VERIFIED: .planning/phases/05-config-discovery-polish/05-CONTEXT.md]
-   - What's unclear: Whether a readable but invalid cwd config should block a valid canonical home config.
-   - Recommendation: Use "first accessible path wins"; if that file is invalid, report the selected file error. This is simpler, predictable, and matches current `discoverConfig()` semantics. [VERIFIED: src/utils/config-discovery.ts]
+   - Resolution: Use "first accessible path wins"; if that file is invalid, stop resolution and report the selected-file parse or schema error. Do not skip a readable but invalid cwd/git/home candidate to continue searching other auto-discovery paths. This is simpler, predictable, and matches current `discoverConfig()` semantics. [VERIFIED: src/utils/config-discovery.ts]
 
-2. **Should explicit override errors list skipped auto-discovery paths?**
+2. **RESOLVED: Explicit override errors do not list skipped auto-discovery paths.**
    - What we know: Context allows this if output does not imply fallback happened. [VERIFIED: .planning/phases/05-config-discovery-polish/05-CONTEXT.md]
-   - What's unclear: Whether extra paths improve or dilute the explicit error.
-   - Recommendation: Do not list auto-discovery paths for missing explicit overrides; instead say the override source is set and must be fixed or unset. [VERIFIED: .planning/phases/05-config-discovery-polish/05-CONTEXT.md]
+   - Resolution: Do not list auto-discovery paths for missing explicit `--config` or `TILDE_CONFIG` overrides in a way that implies fallback happened. Instead, state the override source is set or was provided and must be fixed or unset, and keep the error focused on that selected path. [VERIFIED: .planning/phases/05-config-discovery-polish/05-CONTEXT.md]
 
 ## Environment Availability
 
@@ -391,7 +389,8 @@ vi.mock('execa', () => ({
 |----------|-------|
 | Framework | Vitest 4.1.2. [VERIFIED: package-lock.json] |
 | Config file | `vitest.config.ts` for unit tests; `vitest.integration.config.ts` for integration tests. [VERIFIED: vitest.config.ts] [VERIFIED: vitest.integration.config.ts] |
-| Quick run command | `npm run test -- tests/unit/config-discovery.test.ts tests/unit/reconfigure.test.ts` [VERIFIED: package.json] |
+| Smoke run command | `npm run test -- tests/unit/config-discovery.test.ts` [VERIFIED: package.json] |
+| Targeted run command | `npm run test -- tests/unit/config-discovery.test.ts tests/unit/reconfigure.test.ts` [VERIFIED: package.json] |
 | Full suite command | `npm run build && npm test && npm run test:integration && npm run test:contract` [VERIFIED: package.json] |
 
 ### Phase Requirements -> Test Map
@@ -405,7 +404,8 @@ vi.mock('execa', () => ({
 
 ### Sampling Rate
 
-- **Per task commit:** `npm run test -- tests/unit/config-discovery.test.ts tests/unit/reconfigure.test.ts` plus targeted integration when CLI dispatch changes. [VERIFIED: package.json]
+- **Per task smoke:** `npm run test -- tests/unit/config-discovery.test.ts` for sub-30-second feedback before heavier checks. [VERIFIED: package.json]
+- **Per task targeted:** `npm run test -- tests/unit/config-discovery.test.ts tests/unit/reconfigure.test.ts` plus targeted integration when CLI dispatch changes. [VERIFIED: package.json]
 - **Per wave merge:** `npm run build && npm run test:integration -- tests/integration/cli-regression.test.ts`. [VERIFIED: package.json]
 - **Phase gate:** `npm run build && npm test && npm run test:integration && npm run test:contract`. [VERIFIED: package.json]
 
