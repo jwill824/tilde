@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 5 context gathered
-last_updated: "2026-06-20T03:01:19.545Z"
-last_activity: 2026-06-20 -- Phase 04 marked complete
+status: executing
+stopped_at: Phase 5 planned
+last_updated: "2026-06-20T03:41:54.829Z"
+last_activity: 2026-06-20 -- Phase 05 planned
 progress:
   total_phases: 5
   completed_phases: 4
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-12)
 
 **Core value:** tilde should explain a machine's developer setup clearly enough that users can trust what it will manage before it changes anything.
-**Current focus:** Phase 04 — provenance-summary
+**Current focus:** Phase 05 — config-discovery-polish
 
 ## Current Position
 
-Phase: 04 — COMPLETE
-Plan: Not started
-Status: Phase 04 complete
-Last activity: 2026-06-20 -- Phase 04 marked complete
+Phase: 05 — CONFIG DISCOVERY POLISH
+Plan: 05-01 ready
+Status: Ready to execute
+Last activity: 2026-06-20 -- Phase 05 planned
 
 Progress: [██████░░░░] 60%
 
@@ -105,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-20T03:01:19.542Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-config-discovery-polish/05-CONTEXT.md
+Last session: 2026-06-20T03:41:54.829Z
+Stopped at: Phase 5 planned
+Resume file: .planning/phases/05-config-discovery-polish/05-01-PLAN.md
