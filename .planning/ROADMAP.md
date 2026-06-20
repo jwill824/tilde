@@ -132,7 +132,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 04-01-PLAN.md - Define provenance categories and derivation rules.
+- [x] 04-01-PLAN.md - Define provenance categories and derivation rules.
 
 **Wave 2 (blocked on Wave 1 completion)**
 
@@ -167,5 +167,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Tool Metadata Registry | 3/3 | Complete    | 2026-06-13 |
 | 2. Machine Inventory Scanner | 7/7 | Complete   | 2026-06-14 |
 | 3. Dotfiles Discovery Map | 2/2 | Complete    | 2026-06-19 |
-| 4. Provenance Summary | 0/2 | Not started | - |
+| 4. Provenance Summary | 1/2 | In Progress|  |
 | 5. Config Discovery Polish | 0/1 | Not started | - |
