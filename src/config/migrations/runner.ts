@@ -8,9 +8,15 @@
  * The runner iterates applicable versions in ascending order, applying each
  * registered step in sequence. Missing steps (no-op versions) are skipped.
  *
- * Versions are compared as floating-point numbers (parseFloat).
- * Current version: '1.5'
+ * Versions are compared as major.minor tuples.
+ * Current version: '1.7'
  */
+
+import {
+  compareSchemaVersions,
+  isSchemaVersionGreater,
+  parseSchemaVersion,
+} from '../schema-version.js';
 
 export type MigrationStep = (config: Record<string, unknown>) => Record<string, unknown>;
 
@@ -22,7 +28,7 @@ export interface MigrationResult {
   isFutureVersion: boolean;
 }
 
-export const CURRENT_SCHEMA_VERSION = '1.6';
+export const CURRENT_SCHEMA_VERSION = '1.7';
 
 /**
  * Migration registry — keyed by *source* version string.
@@ -46,7 +52,7 @@ export const MIGRATIONS: Map<string, MigrationStep> = new Map([
 /**
  * Run all applicable migration steps to bring `raw` up to `targetVersion`.
  *
- * - If `raw.schemaVersion` is absent, defaults to '1' (first version).
+ * - If `raw.schemaVersion` is absent or malformed, throws.
  * - If `raw.schemaVersion === targetVersion`, returns immediately (no mutation).
  * - If `raw.schemaVersion > targetVersion`, sets `isFutureVersion: true`.
  * - On step failure, the error propagates and the config is NOT modified on disk.
@@ -56,11 +62,11 @@ export function runMigrations(
   targetVersion: string = CURRENT_SCHEMA_VERSION,
 ): MigrationResult {
   const rawVersion = raw['schemaVersion'];
-  const fromVersionStr = (rawVersion !== undefined && rawVersion !== null)
-    ? String(rawVersion)
-    : '1';
+  const fromVersion = parseSchemaVersion(rawVersion);
+  const target = parseSchemaVersion(targetVersion, 'target schemaVersion');
+  const fromVersionStr = fromVersion.raw;
 
-  if (fromVersionStr === targetVersion) {
+  if (compareSchemaVersions(fromVersion, target) === 0) {
     return {
       config: raw,
       migratedFrom: fromVersionStr,
@@ -70,10 +76,7 @@ export function runMigrations(
     };
   }
 
-  const fromFloat = parseFloat(fromVersionStr);
-  const targetFloat = parseFloat(targetVersion);
-
-  if (fromFloat > targetFloat) {
+  if (isSchemaVersionGreater(fromVersionStr, targetVersion)) {
     return {
       config: raw,
       migratedFrom: fromVersionStr,
@@ -85,9 +88,12 @@ export function runMigrations(
 
   // Find all applicable migration keys in ascending order
   const applicableKeys = Array.from(MIGRATIONS.keys())
-    .map(k => ({ key: k, float: parseFloat(k) }))
-    .filter(({ float }) => float >= fromFloat && float < targetFloat)
-    .sort((a, b) => a.float - b.float);
+    .map(key => ({ key, version: parseSchemaVersion(key, `migration key ${key}`) }))
+    .filter(({ version }) => (
+      compareSchemaVersions(version, fromVersion) >= 0 &&
+      compareSchemaVersions(version, target) < 0
+    ))
+    .sort((a, b) => compareSchemaVersions(a.version, b.version));
 
   let current: Record<string, unknown> = { ...raw };
 

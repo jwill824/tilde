@@ -14,10 +14,79 @@ function expandTilde(p: string): string {
   return p;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function formatFieldPath(parts: Array<string | number>): string {
+  return parts.reduce<string>((path, part) => {
+    if (typeof part === 'number') {
+      return `${path}[${part}]`;
+    }
+    return path ? `${path}.${part}` : part;
+  }, '');
+}
+
+function collectUnknownFieldsRecursive(
+  raw: unknown,
+  parsed: unknown,
+  path: Array<string | number>,
+  unknownFields: string[],
+): void {
+  if (Array.isArray(raw) && Array.isArray(parsed)) {
+    raw.forEach((item, index) => {
+      collectUnknownFieldsRecursive(item, parsed[index], [...path, index], unknownFields);
+    });
+    return;
+  }
+
+  if (!isRecord(raw) || !isRecord(parsed)) {
+    return;
+  }
+
+  for (const [key, value] of Object.entries(raw)) {
+    if (!Object.prototype.hasOwnProperty.call(parsed, key)) {
+      unknownFields.push(formatFieldPath([...path, key]));
+      continue;
+    }
+
+    collectUnknownFieldsRecursive(value, parsed[key], [...path, key], unknownFields);
+  }
+}
+
+export function collectUnknownConfigFields(
+  raw: Record<string, unknown>,
+  parsed: Record<string, unknown>,
+): string[] {
+  const unknownFields: string[] = [];
+  collectUnknownFieldsRecursive(raw, parsed, [], unknownFields);
+  return unknownFields;
+}
+
+export interface ConfigLoadMetadata {
+  migration: MigrationResult;
+  unknownFields: string[];
+  isFutureVersion: boolean;
+  canMutate: boolean;
+}
+
+export interface ConfigLoadResult {
+  config: TildeConfig;
+  metadata: ConfigLoadMetadata;
+}
+
 export async function loadConfig(
   pathOrUrl: string,
   onMigrated?: (result: MigrationResult) => void,
 ): Promise<TildeConfig> {
+  const result = await loadConfigWithMetadata(pathOrUrl, onMigrated);
+  return result.config;
+}
+
+export async function loadConfigWithMetadata(
+  pathOrUrl: string,
+  onMigrated?: (result: MigrationResult) => void,
+): Promise<ConfigLoadResult> {
   let content: string;
 
   if (pathOrUrl.startsWith('https://') || pathOrUrl.startsWith('http://')) {
@@ -58,19 +127,37 @@ export async function loadConfig(
     );
   }
 
-  if (migrationResult.didMigrate && !pathOrUrl.startsWith('http')) {
-    const { join: pathJoin } = await import('node:path');
-    const expandedPath = pathOrUrl.startsWith('~/') ? pathJoin(homedir(), pathOrUrl.slice(2)) : pathOrUrl;
-    const migratedContent = JSON.stringify(migrationResult.config, null, 2) + '\n';
-    await atomicWriteConfig(expandedPath, migratedContent);
-    onMigrated?.(migrationResult);
-  }
-
   const result = TildeConfigSchema.safeParse(migrationResult.config);
   if (!result.success) {
     const validationError = fromZodError(result.error);
     throw new Error(`Config validation failed:\n${validationError.message}`);
   }
 
-  return result.data;
+  const unknownFields = migrationResult.isFutureVersion
+    ? []
+    : collectUnknownConfigFields(migrationResult.config, result.data as Record<string, unknown>);
+  const canMutate = !migrationResult.isFutureVersion;
+
+  if (unknownFields.length > 0) {
+    console.warn(`[tilde] Warning: unknown config field(s) will be removed on rewrite: ${unknownFields.join(', ')}`);
+  }
+
+  if (!migrationResult.isFutureVersion && !pathOrUrl.startsWith('http') && (migrationResult.didMigrate || unknownFields.length > 0)) {
+    const expandedPath = expandTilde(pathOrUrl);
+    const migratedContent = JSON.stringify(result.data, null, 2) + '\n';
+    await atomicWriteConfig(expandedPath, migratedContent);
+    if (migrationResult.didMigrate) {
+      onMigrated?.(migrationResult);
+    }
+  }
+
+  return {
+    config: result.data,
+    metadata: {
+      migration: migrationResult,
+      unknownFields,
+      isFutureVersion: migrationResult.isFutureVersion,
+      canMutate,
+    },
+  };
 }

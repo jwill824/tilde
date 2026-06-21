@@ -9,8 +9,8 @@
  *
  * ## Registration
  *
- * This module registers a migration step keyed '1', meaning it runs when
- * migrating from schema version '1' (or equivalent) toward '1.5'.
+ * This module registers a migration step keyed '1.0', meaning it runs when
+ * migrating from schema version '1.0' toward '1.5'.
  *
  * Import this module from `reader.ts` alongside `runner.ts` so that
  * the registration executes before `runMigrations()` is called.
@@ -52,8 +52,8 @@ const v1ToV1_5: MigrationStep = (config) => {
   return migrated;
 };
 
-// Register the migration: key '1' means "source version is 1 (or '1')"
-MIGRATIONS.set('1', v1ToV1_5);
+// Register the migration: key '1.0' means "source version is 1.0"
+MIGRATIONS.set('1.0', v1ToV1_5);
 
 // Re-export MigrationStep for convenience
 export type { MigrationStep } from './runner.js';
