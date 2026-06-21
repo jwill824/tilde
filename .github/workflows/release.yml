@@ -3,12 +3,6 @@ name: Release
 on:
   push:
     branches: [main]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'release.config.cjs'
   workflow_dispatch:
 
 permissions:
