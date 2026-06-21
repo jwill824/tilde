@@ -8,6 +8,8 @@ import { homedir } from 'node:os';
 import { fromZodError } from 'zod-validation-error';
 import { TildeConfigSchema, type TildeConfig } from '../config/schema.js';
 import { runMigrations, CURRENT_SCHEMA_VERSION } from '../config/migrations/runner.js';
+import { isSchemaVersionGreater } from '../config/schema-version.js';
+import { loadConfigWithMetadata } from '../config/reader.js';
 import { atomicWriteConfig } from '../config/writer.js';
 import { installAll } from '../installer/index.js';
 import { writeAll } from '../dotfiles/writer.js';
@@ -41,6 +43,18 @@ type Phase =
 function expandTilde(p: string): string {
   if (p.startsWith('~/')) return join(homedir(), p.slice(2));
   return p;
+}
+
+function formatFutureSchemaMutationError(schemaVersion: unknown): string {
+  return `This config uses schemaVersion ${String(schemaVersion)}, which is newer than this version of tilde supports.\nUpgrade tilde before applying or rewriting this config.`;
+}
+
+function isFutureSchemaVersion(value: unknown): boolean {
+  try {
+    return typeof value === 'string' && isSchemaVersionGreater(value, CURRENT_SCHEMA_VERSION);
+  } catch {
+    return false;
+  }
 }
 
 function validateAndTransition(partial: Record<string, unknown>): Phase {
@@ -79,21 +93,45 @@ export function ConfigFirstMode({ configPath, configPathSource, inventory, inven
 
     async function load() {
       try {
-        const expanded = expandTilde(configPath);
-        const content = await readFile(expanded, 'utf-8');
-        const raw = JSON.parse(content) as Record<string, unknown>;
-        const migrationResult = runMigrations(raw, CURRENT_SCHEMA_VERSION);
-        if (migrationResult.didMigrate) {
-          const migrated = JSON.stringify({ ...migrationResult.config, schemaVersion: CURRENT_SCHEMA_VERSION }, null, 2) + '\n';
-          try {
-            await atomicWriteConfig(expanded, migrated);
-          } catch {
-            // Non-fatal: continue even if migration write fails
-          }
+        const result = await loadConfigWithMetadata(configPath, () => undefined);
+        if (!result.metadata.canMutate || result.metadata.isFutureVersion) {
+          setPhase({
+            type: 'error',
+            message: formatFutureSchemaMutationError(result.metadata.migration.migratedFrom),
+          });
+          return;
         }
-        setPhase(validateAndTransition(migrationResult.config as Record<string, unknown>));
+        setPhase({ type: 'confirm', config: result.config });
       } catch (err) {
-        setPhase({ type: 'error', message: (err as Error).message });
+        const error = err as Error;
+        if (error.message?.includes('Config validation failed') || error.message?.includes('parse')) {
+          try {
+            const expanded = expandTilde(configPath);
+            const content = await readFile(expanded, 'utf-8');
+            const raw = JSON.parse(content) as Record<string, unknown>;
+            if (isFutureSchemaVersion(raw.schemaVersion)) {
+              setPhase({
+                type: 'error',
+                message: formatFutureSchemaMutationError(raw.schemaVersion),
+              });
+              return;
+            }
+            const migrationResult = runMigrations(raw, CURRENT_SCHEMA_VERSION);
+            if (migrationResult.didMigrate) {
+              const migrated = JSON.stringify({ ...migrationResult.config, schemaVersion: CURRENT_SCHEMA_VERSION }, null, 2) + '\n';
+              try {
+                await atomicWriteConfig(expanded, migrated);
+              } catch {
+                // Non-fatal: continue even if migration write fails
+              }
+            }
+            setPhase(validateAndTransition(migrationResult.config as Record<string, unknown>));
+          } catch (fallbackErr) {
+            setPhase({ type: 'error', message: (fallbackErr as Error).message });
+          }
+          return;
+        }
+        setPhase({ type: 'error', message: error.message });
       }
     }
     load();
