@@ -100,7 +100,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 6. Stabilization and Config Selection Polish | 0/0 | Planned | - |
+| 6. Stabilization and Config Selection Polish | 0/1 | In Progress | - |
 | 7. Config and Schema Versioning Foundation | 0/0 | Planned | - |
 | 8. Search Wrapper API Core | 0/0 | Planned | - |
 | 9. Registry-backed Ecosystem Search UX | 0/0 | Planned | - |
