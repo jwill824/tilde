@@ -11,7 +11,7 @@ interface Props {
   defaultGitEmail?: string;
   /** Pre-existing contexts from wizard history — triggers list view when non-empty */
   initialContexts?: DeveloperContext[];
-  /** Languages detected by env-capture scan — shown as suggestions in lang-gate */
+  /** Languages detected by inventory scan — shown as suggestions in lang-gate */
   detectedLanguages?: Array<{ name: string; version: string }>;
   onBack?: () => void;
   isOptional?: boolean;
@@ -655,5 +655,4 @@ export function ContextsStep({
     </Box>
   );
 }
-
 

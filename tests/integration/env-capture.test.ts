@@ -3,6 +3,7 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
+import { createEmptyInventoryReport, type InventoryReport } from '../../src/inventory/report.js';
 
 vi.mock('../../src/utils/exec.js', () => ({
   run: vi.fn().mockResolvedValue({ stdout: 'git\nnodejs\nnpm\n', stderr: '', exitCode: 0 }),
@@ -104,5 +105,71 @@ describe('env-capture integration', () => {
 
     const includePaths = parseGitconfigIncludes(gitconfigContent);
     expect(includePaths).toContain('~/.gitconfig-work');
+  });
+});
+
+describe('inventory integration', () => {
+  function createInventoryFixture(): InventoryReport {
+    return {
+      ...createEmptyInventoryReport(),
+      tools: [
+        {
+          toolId: 'homebrew',
+          label: 'Homebrew',
+          category: 'package-manager',
+          installed: 'installed',
+          evidence: [{ type: 'homebrew-formula', id: 'brew', requestStatus: 'direct' }],
+          warningIds: [],
+        },
+        {
+          toolId: 'vscode',
+          label: 'Visual Studio Code',
+          category: 'editor',
+          installed: 'installed',
+          evidence: [{ type: 'homebrew-cask', id: 'visual-studio-code', requestStatus: 'direct' }],
+          warningIds: [],
+        },
+      ],
+      unmatchedHomebrew: {
+        formulae: [{ id: 'ripgrep', requestStatus: 'dependency' }],
+        casks: [],
+      },
+      homebrew: {
+        installedFormulaeCount: 2,
+        installedCasksCount: 1,
+        matchedFormulaeCount: 1,
+        matchedCasksCount: 1,
+        unmatchedFormulaeCount: 1,
+        unmatchedCasksCount: 0,
+        directFormulaeCount: 1,
+        dependencyFormulaeCount: 1,
+        unknownFormulaeCount: 0,
+      },
+      warnings: [
+        {
+          id: 'inventory-startup-failed',
+          source: 'scanner',
+          severity: 'warning',
+          message: 'Inventory scan failed; continuing with an empty report.',
+        },
+      ],
+      environment: {
+        homeDir: '~',
+        shell: '/bin/zsh',
+        rcFiles: {},
+        detectedLanguages: [{ name: 'node', version: '22.0.0' }],
+        detectedVersionManagers: [{ name: 'vfox' }],
+      },
+    };
+  }
+
+  it('inventory summary includes known installed tools and warnings from an InventoryReport', () => {
+    const report = createInventoryFixture();
+    const labels = report.tools.map(tool => tool.label);
+    const warnings = report.warnings.map(warning => warning.message);
+
+    expect(labels).toContain('Homebrew');
+    expect(labels).toContain('Visual Studio Code');
+    expect(warnings).toContain('Inventory scan failed; continuing with an empty report.');
   });
 });

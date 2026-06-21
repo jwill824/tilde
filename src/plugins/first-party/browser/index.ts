@@ -11,22 +11,27 @@ import { access } from 'node:fs/promises';
 import type { BrowserPlugin } from '../../api.js';
 import { installCask, installFormula } from '../../../utils/package-manager.js';
 import { execa } from 'execa';
+import { browserToolMetadata } from './metadata.js';
+import type { ToolMetadata } from '../../../tools/metadata.js';
 
 // ---------------------------------------------------------------------------
 // Base browser implementation
 // ---------------------------------------------------------------------------
 
-abstract class BaseBrowserPlugin implements BrowserPlugin {
+class BaseBrowserPlugin implements BrowserPlugin {
   readonly category = 'browser' as const;
-  abstract readonly id: string;
-  abstract readonly label: string;
-  abstract readonly appPath: string;
+  readonly id: string;
+  readonly label: string;
+  readonly appPath: string;
   readonly brewCask: string | undefined;
   readonly defaultBrowserId: string;
 
-  constructor(opts: { brewCask?: string; defaultBrowserId: string }) {
-    this.brewCask = opts.brewCask;
-    this.defaultBrowserId = opts.defaultBrowserId;
+  constructor(metadata: ToolMetadata) {
+    this.id = metadata.id;
+    this.label = metadata.label;
+    this.appPath = metadata.install?.appPath ?? '';
+    this.brewCask = metadata.install?.homebrew?.cask;
+    this.defaultBrowserId = metadata.externalIds?.defaultbrowser ?? metadata.id;
   }
 
   async detectInstalled(): Promise<boolean> {
@@ -62,47 +67,8 @@ abstract class BaseBrowserPlugin implements BrowserPlugin {
 // ---------------------------------------------------------------------------
 
 class SafariPlugin extends BaseBrowserPlugin {
-  readonly id = 'safari';
-  readonly label = 'Safari';
-  readonly appPath = '/Applications/Safari.app';
-  constructor() { super({ defaultBrowserId: 'safari' }); }
   // Safari is always present and not installable via Homebrew
   async install(): Promise<void> { /* always installed */ }
-}
-
-class ChromePlugin extends BaseBrowserPlugin {
-  readonly id = 'chrome';
-  readonly label = 'Google Chrome';
-  readonly appPath = '/Applications/Google Chrome.app';
-  constructor() { super({ brewCask: 'google-chrome', defaultBrowserId: 'chrome' }); }
-}
-
-class FirefoxPlugin extends BaseBrowserPlugin {
-  readonly id = 'firefox';
-  readonly label = 'Firefox';
-  readonly appPath = '/Applications/Firefox.app';
-  constructor() { super({ brewCask: 'firefox', defaultBrowserId: 'firefox' }); }
-}
-
-class ArcPlugin extends BaseBrowserPlugin {
-  readonly id = 'arc';
-  readonly label = 'Arc';
-  readonly appPath = '/Applications/Arc.app';
-  constructor() { super({ brewCask: 'arc', defaultBrowserId: 'arc' }); }
-}
-
-class BravePlugin extends BaseBrowserPlugin {
-  readonly id = 'brave';
-  readonly label = 'Brave Browser';
-  readonly appPath = '/Applications/Brave Browser.app';
-  constructor() { super({ brewCask: 'brave-browser', defaultBrowserId: 'brave' }); }
-}
-
-class EdgePlugin extends BaseBrowserPlugin {
-  readonly id = 'edge';
-  readonly label = 'Microsoft Edge';
-  readonly appPath = '/Applications/Microsoft Edge.app';
-  constructor() { super({ brewCask: 'microsoft-edge', defaultBrowserId: 'edge' }); }
 }
 
 // ---------------------------------------------------------------------------
@@ -110,10 +76,9 @@ class EdgePlugin extends BaseBrowserPlugin {
 // ---------------------------------------------------------------------------
 
 export const BROWSER_PLUGINS: BrowserPlugin[] = [
-  new SafariPlugin(),
-  new ChromePlugin(),
-  new FirefoxPlugin(),
-  new ArcPlugin(),
-  new BravePlugin(),
-  new EdgePlugin(),
+  ...browserToolMetadata.map(metadata =>
+    metadata.id === 'safari'
+      ? new SafariPlugin(metadata)
+      : new BaseBrowserPlugin(metadata)
+  ),
 ];
