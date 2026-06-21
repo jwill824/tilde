@@ -23,7 +23,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsc && tsc -p tsconfig.bin.json",
+    "build": "tsc && tsc -p tsconfig.bin.json && node scripts/fix-bin-output.cjs",
     "dev": "tsx src/index.tsx",
     "test": "vitest run",
     "test:watch": "vitest",

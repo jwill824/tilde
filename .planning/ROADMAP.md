@@ -19,7 +19,7 @@ v1.0 shipped the machine inventory and provenance foundation: shared tool metada
 
 ## Phases
 
-- [ ] **Phase 6: Stabilization and Config Selection Polish** - Close known correctness issues before widening the surface area. GitHub: #52, #60, #74.
+- [x] **Phase 6: Stabilization and Config Selection Polish** - Close known correctness issues before widening the surface area. GitHub: #52, #60, #74. (completed 2026-06-21)
 - [ ] **Phase 7: Config and Schema Versioning Foundation** - Standardize tilde config and related schema evolution so new searchable resources can be managed safely. GitHub: #54, #81, #83.
 - [ ] **Phase 8: Search Wrapper API Core** - Create the consistent search abstraction for packages, plugins, extensions, defaults, and dotfile-backed resources. GitHub: #105, #31.
 - [ ] **Phase 9: Registry-backed Ecosystem Search UX** - Wire the wrapper API into concrete Homebrew, macOS defaults, and plugin registry search flows. GitHub: #84, #70, #56.
@@ -100,7 +100,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 6. Stabilization and Config Selection Polish | 0/1 | In Progress | - |
+| 6. Stabilization and Config Selection Polish | 1/1 | Complete | 2026-06-21 |
 | 7. Config and Schema Versioning Foundation | 0/0 | Planned | - |
 | 8. Search Wrapper API Core | 0/0 | Planned | - |
 | 9. Registry-backed Ecosystem Search UX | 0/0 | Planned | - |

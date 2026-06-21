@@ -106,6 +106,57 @@ describe('ConfigFirstMode', () => {
     expect(frame).not.toContain('Shell not specified');
   });
 
+  it('prompts before loading an auto-discovered config', async () => {
+    const readFile = vi.fn().mockResolvedValue(VALID_CONFIG);
+    vi.doMock('node:fs/promises', async () => {
+      const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
+      return { ...actual, readFile };
+    });
+
+    const { ConfigFirstMode } = await import('../../src/modes/config-first.js');
+    const onComplete = vi.fn();
+    const { lastFrame } = render(
+      React.createElement(ConfigFirstMode, {
+        configPath: '/fake/discovered/tilde.config.json',
+        configPathSource: 'discovered',
+        onComplete,
+      })
+    );
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Found existing tilde.config.json');
+    expect(frame).toContain('/fake/discovered/tilde.config.json');
+    expect(frame).toContain('Use discovered config');
+    expect(readFile).not.toHaveBeenCalled();
+  });
+
+  it('loads explicit configs without prompting', async () => {
+    const readFile = vi.fn().mockResolvedValue(VALID_CONFIG);
+    vi.doMock('node:fs/promises', async () => {
+      const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
+      return { ...actual, readFile };
+    });
+
+    const { ConfigFirstMode } = await import('../../src/modes/config-first.js');
+    const onComplete = vi.fn();
+    const { lastFrame } = render(
+      React.createElement(ConfigFirstMode, {
+        configPath: '/fake/explicit/tilde.config.json',
+        configPathSource: 'flag',
+        onComplete,
+      })
+    );
+
+    await new Promise((r) => setTimeout(r, 200));
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Configuration Summary');
+    expect(frame).not.toContain('Use discovered config');
+    expect(readFile).toHaveBeenCalled();
+  });
+
   it('config with missing contexts field → context step component rendered', async () => {
     vi.doMock('node:fs/promises', async () => {
       const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');

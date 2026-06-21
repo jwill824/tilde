@@ -7,9 +7,9 @@
 
 ### Stabilization
 
-- [ ] **STAB-01**: Generated JavaScript output does not incorrectly copy or expose `.tsx` source content. GitHub: #52.
-- [ ] **STAB-02**: Plugin ownership labels such as `first-party` come from explicit, explainable metadata. GitHub: #60.
-- [ ] **STAB-03**: Interactive config-required flows prompt or clearly explain when an existing discovered config will be used because `--config` was not specified. GitHub: #74.
+- [x] **STAB-01**: Generated JavaScript output does not incorrectly copy or expose `.tsx` source content. GitHub: #52.
+- [x] **STAB-02**: Plugin ownership labels such as `first-party` come from explicit, explainable metadata. GitHub: #60.
+- [x] **STAB-03**: Interactive config-required flows prompt or clearly explain when an existing discovered config will be used because `--config` was not specified. GitHub: #74.
 
 ### Schema and Config Evolution
 
@@ -67,9 +67,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STAB-01 | Phase 6 | Pending |
-| STAB-02 | Phase 6 | Pending |
-| STAB-03 | Phase 6 | Pending |
+| STAB-01 | Phase 6 | Complete |
+| STAB-02 | Phase 6 | Complete |
+| STAB-03 | Phase 6 | Complete |
 | SCHEMA-01 | Phase 7 | Pending |
 | SCHEMA-02 | Phase 7 | Pending |
 | SCHEMA-03 | Phase 7 | Pending |
@@ -88,4 +88,4 @@
 
 ---
 *Requirements defined: 2026-06-21*
-*Last updated: 2026-06-21 after v1.1 milestone setup*
+*Last updated: 2026-06-21 after Phase 6 completion*

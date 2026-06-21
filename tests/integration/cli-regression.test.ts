@@ -100,6 +100,16 @@ describe('CLI regression — #45', () => {
   it.todo('prints a meaningful error message for invalid arguments (FR-002)');
 });
 
+describe('CLI plugin list', () => {
+  it('explains first-party plugin ownership', async () => {
+    const result = await execa('node', [BIN, 'plugin', 'list'], { reject: false, timeout: 10_000 });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('homebrew');
+    expect(result.stdout).toContain('first-party (built in)');
+  });
+});
+
 describe('CLI config discovery and override behavior', () => {
   it.each([
     ['install', ['install'], 'tilde install --config <path>'],

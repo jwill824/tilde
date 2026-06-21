@@ -17,9 +17,11 @@ import { ContextsStep } from '../steps/contexts.js';
 import { ShellStep } from '../steps/shell.js';
 import type { InventoryReport, InventoryScanState } from '../inventory/report.js';
 import { summarizeInventory } from '../inventory/summary.js';
+import type { ConfigPathSource } from '../utils/config-resolution.js';
 
 interface Props {
   configPath: string;
+  configPathSource?: ConfigPathSource;
   inventory?: InventoryReport;
   inventoryState?: InventoryScanState;
   onComplete: () => void;
@@ -68,10 +70,13 @@ function validateAndTransition(partial: Record<string, unknown>): Phase {
   return { type: 'error', message: validationError.message };
 }
 
-export function ConfigFirstMode({ configPath, inventory, inventoryState, onComplete, onEdit, onStartOver }: Props) {
+export function ConfigFirstMode({ configPath, configPathSource, inventory, inventoryState, onComplete, onEdit, onStartOver }: Props) {
   const [phase, setPhase] = useState<Phase>({ type: 'loading' });
+  const [acceptedDiscoveredConfig, setAcceptedDiscoveredConfig] = useState(configPathSource !== 'discovered');
 
   useEffect(() => {
+    if (!acceptedDiscoveredConfig) return;
+
     async function load() {
       try {
         const expanded = expandTilde(configPath);
@@ -92,7 +97,34 @@ export function ConfigFirstMode({ configPath, inventory, inventoryState, onCompl
       }
     }
     load();
-  }, [configPath]);
+  }, [acceptedDiscoveredConfig, configPath]);
+
+  if (!acceptedDiscoveredConfig) {
+    return (
+      <Box flexDirection="column">
+        <Text color="cyan">Found existing tilde.config.json:</Text>
+        <Text dimColor>{configPath}</Text>
+        <Box marginTop={1}>
+          <Text>Use this discovered config?</Text>
+        </Box>
+        <Box marginTop={1}>
+          <SelectInput
+            items={[
+              { label: 'Use discovered config', value: 'use' },
+              { label: 'Start fresh wizard', value: 'start-over' },
+            ]}
+            onSelect={(item) => {
+              if (item.value === 'use') {
+                setAcceptedDiscoveredConfig(true);
+              } else {
+                onStartOver?.();
+              }
+            }}
+          />
+        </Box>
+      </Box>
+    );
+  }
 
   async function applyConfig(config: TildeConfig) {
     const progress: string[] = [];

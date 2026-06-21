@@ -12,12 +12,14 @@ import { writeAll } from './dotfiles/writer.js';
 import { pluginRegistry } from './plugins/registry.js';
 import { createEmptyInventoryReport, type InventoryScanState } from './inventory/report.js';
 import { scanInventory } from './inventory/scan.js';
+import type { ConfigPathSource } from './utils/config-resolution.js';
 
 export type AppMode = 'wizard' | 'config-first' | 'non-interactive';
 
 export interface AppProps {
   mode: AppMode;
   configPath?: string;
+  configPathSource?: ConfigPathSource;
   dryRun?: boolean;
   resume?: boolean;
   reconfigure?: boolean;
@@ -61,7 +63,7 @@ function NonInteractiveMode({ configPath, dryRun }: NonInteractiveProps) {
   );
 }
 
-export function App({ mode, configPath, dryRun, resume, reconfigure, version = '0.1.0' }: AppProps) {
+export function App({ mode, configPath, configPathSource, dryRun, resume, reconfigure, version = '0.1.0' }: AppProps) {
   const [splashDone, setSplashDone] = useState(false);
   const [done, setDone] = useState(false);
   const [configEditMode, setConfigEditMode] = useState<'apply' | 'edit' | 'start-over'>('apply');
@@ -213,6 +215,7 @@ export function App({ mode, configPath, dryRun, resume, reconfigure, version = '
         {header}
         <ConfigFirstMode
           configPath={configPath}
+          configPathSource={configPathSource}
           inventoryState={inventoryState}
           onComplete={() => setDone(true)}
           onEdit={() => setConfigEditMode('edit')}

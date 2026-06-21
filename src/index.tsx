@@ -252,7 +252,7 @@ async function handlePluginSubcommand(sub: string, name: string | undefined) {
     const categories: PluginCategory[] = ['package-manager', 'secrets-backend', 'account-connector', 'env-loader', 'version-manager'];
     for (const cat of categories) {
       for (const p of pluginRegistry.getAll(cat)) {
-        process.stdout.write(`${p.id}  ${p.version}  ${p.source}\n`);
+        process.stdout.write(`${p.id}  ${p.version}  ${formatPluginSource(p.source)}\n`);
       }
     }
     process.exit(0);
@@ -280,6 +280,18 @@ async function handlePluginSubcommand(sub: string, name: string | undefined) {
 
   process.stderr.write(`Unknown plugin subcommand: ${sub}\n`);
   process.exit(1);
+}
+
+function formatPluginSource(source: 'first-party' | 'community' | 'local'): string {
+  if (source === 'first-party') {
+    return 'first-party (built in)';
+  }
+
+  if (source === 'community') {
+    return 'community';
+  }
+
+  return 'local';
 }
 
 async function handleConfigSubcommand(
@@ -442,6 +454,7 @@ export async function main() {
     React.createElement(App, {
       mode,
       configPath: resolvedConfigPath,
+      configPathSource: startupResolution.found ? startupResolution.resolved.source : undefined,
       dryRun,
       resume: resume && !noResume,
       reconfigure,
