@@ -56,12 +56,12 @@ v1.0 shipped the machine inventory and provenance foundation: shared tool metada
 3. Users or maintainers can inspect the effective schema through a CLI schema-viewer path.
 4. Tests cover migration, validation, and compatibility behavior.
 
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 
 - [x] 07-01-PLAN.md — Enforce authoritative `schemaVersion` policy and migration compatibility
-- [ ] 07-02-PLAN.md — Add shared schema metadata and `tilde config schema`
+- [x] 07-02-PLAN.md — Add shared schema metadata and `tilde config schema`
 - [ ] 07-03-PLAN.md — Publish the docs-site schema explorer from generated metadata
 - [ ] 07-04-PLAN.md — Soft-block mutation paths for unsupported future schemas
 
@@ -110,6 +110,6 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 6. Stabilization and Config Selection Polish | 1/1 | Complete | 2026-06-21 |
-| 7. Config and Schema Versioning Foundation | 1/4 | In Progress | - |
+| 7. Config and Schema Versioning Foundation | 2/4 | In Progress | - |
 | 8. Search Wrapper API Core | 0/0 | Planned | - |
 | 9. Registry-backed Ecosystem Search UX | 0/0 | Planned | - |

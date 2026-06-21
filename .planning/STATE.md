@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Searchable Tool and Config Ecosystem
 status: executing
-stopped_at: Completed 07-01-PLAN.md
-last_updated: "2026-06-21T19:39:10.055Z"
+stopped_at: Completed 07-02-PLAN.md
+last_updated: "2026-06-21T19:53:23.651Z"
 last_activity: 2026-06-21 -- Phase 07 execution started
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 5
-  completed_plans: 2
-  percent: 40
+  completed_plans: 3
+  percent: 60
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-12)
 ## Current Position
 
 Phase: 07 (config-and-schema-versioning-foundation) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-21 -- Phase 07 execution started
 
@@ -61,6 +61,7 @@ Last activity: 2026-06-21 -- Phase 07 execution started
 | Phase 04 P01 | 6 min | 2 tasks | 2 files |
 | Phase 04 P02 | 4 min | 2 tasks | 7 files |
 | Phase 07 P01 | 33min | 2 tasks | 10 files |
+| Phase 07 P02 | 6min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,9 @@ Recent decisions affecting current work:
 - [Phase 07]: schemaVersion is required, string-only, and must use major.minor without patch values.
 - [Phase 07]: Migration ordering uses parsed major/minor tuples instead of parseFloat.
 - [Phase 07]: Supported configs with unknown fields warn with field paths only, then rewrite using parsed supported fields.
+- [Phase 07]: Shared schema metadata is explicit TypeScript data keyed to CURRENT_SCHEMA_VERSION rather than generated from Zod JSON Schema. — Zod JSON Schema conversion does not directly represent the user-facing schema contract for this config shape.
+- [Phase 07]: tilde config schema branches before config path resolution so schema inspection works without any user config file. — Schema inspection is structural metadata and must not depend on local user config discovery.
+- [Phase 07]: Ink cursor restoration now runs only before render paths so machine-readable subcommand stdout remains parseable. — The config schema JSON route must emit valid JSON without terminal escape prefixes.
 
 ### Pending Todos
 
@@ -107,8 +111,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-21T19:38:53.266Z
-Stopped at: Completed 07-01-PLAN.md
+Last session: 2026-06-21T19:52:58.504Z
+Stopped at: Completed 07-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
