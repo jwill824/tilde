@@ -14,7 +14,7 @@
 ### Schema and Config Evolution
 
 - [ ] **SCHEMA-01**: `tilde.config.json` has a standardized versioning and migration pattern. GitHub: #54.
-- [ ] **SCHEMA-02**: `repos.json` supports schema versioning for future compatibility. GitHub: #81.
+- [ ] **SCHEMA-02**: Shared generated schema metadata powers both CLI schema output and the docs-site schema explorer so config docs do not drift from runtime behavior. GitHub: #83.
 - [ ] **SCHEMA-03**: tilde exposes a schema viewer so users and maintainers can inspect effective schema structure. GitHub: #83.
 
 ### Search Wrapper API
