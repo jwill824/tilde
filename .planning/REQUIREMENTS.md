@@ -1,52 +1,35 @@
-# Requirements: tilde Machine Inventory and Provenance
+# Requirements: tilde Searchable Tool and Config Ecosystem
 
-**Defined:** 2026-06-12
+**Defined:** 2026-06-21
 **Core Value:** tilde should explain a machine's developer setup clearly enough that users can trust what it will manage before it changes anything.
 
-## v1 Requirements
+## v1.1 Requirements
 
-### Metadata Registry
+### Stabilization
 
-- [x] **META-01**: Developer can define tool metadata in one shared location instead of duplicating step-specific maps.
-- [x] **META-02**: Tool metadata can describe install method, package identifiers, plugin category, display label, supported platforms, config paths, and dotfile locations.
-- [x] **META-03**: Existing wizard steps can read metadata from the shared registry without changing their visible behavior.
-- [x] **META-04**: Registry lookups can answer cross-step questions such as "which tools have dotfiles under ~/.config?".
-- [x] **META-05**: Tests protect metadata loading, validation, and at least one existing step migration.
+- [ ] **STAB-01**: Generated JavaScript output does not incorrectly copy or expose `.tsx` source content. GitHub: #52.
+- [ ] **STAB-02**: Plugin ownership labels such as `first-party` come from explicit, explainable metadata. GitHub: #60.
+- [ ] **STAB-03**: Interactive config-required flows prompt or clearly explain when an existing discovered config will be used because `--config` was not specified. GitHub: #74.
 
-### Machine Inventory
+### Schema and Config Evolution
 
-- [x] **INV-01**: tilde can detect already-installed package managers, version managers, shells, editors, and core tools before wizard interaction.
-- [x] **INV-02**: tilde can distinguish direct Homebrew installs from dependency installs using `brew list --installed-on-request`.
-- [x] **INV-03**: Wizard or summary output can pre-highlight tools that are already installed.
-- [x] **INV-04**: Inventory scans fail softly when an external command is missing, slow, or unavailable.
+- [ ] **SCHEMA-01**: `tilde.config.json` has a standardized versioning and migration pattern. GitHub: #54.
+- [ ] **SCHEMA-02**: `repos.json` supports schema versioning for future compatibility. GitHub: #81.
+- [ ] **SCHEMA-03**: tilde exposes a schema viewer so users and maintainers can inspect effective schema structure. GitHub: #83.
 
-### Dotfiles Mapping
+### Search Wrapper API
 
-- [x] **DOT-01**: tilde can map known dotfile paths to related tools using the shared metadata registry.
-- [x] **DOT-02**: tilde can parse common shell rc files for aliases, environment variables, plugin references, and PATH modifications.
-- [x] **DOT-03**: tilde can look for tool config files in home and workspace context locations without mutating them.
-- [x] **DOT-04**: Dotfile discovery output identifies unknown files separately from known tool-owned files.
+- [ ] **WRAP-01**: tilde provides a typed search interface for package, extension, plugin, defaults, and dotfile ecosystems. GitHub: #105.
+- [ ] **WRAP-02**: Search providers can report actionable result identity, ecosystem source, install/config target, and confidence. GitHub: #105, #31.
+- [ ] **WRAP-03**: Search provider failures are non-fatal diagnostics and all external commands are mocked in tests. GitHub: #105.
 
-### Provenance Summary
+### Ecosystem Search UX
 
-- [x] **PROV-01**: tilde can label tools as tilde-managed, already installed, Homebrew dependency, manually installed, app-store/manual GUI install, OS-provided, or unknown.
-- [x] **PROV-02**: Wizard and/or config summary output shows provenance without overwhelming the user.
-- [x] **PROV-03**: Provenance can explain why tilde selected or skipped a tool.
-- [x] **PROV-04**: Provenance data is derived from scanner output and metadata rather than hardcoded per-step text.
+- [ ] **SEARCH-01**: tilde can search Homebrew formulae and display actionable results. GitHub: #70.
+- [ ] **SEARCH-02**: tilde can search macOS defaults metadata without writing defaults. GitHub: #56.
+- [ ] **SEARCH-03**: tilde can search registered plugins/resources using shared registry metadata. GitHub: #84.
 
-### Config Discovery
-
-- [ ] **CONF-01**: When no config is provided, tilde gives a helpful error that lists searched paths.
-- [ ] **CONF-02**: tilde can discover configs in known dotfiles locations when safe and deterministic.
-- [ ] **CONF-03**: `--config` and `TILDE_CONFIG` continue to override auto-discovery.
-
-## v2 Requirements
-
-### Ecosystem Search and Wrapper APIs
-
-- **WRAP-01**: Provide a consistent search interface for package, extension, plugin, defaults, and dotfile ecosystems. GitHub: #105.
-- **WRAP-02**: Support Homebrew formula search and macOS defaults search. GitHub: #70, #56.
-- **WRAP-03**: Create plugin registry and search UX. GitHub: #84.
+## Future Requirements
 
 ### Additional Wizard Steps
 
@@ -55,52 +38,54 @@
 - **STEP-03**: Add note-taking apps wizard step. GitHub: #82.
 - **STEP-04**: Add zsh plugin support. GitHub: #101.
 - **STEP-05**: Add expanded browser capabilities. GitHub: #108, #109.
+- **STEP-06**: Add Obsidian iCloud Drive symlink sync. GitHub: #110.
 
-### Platform Expansion
+### Distribution and Release Channels
 
-- **PLAT-01**: Support OS-specific config files. GitHub: #107.
+- **DIST-01**: Publish or maintain Homebrew formula. GitHub: #3.
+- **DIST-02**: Clean up bootstrap Node.js after first-run setup. GitHub: #2.
+- **DIST-03**: Verify pnpm and yarn global install support. GitHub: #5.
+- **DIST-04**: Add canary releases. GitHub: #62.
+
+### Platform and Backend Expansion
+
+- **PLAT-01**: Support OS-specific config files beyond v1.1 schema groundwork. GitHub: #107.
 - **PLAT-02**: Add Windows support. GitHub: #7.
+- **PLAT-03**: Add Nix and MacPorts package manager support. GitHub: #55.
+- **SEC-01**: Add Bitwarden and macOS Keychain secrets backends. GitHub: #8.
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Full ecosystem wrapper/search API in v1 | Needs shared metadata and inventory first. |
-| New wizard step families in v1 | The current milestone sequence is about making existing and future steps data-driven. |
-| Cross-platform inventory in v1 | Current app enforces macOS for interactive flows. |
-| Homebrew formula distribution | Separate install-channel work, not inventory/provenance. |
+| New wizard step families in v1.1 | Search and schema foundations should land before broadening setup choices. |
+| Install-channel/distribution work in v1.1 | Separate release engineering milestone; not core to searchable resource management. |
+| First-class Windows support in v1.1 | Current product remains macOS-first; wrapper/search abstractions should not force cross-platform behavior yet. |
+| Secret resolution in search results | Security constraint: do not resolve or persist raw secrets. |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| META-01 | Phase 1 | Complete |
-| META-02 | Phase 1 | Complete |
-| META-03 | Phase 1 | Complete |
-| META-04 | Phase 1 | Complete |
-| META-05 | Phase 1 | Complete |
-| INV-01 | Phase 2 | Complete |
-| INV-02 | Phase 2 | Complete |
-| INV-03 | Phase 2 | Complete |
-| INV-04 | Phase 2 | Complete |
-| DOT-01 | Phase 3 | Complete |
-| DOT-02 | Phase 3 | Complete |
-| DOT-03 | Phase 3 | Complete |
-| DOT-04 | Phase 3 | Complete |
-| PROV-01 | Phase 4 | Complete |
-| PROV-02 | Phase 4 | Complete |
-| PROV-03 | Phase 4 | Complete |
-| PROV-04 | Phase 4 | Complete |
-| CONF-01 | Phase 5 | Pending |
-| CONF-02 | Phase 5 | Pending |
-| CONF-03 | Phase 5 | Pending |
+| STAB-01 | Phase 6 | Pending |
+| STAB-02 | Phase 6 | Pending |
+| STAB-03 | Phase 6 | Pending |
+| SCHEMA-01 | Phase 7 | Pending |
+| SCHEMA-02 | Phase 7 | Pending |
+| SCHEMA-03 | Phase 7 | Pending |
+| WRAP-01 | Phase 8 | Pending |
+| WRAP-02 | Phase 8 | Pending |
+| WRAP-03 | Phase 8 | Pending |
+| SEARCH-01 | Phase 9 | Pending |
+| SEARCH-02 | Phase 9 | Pending |
+| SEARCH-03 | Phase 9 | Pending |
 
 **Coverage:**
 
-- v1 requirements: 20 total
-- Mapped to phases: 20
+- v1.1 requirements: 12 total
+- Mapped to phases: 12
 - Unmapped: 0
 
 ---
-*Requirements defined: 2026-06-12*
-*Last updated: 2026-06-12 after initial definition*
+*Requirements defined: 2026-06-21*
+*Last updated: 2026-06-21 after v1.1 milestone setup*

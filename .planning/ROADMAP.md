@@ -1,170 +1,106 @@
-# Roadmap: tilde Machine Inventory and Provenance
+# Roadmap: tilde Searchable Tool and Config Ecosystem
 
 ## Overview
 
-This roadmap turns tilde from a setup wizard into a machine-aware setup assistant. The work starts with issue #98 because a shared metadata registry is the foundation for installed-tool detection, dotfile mapping, provenance summaries, and later ecosystem search features.
+v1.0 shipped the machine inventory and provenance foundation: shared tool metadata, installed-tool scanning, dotfile discovery, provenance summaries, and safer config discovery. v1.1 builds on that foundation by stabilizing the existing CLI surfaces, formalizing config/schema evolution, and introducing the first searchable ecosystem layer for tools, packages, plugins, and macOS defaults.
 
-## Phases
+## Completed Milestones
+
+- [x] **v1.0: Machine Inventory and Provenance** - Shipped metadata registry, inventory scanner, dotfile map, provenance summary, and config discovery polish. See `.planning/milestones/v1.0-ROADMAP.md` and `.planning/milestones/v1.0-REQUIREMENTS.md`.
+
+## Current Milestone: v1.1 Searchable Tool and Config Ecosystem
+
+**Goal:** tilde can describe, validate, and search developer-environment resources through stable config/schema foundations and a first-pass wrapper API.
 
 **Phase Numbering:**
 
-- Integer phases are planned milestone work.
-- Phase 1 is the immediate next milestone and covers GitHub issue #98.
+- Phase numbering continues from v1.0.
+- v1.1 starts at Phase 6.
 
-- [x] **Phase 1: Tool Metadata Registry** - Create the shared data model and registry lookup layer for wizard tool metadata. (completed 2026-06-13)
-- [x] **Phase 2: Machine Inventory Scanner** - Detect installed tools and Homebrew direct-vs-dependency provenance. (completed 2026-06-13)
-- [x] **Phase 3: Dotfiles Discovery Map** - Map known dotfiles and rc-file contents to tools. (completed 2026-06-19)
-- [x] **Phase 4: Provenance Summary** - Surface clear managed/already-installed/dependency/manual/unknown status to users. (completed 2026-06-20)
-- [x] **Phase 5: Config Discovery Polish** - Improve non-default config discovery and error messaging. (completed 2026-06-20)
+## Phases
+
+- [ ] **Phase 6: Stabilization and Config Selection Polish** - Close known correctness issues before widening the surface area. GitHub: #52, #60, #74.
+- [ ] **Phase 7: Config and Schema Versioning Foundation** - Standardize tilde config and related schema evolution so new searchable resources can be managed safely. GitHub: #54, #81, #83.
+- [ ] **Phase 8: Search Wrapper API Core** - Create the consistent search abstraction for packages, plugins, extensions, defaults, and dotfile-backed resources. GitHub: #105, #31.
+- [ ] **Phase 9: Registry-backed Ecosystem Search UX** - Wire the wrapper API into concrete Homebrew, macOS defaults, and plugin registry search flows. GitHub: #84, #70, #56.
 
 ## Phase Details
 
-### Phase 1: Tool Metadata Registry
+### Phase 6: Stabilization and Config Selection Polish
 
-**Goal**: Existing wizard tool metadata lives in one shared registry that current steps can consume without user-visible behavior changes.
+**Goal:** Fix known correctness and trust issues in generated outputs, plugin ownership labels, and config selection prompts before expanding tilde's search surface.
 **Mode:** mvp
-**Depends on**: Nothing (first phase)
-**Requirements**: [META-01, META-02, META-03, META-04, META-05]
-**GitHub**: #98
+**Depends on:** v1.0 completion
+**Requirements:** [STAB-01, STAB-02, STAB-03]
+**GitHub:** #52, #60, #74
+
 **Success Criteria** (what must be TRUE):
 
-  1. Developers can add or edit tool metadata in one shared source.
-  2. At least one existing wizard step reads from the shared registry with no visible behavior regression.
-  3. Registry metadata includes install identifiers, config paths, dotfile paths, plugin category, labels, and platform support.
-  4. Tests fail if required metadata fields are missing or malformed.
+1. Generated JavaScript artifacts no longer copy or expose `.tsx` source content incorrectly.
+2. `tilde plugin list` reports first-party/plugin ownership from explicit registry metadata that users can understand.
+3. When a config exists but was not specified with `--config`, tilde prompts or explains the selected config path before proceeding in interactive flows.
+4. Tests cover each regression without running real external package managers or editors.
 
-**Plans**: 3 plans
+### Phase 7: Config and Schema Versioning Foundation
 
-Plans:
-**Wave 1**
-
-- [x] 01-01-PLAN.md - Define and test the shared metadata registry slice for browser plus non-plugin note-taking metadata.
-
-**Wave 2 (blocked on Wave 1 completion)**
-
-- [x] 01-02-PLAN.md - Migrate BrowserStep and browser plugin fields to consume shared metadata.
-
-**Wave 3 (blocked on Wave 2 completion)**
-
-- [x] 01-03-PLAN.md - Harden registry validation and browser regression coverage.
-
-Cross-cutting constraints:
-
-- Existing wizard tool metadata must live in one shared registry without user-visible behavior changes.
-- Registry validation must fail malformed required metadata before downstream use.
-- Browser command behavior must remain mocked in tests and outside registry helpers.
-
-### Phase 2: Machine Inventory Scanner
-
-**Goal**: tilde can detect already-installed tools before interaction and distinguish direct Homebrew installs from dependency installs.
+**Goal:** tilde has a clear, versioned schema story for `tilde.config.json`, `repos.json`, and schema inspection.
 **Mode:** mvp
-**Depends on**: Phase 1
-**Requirements**: [INV-01, INV-02, INV-03, INV-04]
-**GitHub**: #99, #112
+**Depends on:** Phase 6
+**Requirements:** [SCHEMA-01, SCHEMA-02, SCHEMA-03]
+**GitHub:** #54, #81, #83
+
 **Success Criteria** (what must be TRUE):
 
-  1. Wizard startup has access to installed-tool facts for package managers, version managers, shells, editors, and known core tools.
-  2. Homebrew formulae can be marked as direct installs or dependencies.
-  3. Missing or failing external commands do not crash the wizard.
-  4. Tests cover scanner success and failure paths with mocked command execution.
+1. `tilde.config.json` has an explicit versioning and migration policy documented in code and user-facing docs.
+2. `repos.json` can carry a schema version without breaking existing configs.
+3. Users or maintainers can inspect the effective schema through a CLI schema-viewer path.
+4. Tests cover migration, validation, and compatibility behavior.
 
-**Plans**: 5 plans
+### Phase 8: Search Wrapper API Core
 
-Plans:
-
-**Wave 1**
-
-- [x] 02-01-PLAN.md - Create inventory report, scanner, summary helpers, and mocked scanner tests.
-- [x] 02-02-PLAN.md - Seed plugin-backed metadata rows and registry tests for inventory categories.
-
-**Wave 2 (blocked on Wave 1 completion)**
-
-- [x] 02-03-PLAN.md - Wire startup inventory into the wizard and renamed InventoryStep.
-- [x] 02-04-PLAN.md - Add Homebrew installed-on-request helper, classifier, scanner integration, and unit tests.
-
-**Wave 3 (blocked on Wave 2 completion)**
-
-- [x] 02-05-PLAN.md - Render final inventory summary in config-first and wizard confirmation paths.
-
-### Phase 3: Dotfiles Discovery Map
-
-**Goal**: tilde can map known dotfiles and shell rc-file contents to the tools they configure.
+**Goal:** tilde exposes a shared internal API for searching and describing external resource ecosystems without hardcoding each flow into wizard steps.
 **Mode:** mvp
-**Depends on**: Phase 2
-**Requirements**: [DOT-01, DOT-02, DOT-03, DOT-04]
-**GitHub**: #104
+**Depends on:** Phase 7
+**Requirements:** [WRAP-01, WRAP-02, WRAP-03]
+**GitHub:** #105, #31
+
 **Success Criteria** (what must be TRUE):
 
-  1. Known dotfile paths are matched through registry metadata.
-  2. Shell rc parsing surfaces aliases, env vars, plugin references, and PATH edits.
-  3. Workspace context paths can be scanned read-only for known config files.
-  4. Unknown files are reported separately without being treated as errors.
+1. Search providers share a typed interface for query, result identity, install/config target, source ecosystem, and confidence.
+2. The API can represent package managers, extensions, plugins, macOS defaults, and dotfile mappings without resolving secrets.
+3. Provider failures are reported as non-fatal search diagnostics.
+4. Tests mock all external commands and network-adjacent behavior.
 
-**Plans**: 2 plans
+### Phase 9: Registry-backed Ecosystem Search UX
 
-Plans:
-
-**Wave 1**
-
-- [x] 03-01-PLAN.md - Add metadata-driven dotfile path discovery.
-
-**Wave 2 (blocked on Wave 1 completion)**
-
-- [x] 03-02-PLAN.md - Add rc-file parsing and structured dotfile map output.
-
-### Phase 4: Provenance Summary
-
-**Goal**: Users can see which tools are tilde-managed, already installed, dependencies, manual installs, OS-provided, or unknown.
+**Goal:** Users can search concrete ecosystems through tilde using registry-backed metadata and safe command boundaries.
 **Mode:** mvp
-**Depends on**: Phase 3
-**Requirements**: [PROV-01, PROV-02, PROV-03, PROV-04]
-**GitHub**: #73
+**Depends on:** Phase 8
+**Requirements:** [SEARCH-01, SEARCH-02, SEARCH-03]
+**GitHub:** #84, #70, #56
+
 **Success Criteria** (what must be TRUE):
 
-  1. Summary output labels each known tool with a provenance category.
-  2. The wizard can explain why a tool is selected, skipped, or shown as already present.
-  3. Provenance is computed from registry and scanner data, not duplicated per step.
-  4. Output remains concise in normal mode while preserving detail for audit views.
+1. tilde can search Homebrew formulae through the wrapper API and display actionable results.
+2. tilde can search macOS defaults metadata without requiring destructive writes.
+3. tilde can search registered plugins/resources using the shared tool metadata registry.
+4. CLI output remains usable in non-interactive contexts and includes source/provenance hints.
 
-**Plans**: 2 plans
+## Deferred From v1.1
 
-Plans:
-
-**Wave 1**
-
-- [x] 04-01-PLAN.md - Define provenance categories and derivation rules.
-
-**Wave 2 (blocked on Wave 1 completion)**
-
-- [x] 04-02-PLAN.md - Render provenance in wizard/config summary output.
-
-### Phase 5: Config Discovery Polish
-
-**Goal**: tilde handles non-default config locations more clearly and can optionally discover known dotfiles config locations.
-**Mode:** mvp
-**Depends on**: Phase 4
-**Requirements**: [CONF-01, CONF-02, CONF-03]
-**GitHub**: #95
-**Success Criteria** (what must be TRUE):
-
-  1. Config-not-found errors clearly list searched paths and recommended next commands.
-  2. Known dotfiles config locations can be discovered safely.
-  3. Explicit `--config` and `TILDE_CONFIG` override all auto-discovery behavior.
-
-**Plans**: 1 plan
-Plans:
-
-- [x] 05-01-PLAN.md - Improve discovery paths, error messaging, and tests for non-default config locations.
+- New wizard step families: terminal emulators, productivity apps, notes, zsh plugins, expanded browser features. GitHub: #82, #96, #97, #101, #108, #109, #110.
+- Distribution and install-channel work: Homebrew formula, bootstrap Node cleanup, pnpm/yarn global install, canary releases. GitHub: #2, #3, #5, #62.
+- Platform expansion: Windows support, OS-specific configs beyond schema groundwork, Nix/MacPorts, additional secrets backends. GitHub: #7, #8, #55, #107.
+- Docs/marketing refresh and demos. GitHub: #69, #80, #111.
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
+Phases execute in numeric order: 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Tool Metadata Registry | 3/3 | Complete    | 2026-06-13 |
-| 2. Machine Inventory Scanner | 7/7 | Complete   | 2026-06-14 |
-| 3. Dotfiles Discovery Map | 2/2 | Complete    | 2026-06-19 |
-| 4. Provenance Summary | 2/2 | Complete    | 2026-06-20 |
-| 5. Config Discovery Polish | 1/1 | Complete    | 2026-06-20 |
+| 6. Stabilization and Config Selection Polish | 0/0 | Planned | - |
+| 7. Config and Schema Versioning Foundation | 0/0 | Planned | - |
+| 8. Search Wrapper API Core | 0/0 | Planned | - |
+| 9. Registry-backed Ecosystem Search UX | 0/0 | Planned | - |
