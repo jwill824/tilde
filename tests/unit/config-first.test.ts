@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from 'ink-testing-library';
 
 vi.mock('../../src/installer/index.js', () => ({
@@ -83,9 +83,58 @@ const CONFIG_INVALID_TYPE = JSON.stringify({
   secretsBackend: '1password',
 });
 
+const FUTURE_CONFIG = {
+  $schema: 'https://thingstead.io/tilde/config-schema/v1.json',
+  version: '1',
+  schemaVersion: '1.8',
+  os: 'macos',
+  shell: 'zsh',
+  packageManagers: ['homebrew'],
+  versionManagers: [],
+  languages: [],
+  workspaceRoot: '~/Developer',
+  dotfilesRepo: '~/Developer/personal/dotfiles',
+  contexts: [
+    {
+      label: 'personal',
+      path: '~/Developer/personal',
+      git: { name: 'Test User', email: 'test@example.com' },
+      authMethod: 'gh-cli',
+    },
+  ],
+  tools: [],
+  configurations: { git: true, vscode: false, aliases: false, osDefaults: false, direnv: true },
+  secretsBackend: '1password',
+};
+
+function makeFutureLoadResult() {
+  return {
+    config: FUTURE_CONFIG,
+    metadata: {
+      migration: {
+        config: FUTURE_CONFIG,
+        migratedFrom: '1.8',
+        migratedTo: '1.7',
+        didMigrate: false,
+        isFutureVersion: true,
+      },
+      unknownFields: [],
+      isFutureVersion: true,
+      canMutate: false,
+    },
+  };
+}
+
+const waitForEffects = () => new Promise((r) => setTimeout(r, 200));
+
 describe('ConfigFirstMode', () => {
   beforeEach(() => {
     vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.doUnmock('../../src/config/reader.js');
+    vi.doUnmock('node:fs/promises');
   });
 
   it('complete valid config → ConfigSummary rendered, no step components shown', async () => {
@@ -195,5 +244,65 @@ describe('ConfigFirstMode', () => {
     const frame = lastFrame() ?? '';
     expect(frame).toContain('Configuration Error');
     expect(frame).toContain('shell');
+  });
+
+  it('blocks explicit future-schema configs before apply choices', async () => {
+    const loadConfigWithMetadata = vi.fn().mockResolvedValue(makeFutureLoadResult());
+    vi.doMock('../../src/config/reader.js', () => ({ loadConfigWithMetadata }));
+
+    const { installAll } = await import('../../src/installer/index.js');
+    const { writeAll } = await import('../../src/dotfiles/writer.js');
+    const { ConfigFirstMode } = await import('../../src/modes/config-first.js');
+    const onComplete = vi.fn();
+    const { lastFrame } = render(
+      React.createElement(ConfigFirstMode, {
+        configPath: '/fake/future/tilde.config.json',
+        configPathSource: 'flag',
+        onComplete,
+      })
+    );
+
+    await waitForEffects();
+
+    const frame = lastFrame() ?? '';
+    expect(loadConfigWithMetadata).toHaveBeenCalledWith('/fake/future/tilde.config.json', expect.any(Function));
+    expect(frame).toContain('newer than this version of tilde supports');
+    expect(frame).toContain('Upgrade tilde');
+    expect(frame).not.toContain('Apply this configuration');
+    expect(installAll).not.toHaveBeenCalled();
+    expect(writeAll).not.toHaveBeenCalled();
+  });
+
+  it('keeps discovered-config confirmation before blocking future-schema apply', async () => {
+    const loadConfigWithMetadata = vi.fn().mockResolvedValue(makeFutureLoadResult());
+    vi.doMock('../../src/config/reader.js', () => ({ loadConfigWithMetadata }));
+
+    const { installAll } = await import('../../src/installer/index.js');
+    const { writeAll } = await import('../../src/dotfiles/writer.js');
+    const { ConfigFirstMode } = await import('../../src/modes/config-first.js');
+    const onComplete = vi.fn();
+    const { lastFrame, stdin } = render(
+      React.createElement(ConfigFirstMode, {
+        configPath: '/fake/discovered/tilde.config.json',
+        configPathSource: 'discovered',
+        onComplete,
+      })
+    );
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    expect(lastFrame() ?? '').toContain('Use discovered config');
+    expect(loadConfigWithMetadata).not.toHaveBeenCalled();
+
+    stdin.write('\r');
+    await waitForEffects();
+
+    const frame = lastFrame() ?? '';
+    expect(loadConfigWithMetadata).toHaveBeenCalledWith('/fake/discovered/tilde.config.json', expect.any(Function));
+    expect(frame).toContain('newer than this version of tilde supports');
+    expect(frame).toContain('Upgrade tilde');
+    expect(frame).not.toContain('Apply this configuration');
+    expect(installAll).not.toHaveBeenCalled();
+    expect(writeAll).not.toHaveBeenCalled();
   });
 });
