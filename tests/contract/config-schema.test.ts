@@ -2,13 +2,14 @@
  * Contract tests for config schema — schemaVersion field assertions.
  *
  * These tests verify the schemaVersion contract:
- * - writeConfig() always stamps schemaVersion: CURRENT_SCHEMA_VERSION ('1.5')
- * - loadConfig() accepts files without schemaVersion (defaults to '1')
- * - loadConfig() migrates v1 configs to v1.5 automatically
- * - loadConfig() accepts files with schemaVersion: '1.5'
+ * - writeConfig() always stamps schemaVersion: CURRENT_SCHEMA_VERSION
+ * - loadConfig() rejects files without authoritative schemaVersion
+ * - loadConfig() migrates supported v1.0 configs automatically
+ * - loadConfig() accepts files with current schemaVersion
+ * - loadConfig() warns about unknown supported-schema fields and strips them on rewrite
  * - v1.5 schema fields (browser, aiTools, editors, languageBindings) round-trip correctly
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { writeFile, readFile, mkdir, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir, homedir } from 'node:os';
@@ -20,7 +21,7 @@ import type { TildeConfig } from '../../src/config/schema.js';
 const MINIMAL_CONFIG: TildeConfig = {
   $schema: 'https://thingstead.io/tilde/config-schema/v1.json',
   version: '1',
-  schemaVersion: '1.5',
+  schemaVersion: '1.7',
   os: 'macos',
   shell: 'zsh',
   packageManagers: ['homebrew'],
@@ -129,23 +130,23 @@ describe('writeConfig() — schemaVersion contract', () => {
     const content = await readFile(outputPath, 'utf-8');
     const parsed = JSON.parse(content) as Record<string, unknown>;
     expect(String(parsed['schemaVersion'])).toBe(CURRENT_SCHEMA_VERSION);
-    expect(CURRENT_SCHEMA_VERSION).toBe('1.6');
+    expect(CURRENT_SCHEMA_VERSION).toBe('1.7');
   });
 });
 
 describe('loadConfig() — schemaVersion contract', () => {
-  it('config without schemaVersion field parses and migrates to current version', async () => {
+  it('config without schemaVersion field fails validation before rewrite', async () => {
     const configPath = join(tmpDir, 'no-schema-version.json');
     const { schemaVersion: _sv, ...withoutVersion } = MINIMAL_CONFIG;
-    // Remove schemaVersion — simulates old config
     const oldConfig = { ...withoutVersion };
-    await writeFile(configPath, JSON.stringify(oldConfig, null, 2), 'utf-8');
+    const originalContent = JSON.stringify(oldConfig, null, 2) + '\n';
+    await writeFile(configPath, originalContent, 'utf-8');
 
-    const loaded = await loadConfig(configPath);
-    expect(String(loaded.schemaVersion)).toBe(CURRENT_SCHEMA_VERSION);
+    await expect(loadConfig(configPath)).rejects.toThrow(/schemaVersion.*major\.minor/i);
+    await expect(readFile(configPath, 'utf-8')).resolves.toBe(originalContent);
   });
 
-  it('config with schemaVersion: "1.5" loads successfully', async () => {
+  it('config with schemaVersion: "1.7" loads successfully', async () => {
     const configPath = join(tmpDir, 'with-schema-version.json');
     await writeFile(configPath, JSON.stringify(MINIMAL_CONFIG, null, 2), 'utf-8');
 
@@ -153,13 +154,50 @@ describe('loadConfig() — schemaVersion contract', () => {
     expect(String(loaded.schemaVersion)).toBe(CURRENT_SCHEMA_VERSION);
   });
 
-  it('v1 config (schemaVersion: 1) is migrated to v1.6', async () => {
+  it('v1.0 config is migrated to v1.7', async () => {
     const configPath = join(tmpDir, 'v1-config.json');
-    const v1Config = { ...MINIMAL_CONFIG, schemaVersion: 1 };
+    const v1Config = { ...MINIMAL_CONFIG, schemaVersion: '1.0' };
     await writeFile(configPath, JSON.stringify(v1Config, null, 2), 'utf-8');
 
     const loaded = await loadConfig(configPath);
-    expect(String(loaded.schemaVersion)).toBe('1.6');
+    expect(String(loaded.schemaVersion)).toBe('1.7');
+  });
+
+  it('supported configs with unknown fields warn and rewrite without those fields', async () => {
+    const configPath = join(tmpDir, 'unknown-fields.json');
+    const configWithUnknown = {
+      ...MINIMAL_CONFIG,
+      unexpectedTopLevel: 'do-not-print-this-value',
+      contexts: [
+        {
+          ...MINIMAL_CONFIG.contexts[0],
+          extraContextField: 'do-not-print-context-value',
+        },
+      ],
+    };
+    await writeFile(configPath, JSON.stringify(configWithUnknown, null, 2), 'utf-8');
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    let warnings = '';
+
+    try {
+      const loaded = await loadConfig(configPath);
+      expect(loaded.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+      warnings = warnSpy.mock.calls.map(call => call.join(' ')).join('\n');
+    } finally {
+      warnSpy.mockRestore();
+    }
+
+    expect(warnings).toMatch(/unknown config field/i);
+    expect(warnings).toMatch(/unexpectedTopLevel/);
+    expect(warnings).toMatch(/contexts\[0\]\.extraContextField/);
+    expect(warnings).not.toContain('do-not-print-this-value');
+    expect(warnings).not.toContain('do-not-print-context-value');
+
+    const rewritten = JSON.parse(await readFile(configPath, 'utf-8')) as Record<string, unknown>;
+    expect(rewritten['schemaVersion']).toBe(CURRENT_SCHEMA_VERSION);
+    expect(rewritten['unexpectedTopLevel']).toBeUndefined();
+    const contexts = rewritten['contexts'] as Array<Record<string, unknown>>;
+    expect(contexts[0]!['extraContextField']).toBeUndefined();
   });
 });
 
@@ -204,7 +242,7 @@ describe('schema v1.5 — v1 migration defaults', () => {
     const configPath = join(tmpDir, 'v1-no-browser.json');
     const v1Config: Record<string, unknown> = {
       ...MINIMAL_CONFIG,
-      schemaVersion: 1,
+      schemaVersion: '1.0',
       browser: undefined,
     };
     delete v1Config['browser'];
@@ -216,7 +254,7 @@ describe('schema v1.5 — v1 migration defaults', () => {
 
   it('v1 config without aiTools gets aiTools: []', async () => {
     const configPath = join(tmpDir, 'v1-no-ai-tools.json');
-    const v1Config: Record<string, unknown> = { ...MINIMAL_CONFIG, schemaVersion: 1 };
+    const v1Config: Record<string, unknown> = { ...MINIMAL_CONFIG, schemaVersion: '1.0' };
     delete (v1Config as Record<string, unknown>)['aiTools'];
     await writeFile(configPath, JSON.stringify(v1Config, null, 2), 'utf-8');
 
@@ -228,7 +266,7 @@ describe('schema v1.5 — v1 migration defaults', () => {
     const configPath = join(tmpDir, 'v1-editors-string.json');
     const v1Config = {
       ...MINIMAL_CONFIG,
-      schemaVersion: 1,
+      schemaVersion: '1.0',
       editors: 'vscode',  // old string form
     };
     await writeFile(configPath, JSON.stringify(v1Config, null, 2), 'utf-8');
@@ -241,7 +279,7 @@ describe('schema v1.5 — v1 migration defaults', () => {
     const configPath = join(tmpDir, 'v1-no-lang-bindings.json');
     const v1Config = {
       ...MINIMAL_CONFIG,
-      schemaVersion: 1,
+      schemaVersion: '1.0',
       contexts: [
         {
           label: 'personal',
