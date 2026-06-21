@@ -13,7 +13,7 @@
 
 ### Schema and Config Evolution
 
-- [ ] **SCHEMA-01**: `tilde.config.json` has a standardized versioning and migration pattern. GitHub: #54.
+- [x] **SCHEMA-01**: `tilde.config.json` has a standardized versioning and migration pattern. GitHub: #54.
 - [ ] **SCHEMA-02**: Shared generated schema metadata powers both CLI schema output and the docs-site schema explorer so config docs do not drift from runtime behavior. GitHub: #83.
 - [ ] **SCHEMA-03**: tilde exposes a schema viewer so users and maintainers can inspect effective schema structure. GitHub: #83.
 
@@ -70,7 +70,7 @@
 | STAB-01 | Phase 6 | Complete |
 | STAB-02 | Phase 6 | Complete |
 | STAB-03 | Phase 6 | Complete |
-| SCHEMA-01 | Phase 7 | Pending |
+| SCHEMA-01 | Phase 7 | Complete |
 | SCHEMA-02 | Phase 7 | Pending |
 | SCHEMA-03 | Phase 7 | Pending |
 | WRAP-01 | Phase 8 | Pending |

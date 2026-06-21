@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Searchable Tool and Config Ecosystem
-status: planning
-stopped_at: Phase 07 context gathered
-last_updated: "2026-06-21T15:00:39.359Z"
-last_activity: 2026-06-21 — Phase 06 completed
+status: executing
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-06-21T19:39:10.055Z"
+last_activity: 2026-06-21 -- Phase 07 execution started
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
-  percent: 25
+  total_plans: 5
+  completed_plans: 2
+  percent: 40
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-12)
 
 **Core value:** tilde should explain a machine's developer setup clearly enough that users can trust what it will manage before it changes anything.
-**Current focus:** Milestone v1.1 Searchable Tool and Config Ecosystem
+**Current focus:** Phase 07 — config-and-schema-versioning-foundation
 
 ## Current Position
 
-Phase: 06 (stabilization-and-config-selection-polish) — COMPLETE
-Plan: 1 of 1 complete
-Status: Phase 06 complete; ready to plan Phase 07
-Last activity: 2026-06-21 — Phase 06 completed
+Phase: 07 (config-and-schema-versioning-foundation) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-06-21 -- Phase 07 execution started
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Last activity: 2026-06-21 — Phase 06 completed
 | Phase 03 P02 | 17min | 2 tasks | 5 files |
 | Phase 04 P01 | 6 min | 2 tasks | 2 files |
 | Phase 04 P02 | 4 min | 2 tasks | 7 files |
+| Phase 07 P01 | 33min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,9 @@ Recent decisions affecting current work:
 - [Phase ?]: Rc parser output stores env names and value kinds only; raw values, command substitutions, and function bodies are not persisted.
 - [Phase ?]: Wizard and config-first output share the new Dotfile findings line from summarizeInventory().
 - [Phase ?]: Known rc hooks count as known tool findings while aliases, functions, exports, PATH edits, and source statements remain unknown rc evidence.
+- [Phase 07]: schemaVersion is required, string-only, and must use major.minor without patch values.
+- [Phase 07]: Migration ordering uses parsed major/minor tuples instead of parseFloat.
+- [Phase 07]: Supported configs with unknown fields warn with field paths only, then rewrite using parsed supported fields.
 
 ### Pending Todos
 
@@ -103,9 +107,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-21T15:00:39.356Z
-Stopped at: Phase 07 context gathered
-Resume file: .planning/phases/07-config-and-schema-versioning-foundation/07-CONTEXT.md
+Last session: 2026-06-21T19:38:53.266Z
+Stopped at: Completed 07-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
