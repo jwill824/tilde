@@ -21,6 +21,7 @@ vi.mock('../../src/plugins/registry.js', () => ({
 const VALID_CONFIG = JSON.stringify({
   $schema: 'https://thingstead.io/tilde/config-schema/v1.json',
   version: '1',
+  schemaVersion: '1.7',
   os: 'macos',
   shell: 'zsh',
   packageManagers: ['homebrew'],
@@ -44,6 +45,7 @@ const VALID_CONFIG = JSON.stringify({
 const CONFIG_MISSING_CONTEXTS = JSON.stringify({
   $schema: 'https://thingstead.io/tilde/config-schema/v1.json',
   version: '1',
+  schemaVersion: '1.7',
   os: 'macos',
   shell: 'zsh',
   packageManagers: ['homebrew'],
@@ -60,6 +62,7 @@ const CONFIG_MISSING_CONTEXTS = JSON.stringify({
 const CONFIG_INVALID_TYPE = JSON.stringify({
   $schema: 'https://thingstead.io/tilde/config-schema/v1.json',
   version: '1',
+  schemaVersion: '1.7',
   os: 'macos',
   shell: 42, // wrong type
   packageManagers: ['homebrew'],

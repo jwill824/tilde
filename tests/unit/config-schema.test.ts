@@ -4,6 +4,7 @@ import { TildeConfigSchema } from '../../src/config/schema.js';
 const MINIMAL_CONFIG = {
   $schema: 'https://thingstead.io/tilde/config-schema/v1.json',
   version: '1' as const,
+  schemaVersion: '1.7',
   os: 'macos' as const,
   shell: 'zsh' as const,
   packageManagers: ['homebrew'] as const,
