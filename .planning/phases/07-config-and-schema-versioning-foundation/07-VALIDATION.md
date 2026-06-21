@@ -2,8 +2,8 @@
 phase: 07
 slug: config-and-schema-versioning-foundation
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-06-21
 ---
 
@@ -48,10 +48,10 @@ created: 2026-06-21
 
 ## Wave 0 Requirements
 
-- [ ] Unit tests exist for schema version comparison, unknown/future version handling, and migration compatibility.
-- [ ] Unit tests exist for shared schema metadata shape, CLI `--json` output, generated docs artifact freshness, and docs explorer consumption.
-- [ ] CLI tests exist for `tilde config schema` with no config path.
-- [ ] Test fixtures avoid real external commands; any command execution remains mocked.
+- [x] Plans require unit tests for schema version comparison, unknown/future version handling, and migration compatibility.
+- [x] Plans require unit tests for shared schema metadata shape, CLI `--json` output, generated docs artifact freshness, and docs explorer consumption.
+- [x] Plans require CLI tests for `tilde config schema` with no config path.
+- [x] Plans require test fixtures to avoid real external commands; any command execution remains mocked.
 
 ---
 
@@ -63,11 +63,11 @@ All phase behaviors have automated verification.
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-06-21
