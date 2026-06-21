@@ -437,22 +437,19 @@ await writeFile(
 | A2 | The generated docs artifact path `site/docs/src/data/tilde-config-schema.json` is planner-adjustable. [ASSUMED] | Recommended Project Structure | Low; any stable checked-in path works if CLI and docs share the same source. |
 | A3 | The schema metadata module can be authored manually at first and later generated more deeply from Zod metadata. [ASSUMED] | Architecture Patterns | Medium; if the user expects pure generation, planner should add a checkpoint before implementation. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `CURRENT_SCHEMA_VERSION` become `1.7` in Phase 07?**
    - What we know: package version is `1.7.0`, current schema version constant is `1.6`, and Phase 07 adds schema policy/viewer behavior. [VERIFIED: package.json] [VERIFIED: src/config/migrations/runner.ts]
-   - What's unclear: Whether adding metadata/viewer behavior without persisted config shape changes warrants a minor schema bump.
-   - Recommendation: Bump only if persisted `tilde.config.json` shape/meaning changes; requiring `schemaVersion` and deprecating `version` likely merits `1.7`. [ASSUMED]
+   - RESOLVED: Bump `CURRENT_SCHEMA_VERSION` to `"1.7"` because Phase 07 changes persisted config semantics: missing `schemaVersion` becomes invalid, `version` is deprecated as schema authority, and supported configs gain explicit future-version mutation safety. This is a schema contract change, not only a viewer feature.
 
 2. **How strict should unknown-field warnings be for nested objects?**
    - What we know: Zod strips unknown object fields by default, and Phase 07 requires warnings plus stripping on next successful rewrite. [CITED: https://zod.dev/json-schema] [VERIFIED: local zod parse check]
-   - What's unclear: Whether warnings should report only top-level unknowns or full nested paths.
-   - Recommendation: Report nested paths for config authors, but keep the message concise in CLI output. [ASSUMED]
+   - RESOLVED: Report nested unknown-field paths when they can be determined, using concise dot/bracket paths such as `contexts[0].unknownKey`. Top-level-only warnings are insufficient for config authors editing nested arrays and objects. The CLI should summarize when many paths exist, but tests should cover nested path extraction.
 
 3. **Should schema metadata include exact examples for every field in Phase 07?**
    - What we know: CLI and docs need type/default/required/version notes. [VERIFIED: .planning/phases/07-config-and-schema-versioning-foundation/07-CONTEXT.md]
-   - What's unclear: Examples are useful but not explicitly required by locked decisions.
-   - Recommendation: Include examples only where they prevent ambiguity, such as `envVars.value` backend references and `contexts[].languageBindings`. [ASSUMED]
+   - RESOLVED: Do not require examples for every field in the first metadata version. Include examples only where they prevent ambiguity or unsafe usage, especially backend-reference values such as `op://...`, nested `contexts[].languageBindings`, and deprecated `version` guidance.
 
 ## Environment Availability
 
