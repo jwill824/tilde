@@ -3,6 +3,7 @@
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { BROWSER_PLUGINS } from '../../src/plugins/first-party/browser/index.js';
+import { browserToolMetadata } from '../../src/plugins/first-party/browser/metadata.js';
 
 describe('BROWSER_PLUGINS', () => {
   it('contains 6 browser plugins', () => {
@@ -42,6 +43,17 @@ describe('BROWSER_PLUGINS', () => {
   it('safari has no brewCask (always installed)', () => {
     const safari = BROWSER_PLUGINS.find(p => p.id === 'safari')!;
     expect(safari.brewCask).toBeUndefined();
+  });
+
+  it('aligns browser plugin fields with shared browser metadata', () => {
+    expect(BROWSER_PLUGINS.map(plugin => plugin.id)).toEqual(browserToolMetadata.map(metadata => metadata.id));
+
+    for (const plugin of BROWSER_PLUGINS) {
+      const metadata = browserToolMetadata.find(item => item.id === plugin.id)!;
+      expect(plugin.label).toBe(metadata.label);
+      expect(plugin.appPath).toBe(metadata.install?.appPath);
+      expect(plugin.brewCask).toBe(metadata.install?.homebrew?.cask);
+    }
   });
 
   it('all non-safari browsers have a brewCask', () => {

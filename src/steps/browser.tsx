@@ -12,6 +12,8 @@ import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import Spinner from 'ink-spinner';
 import type { BrowserConfig } from '../config/schema.js';
+import { getToolsByCategory } from '../tools/registry.js';
+import type { ToolMetadata } from '../tools/metadata.js';
 
 interface Props {
   onComplete: (data: { browser: BrowserConfig }) => void;
@@ -31,14 +33,17 @@ interface BrowserEntry {
   selected: boolean;
 }
 
-const KNOWN_BROWSERS: Omit<BrowserEntry, 'installed' | 'selected'>[] = [
-  { id: 'safari',  label: 'Safari',          appPath: '/Applications/Safari.app',          defaultBrowserId: 'safari' },
-  { id: 'chrome',  label: 'Google Chrome',   appPath: '/Applications/Google Chrome.app',   brewCask: 'google-chrome', defaultBrowserId: 'chrome' },
-  { id: 'firefox', label: 'Firefox',         appPath: '/Applications/Firefox.app',         brewCask: 'firefox',        defaultBrowserId: 'firefox' },
-  { id: 'arc',     label: 'Arc',             appPath: '/Applications/Arc.app',             brewCask: 'arc',            defaultBrowserId: 'arc' },
-  { id: 'brave',   label: 'Brave Browser',   appPath: '/Applications/Brave Browser.app',   brewCask: 'brave-browser',  defaultBrowserId: 'brave' },
-  { id: 'edge',    label: 'Microsoft Edge',  appPath: '/Applications/Microsoft Edge.app',  brewCask: 'microsoft-edge', defaultBrowserId: 'edge' },
-];
+function toBrowserEntry(metadata: ToolMetadata): Omit<BrowserEntry, 'installed' | 'selected'> {
+  return {
+    id: metadata.id,
+    label: metadata.label,
+    appPath: metadata.install?.appPath ?? '',
+    brewCask: metadata.install?.homebrew?.cask,
+    defaultBrowserId: metadata.externalIds?.defaultbrowser ?? metadata.id,
+  };
+}
+
+const browserCatalog = getToolsByCategory('browser').map(toBrowserEntry);
 
 type Phase = 'detecting' | 'select-browsers' | 'set-default' | 'installing' | 'done' | 'error';
 
@@ -55,7 +60,7 @@ export function BrowserStep({ onComplete, onBack, isOptional, onSkip, initialVal
     async function detectBrowsers() {
       const { access } = await import('node:fs/promises');
       const entries: BrowserEntry[] = await Promise.all(
-        KNOWN_BROWSERS.map(async (b) => {
+        browserCatalog.map(async (b) => {
           let installed = false;
           try {
             await access(b.appPath);

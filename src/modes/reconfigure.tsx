@@ -5,7 +5,8 @@ import { loadConfig } from '../config/reader.js';
 import { atomicWriteConfig } from '../config/writer.js';
 import { CURRENT_SCHEMA_VERSION } from '../config/migrations/runner.js';
 import { Wizard } from './wizard.js';
-import type { TildeConfig } from '../config/schema.js';
+import { formatNoConfigError } from '../utils/config-discovery.js';
+import { DeveloperContextSchema, TildeConfigSchema, type TildeConfig } from '../config/schema.js';
 import type { EnvironmentSnapshot } from '../utils/environment.js';
 
 export interface ReconfigureModeProps {
@@ -23,6 +24,84 @@ type Phase =
   | { type: 'done' }
   | { type: 'cancelled' };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function stringArray(value: unknown): string[] | undefined {
+  return Array.isArray(value) && value.every(item => typeof item === 'string')
+    ? value
+    : undefined;
+}
+
+function recoverValidConfigFields(raw: Record<string, unknown>): Partial<TildeConfig> {
+  const recovered: Partial<TildeConfig> = {};
+
+  if (raw.$schema === undefined || typeof raw.$schema === 'string') recovered.$schema = raw.$schema;
+  if (raw.version === undefined || raw.version === '1') recovered.version = raw.version;
+  if (typeof raw.schemaVersion === 'string' || typeof raw.schemaVersion === 'number') recovered.schemaVersion = String(raw.schemaVersion);
+  if (raw.os === 'macos') recovered.os = raw.os;
+  if (raw.shell === 'zsh' || raw.shell === 'bash' || raw.shell === 'fish') recovered.shell = raw.shell;
+
+  const packageManagers = stringArray(raw.packageManagers);
+  if (packageManagers && packageManagers.length > 0) recovered.packageManagers = packageManagers;
+
+  if (Array.isArray(raw.versionManagers) && raw.versionManagers.every(item => isRecord(item) && ['vfox', 'nvm', 'pyenv', 'sdkman'].includes(String(item.name)))) {
+    recovered.versionManagers = raw.versionManagers as TildeConfig['versionManagers'];
+  }
+
+  if (Array.isArray(raw.languages) && raw.languages.every(item => isRecord(item) && typeof item.name === 'string' && typeof item.version === 'string' && typeof item.manager === 'string')) {
+    recovered.languages = raw.languages as TildeConfig['languages'];
+  }
+
+  if (typeof raw.workspaceRoot === 'string' && raw.workspaceRoot.length > 0) recovered.workspaceRoot = raw.workspaceRoot;
+  if (typeof raw.dotfilesRepo === 'string' && (raw.dotfilesRepo.startsWith('/') || raw.dotfilesRepo.startsWith('~/'))) recovered.dotfilesRepo = raw.dotfilesRepo;
+
+  if (Array.isArray(raw.contexts)) {
+    const contexts = raw.contexts
+      .map(context => DeveloperContextSchema.safeParse(context))
+      .filter((result): result is Extract<typeof result, { success: true }> => result.success)
+      .map(result => result.data);
+    if (contexts.length > 0) recovered.contexts = contexts;
+  }
+
+  const tools = stringArray(raw.tools);
+  if (tools) recovered.tools = tools;
+
+  if (
+    isRecord(raw.configurations) &&
+    typeof raw.configurations.git === 'boolean' &&
+    typeof raw.configurations.vscode === 'boolean' &&
+    typeof raw.configurations.aliases === 'boolean' &&
+    typeof raw.configurations.osDefaults === 'boolean' &&
+    typeof raw.configurations.direnv === 'boolean'
+  ) {
+    recovered.configurations = raw.configurations as TildeConfig['configurations'];
+  }
+
+  if (Array.isArray(raw.accounts) && raw.accounts.every(account => isRecord(account) && typeof account.service === 'string' && typeof account.identifier === 'string')) {
+    recovered.accounts = raw.accounts as TildeConfig['accounts'];
+  }
+
+  if (raw.secretsBackend === '1password' || raw.secretsBackend === 'keychain' || raw.secretsBackend === 'env-only') {
+    recovered.secretsBackend = raw.secretsBackend;
+  }
+
+  if (isRecord(raw.browser)) recovered.browser = raw.browser as TildeConfig['browser'];
+  if (isRecord(raw.editors) && typeof raw.editors.primary === 'string' && Array.isArray(raw.editors.additional)) recovered.editors = raw.editors as TildeConfig['editors'];
+  if (Array.isArray(raw.aiTools) && raw.aiTools.every(tool => isRecord(tool) && typeof tool.name === 'string' && typeof tool.label === 'string' && typeof tool.variant === 'string')) {
+    recovered.aiTools = raw.aiTools as TildeConfig['aiTools'];
+  }
+
+  return recovered;
+}
+
+async function saveConfig(configPath: string, newConfig: TildeConfig) {
+  const parsed = TildeConfigSchema.parse({ ...newConfig, schemaVersion: CURRENT_SCHEMA_VERSION });
+  const content = JSON.stringify(parsed, null, 2) + '\n';
+  await atomicWriteConfig(configPath, content);
+}
+
 export function ReconfigureMode({ configPath, environment: _environment, onComplete }: ReconfigureModeProps) {
   const [phase, setPhase] = useState<Phase>({ type: 'loading' });
 
@@ -31,8 +110,10 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
       if (!configPath) {
         setPhase({
           type: 'error',
-          message:
-            'No config file found. Run `tilde` (without --reconfigure) to create your initial configuration.',
+          message: await formatNoConfigError({
+            command: 'reconfigure',
+            configExample: 'tilde --reconfigure --config <path>',
+          }),
         });
         return;
       }
@@ -58,17 +139,21 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
           // Attempt partial parse from raw file
           try {
             const { readFile } = await import('node:fs/promises');
-            const { TildeConfigSchema } = await import('../config/schema.js');
             const content = await readFile(configPath, 'utf-8');
             const raw = JSON.parse(content) as Record<string, unknown>;
             const partial = TildeConfigSchema.safeParse(raw);
-            const initialConfig: Partial<TildeConfig> = partial.success ? partial.data : (raw as Partial<TildeConfig>);
+            const initialConfig: Partial<TildeConfig> = partial.success ? partial.data : recoverValidConfigFields(raw);
             const issues = partial.success
               ? []
               : partial.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`);
             setPhase({ type: 'field-errors', issues, initialConfig });
-          } catch {
-            setPhase({ type: 'wizard', initialConfig: {} });
+          } catch (parseErr) {
+            setPhase({
+              type: 'error',
+              message:
+                `Failed to parse config from ${configPath}: ${(parseErr as Error).message}. ` +
+                `Fix the JSON before running --reconfigure; the original file was not modified.`,
+            });
           }
           return;
         }
@@ -117,9 +202,7 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
           onComplete={async (newConfig: TildeConfig) => {
             setPhase({ type: 'saving' });
             try {
-              const configWithVersion = { ...newConfig, schemaVersion: CURRENT_SCHEMA_VERSION };
-              const content = JSON.stringify(configWithVersion, null, 2) + '\n';
-              await atomicWriteConfig(configPath, content);
+              await saveConfig(configPath, newConfig);
               setPhase({ type: 'done' });
             } catch (err) {
               setPhase({ type: 'error', message: `Failed to save config: ${(err as Error).message}` });
@@ -138,9 +221,7 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
         onComplete={async (newConfig: TildeConfig) => {
           setPhase({ type: 'saving' });
           try {
-            const configWithVersion = { ...newConfig, schemaVersion: CURRENT_SCHEMA_VERSION };
-            const content = JSON.stringify(configWithVersion, null, 2) + '\n';
-            await atomicWriteConfig(configPath, content);
+            await saveConfig(configPath, newConfig);
             setPhase({ type: 'done' });
           } catch (err) {
             setPhase({
