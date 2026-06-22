@@ -53,8 +53,8 @@ completed: 2026-06-21
 - **Duration:** 34 min
 - **Started:** 2026-06-22T00:10:46Z
 - **Completed:** 2026-06-22T00:44:24Z
-- **Tasks:** 2 committed, 1 not committed
-- **Files modified:** 7 committed
+- **Tasks:** 3 committed
+- **Files modified:** 9 committed
 
 ## Accomplishments
 
@@ -68,7 +68,7 @@ completed: 2026-06-21
 1. **Task 1 RED: Add generated metadata artifact freshness test** - `11f27af` (`test`)
 2. **Task 1 GREEN: Generate docs schema metadata artifact** - `47505f1` (`feat`)
 3. **Task 2: Build the Starlight schema explorer page** - `fd9f0e0` (`feat`)
-4. **Task 3: Align static config docs with schemaVersion authority** - not committed before interruption
+4. **Task 3: Align static config docs with schemaVersion authority** - `d5c4690` (`docs`)
 
 ## Files Created/Modified
 
@@ -79,12 +79,14 @@ completed: 2026-06-21
 - `site/docs/src/components/SchemaExplorer.astro` - Interactive docs explorer for grouped schema fields.
 - `site/docs/src/content/docs/config-schema.mdx` - Dedicated Configuration Schema page.
 - `site/docs/astro.config.mjs` - Adds the Configuration Schema sidebar entry.
+- `docs/config-format.md` - Aligns static config format prose with authoritative `schemaVersion`.
+- `site/docs/src/content/docs/config-format.md` - Mirrors static docs-site config format prose.
 
 ## Decisions Made
 
 - Used a checked-in JSON artifact so the docs site can build from stable metadata without importing the CLI source directly.
 - Kept explorer behavior to search, disclosure panels, and expand/collapse controls; no in-browser config validator or playground was introduced.
-- Left interrupted static-doc edits uncommitted during close-out per operator instruction to stop further production edits.
+- Committed the interrupted static-doc alignment together with the summary close-out after verifying the remaining diff belonged to Task 3.
 
 ## Deviations from Plan
 
@@ -95,12 +97,12 @@ None.
 ---
 
 **Total deviations:** 0 auto-fixed.
-**Impact on plan:** Task 1 and Task 2 were completed and committed. Task 3 remains incomplete in committed history.
+**Impact on plan:** All planned tasks were completed and committed.
 
 ## Issues Encountered
 
 - `npm run generate:schema-metadata` initially failed in the sandbox because `tsx` could not create its temporary IPC pipe under the system temp directory. Rerunning the same command with approval succeeded.
-- Execution was interrupted during Task 3 before static config docs were committed. Uncommitted docs edits were intentionally not touched during this close-out.
+- Execution was interrupted during Task 3 close-out, then resumed to commit the static config docs and summary.
 
 ## Verification
 
@@ -113,7 +115,7 @@ None.
 - `rg "Search fields|Expand all|Collapse all|Type|Required|Default|Since" site/docs/src/components/SchemaExplorer.astro` - matched required controls and detail labels.
 - `rg "validator|playground" site/docs/src/content/docs/config-schema.mdx site/docs/src/components/SchemaExplorer.astro` - no matches.
 - `cd site/docs && npm run build` - passed.
-- `npm run validate:config-doc` - not run after interruption because Task 3 was not completed.
+- `npm run validate:config-doc` - passed after rerun with permission for `tsx` IPC pipe creation.
 
 ## Known Stubs
 
@@ -129,14 +131,14 @@ None - no external service configuration required.
 
 ## Next Phase Readiness
 
-The generated metadata artifact and docs schema explorer are ready for use. Static config docs still need a committed follow-up to align `schemaVersion`, `version`, and `packageManagers` prose with the Phase 07 policy.
+The generated metadata artifact, docs schema explorer, and static config docs are ready for use.
 
-## Self-Check: FAILED
+## Self-Check: PASSED
 
 - Found created files: `scripts/generate-schema-metadata.ts`, `site/docs/src/data/tilde-config-schema.json`, `site/docs/src/components/SchemaExplorer.astro`, `site/docs/src/content/docs/config-schema.mdx`, `tests/unit/config/schema-metadata-artifact.test.ts`, `.planning/phases/07-config-and-schema-versioning-foundation/07-03-SUMMARY.md`.
-- Found task commits: `11f27af`, `47505f1`, `fd9f0e0`.
-- Missing committed Task 3 close-out: static config docs alignment was started but not committed before interruption.
-- Worktree was not clean at close-out: `docs/config-format.md` and `site/docs/src/content/docs/config-format.md` had unstaged interrupted production edits and were intentionally left untouched.
+- Found task commits: `11f27af`, `47505f1`, `fd9f0e0`, `d5c4690`.
+- Static config docs alignment was committed in `d5c4690`.
+- Worktree is clean except pre-existing untracked `.planning/research/.cache` files.
 
 ---
 *Phase: 07-config-and-schema-versioning-foundation*
