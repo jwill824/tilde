@@ -21,6 +21,7 @@ export default defineConfig({
 				{ label: 'Installation', slug: 'installation' },
 				{ label: 'Getting Started', slug: 'getting-started' },
 				{ label: 'Configuration Reference', slug: 'config-reference' },
+				{ label: 'Configuration Schema', slug: 'config-schema' },
 				{ label: 'Configuration Format', slug: 'config-format' },
 			],
 			customCss: ['./src/styles/tilde-theme.css'],

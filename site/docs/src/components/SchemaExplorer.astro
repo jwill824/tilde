@@ -1,0 +1,412 @@
+---
+import schemaMetadata from '../data/tilde-config-schema.json';
+
+interface ConfigSchemaField {
+  path: string;
+  label: string;
+  type: string;
+  required: boolean;
+  defaultValue?: unknown;
+  since: string;
+  deprecated?: boolean;
+  description: string;
+  children?: ConfigSchemaField[];
+}
+
+const fields = schemaMetadata.fields as ConfigSchemaField[];
+
+function formatDefault(value: unknown): string {
+  if (value === undefined) {
+    return 'None';
+  }
+  return JSON.stringify(value);
+}
+---
+
+<section class="schema-explorer" data-schema-explorer>
+  <div class="schema-summary">
+    <p>{schemaMetadata.description}</p>
+    <p>
+      <strong>Schema version:</strong> <code>{schemaMetadata.schemaVersion}</code>
+    </p>
+  </div>
+
+  <div class="schema-toolbar" aria-label="Schema controls">
+    <label class="schema-search">
+      <span>Search fields</span>
+      <input
+        type="search"
+        name="schema-search"
+        placeholder="Filter by field, type, or description"
+        aria-label="Search schema fields"
+        data-schema-search
+      />
+    </label>
+    <div class="schema-actions">
+      <button type="button" data-expand-all>Expand all</button>
+      <button type="button" data-collapse-all>Collapse all</button>
+    </div>
+  </div>
+
+  <div class="schema-groups" data-schema-groups>
+    {fields.map((field) => (
+      <details
+        class="schema-group"
+        data-schema-group
+        data-search-text={`${field.path} ${field.label} ${field.type} ${field.description}`.toLowerCase()}
+      >
+        <summary>
+          <span>
+            <code>{field.path}</code>
+            {field.deprecated && <span class="schema-badge schema-badge-warning">Deprecated</span>}
+          </span>
+          <span class="schema-kind">{field.type}</span>
+        </summary>
+
+        <div class="schema-field-details">
+          <dl>
+            <div>
+              <dt>Type</dt>
+              <dd>{field.type}</dd>
+            </div>
+            <div>
+              <dt>Required</dt>
+              <dd>{field.required ? 'Yes' : 'No'}</dd>
+            </div>
+            <div>
+              <dt>Default</dt>
+              <dd><code>{formatDefault(field.defaultValue)}</code></dd>
+            </div>
+            <div>
+              <dt>Since</dt>
+              <dd>{field.since}</dd>
+            </div>
+          </dl>
+          <p>{field.description}</p>
+        </div>
+
+        {field.children && (
+          <div class="schema-children">
+            {field.children.map((child) => (
+              <details
+                class="schema-field"
+                data-schema-field
+                data-search-text={`${child.path} ${child.label} ${child.type} ${child.description}`.toLowerCase()}
+              >
+                <summary>
+                  <span>
+                    <code>{child.path}</code>
+                    {child.deprecated && <span class="schema-badge schema-badge-warning">Deprecated</span>}
+                  </span>
+                  <span class="schema-kind">{child.type}</span>
+                </summary>
+                <div class="schema-field-details">
+                  <dl>
+                    <div>
+                      <dt>Type</dt>
+                      <dd>{child.type}</dd>
+                    </div>
+                    <div>
+                      <dt>Required</dt>
+                      <dd>{child.required ? 'Yes' : 'No'}</dd>
+                    </div>
+                    <div>
+                      <dt>Default</dt>
+                      <dd><code>{formatDefault(child.defaultValue)}</code></dd>
+                    </div>
+                    <div>
+                      <dt>Since</dt>
+                      <dd>{child.since}</dd>
+                    </div>
+                  </dl>
+                  <p>{child.description}</p>
+
+                  {child.children && (
+                    <div class="schema-children schema-children-nested">
+                      {child.children.map((grandchild) => (
+                        <details
+                          class="schema-field"
+                          data-schema-field
+                          data-search-text={`${grandchild.path} ${grandchild.label} ${grandchild.type} ${grandchild.description}`.toLowerCase()}
+                        >
+                          <summary>
+                            <span>
+                              <code>{grandchild.path}</code>
+                              {grandchild.deprecated && <span class="schema-badge schema-badge-warning">Deprecated</span>}
+                            </span>
+                            <span class="schema-kind">{grandchild.type}</span>
+                          </summary>
+                          <div class="schema-field-details">
+                            <dl>
+                              <div>
+                                <dt>Type</dt>
+                                <dd>{grandchild.type}</dd>
+                              </div>
+                              <div>
+                                <dt>Required</dt>
+                                <dd>{grandchild.required ? 'Yes' : 'No'}</dd>
+                              </div>
+                              <div>
+                                <dt>Default</dt>
+                                <dd><code>{formatDefault(grandchild.defaultValue)}</code></dd>
+                              </div>
+                              <div>
+                                <dt>Since</dt>
+                                <dd>{grandchild.since}</dd>
+                              </div>
+                            </dl>
+                            <p>{grandchild.description}</p>
+                          </div>
+                        </details>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </details>
+            ))}
+          </div>
+        )}
+      </details>
+    ))}
+  </div>
+
+  <p class="schema-empty" data-schema-empty hidden>No matching fields.</p>
+</section>
+
+<script>
+  const root = document.querySelector('[data-schema-explorer]');
+
+  if (root) {
+    const search = root.querySelector('[data-schema-search]');
+    const empty = root.querySelector('[data-schema-empty]');
+    const rows = Array.from(root.querySelectorAll('[data-search-text]'));
+    const groups = Array.from(root.querySelectorAll('[data-schema-group]'));
+    const allDetails = Array.from(root.querySelectorAll('details'));
+    const expandAll = root.querySelector('[data-expand-all]');
+    const collapseAll = root.querySelector('[data-collapse-all]');
+
+    const filterRows = () => {
+      const query = search instanceof HTMLInputElement ? search.value.trim().toLowerCase() : '';
+      let visibleCount = 0;
+
+      for (const row of rows) {
+        const text = row.getAttribute('data-search-text') ?? '';
+        const matches = query.length === 0 || text.includes(query);
+        row.toggleAttribute('hidden', !matches);
+        if (matches) {
+          visibleCount++;
+          if (query.length > 0 && row instanceof HTMLDetailsElement) {
+            row.open = true;
+            row.closest('[data-schema-group]')?.setAttribute('open', '');
+          }
+        }
+      }
+
+      if (empty instanceof HTMLElement) {
+        empty.hidden = visibleCount !== 0;
+      }
+    };
+
+    search?.addEventListener('input', filterRows);
+    expandAll?.addEventListener('click', () => {
+      for (const detail of allDetails) {
+        if (detail instanceof HTMLDetailsElement) {
+          detail.open = true;
+        }
+      }
+    });
+    collapseAll?.addEventListener('click', () => {
+      for (const detail of allDetails) {
+        if (detail instanceof HTMLDetailsElement) {
+          detail.open = false;
+        }
+      }
+    });
+
+    for (const group of groups) {
+      if (group instanceof HTMLDetailsElement) {
+        group.open = true;
+      }
+    }
+  }
+</script>
+
+<style>
+  .schema-explorer {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .schema-summary {
+    border-left: 3px solid var(--sl-color-accent);
+    padding-left: 1rem;
+  }
+
+  .schema-toolbar {
+    align-items: end;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .schema-search {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .schema-search span {
+    font-weight: 700;
+  }
+
+  .schema-search input {
+    background: var(--sl-color-black);
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 6px;
+    color: var(--sl-color-white);
+    font: inherit;
+    inline-size: 100%;
+    padding: 0.55rem 0.65rem;
+  }
+
+  .schema-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .schema-actions button {
+    background: var(--sl-color-gray-6);
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 6px;
+    color: var(--sl-color-white);
+    cursor: pointer;
+    font: inherit;
+    padding: 0.5rem 0.7rem;
+  }
+
+  .schema-groups {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .schema-group,
+  .schema-field {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 6px;
+    overflow: clip;
+  }
+
+  .schema-field {
+    background: color-mix(in srgb, var(--sl-color-gray-6) 72%, transparent);
+  }
+
+  .schema-group > summary,
+  .schema-field > summary {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    min-block-size: 2.75rem;
+    padding: 0.65rem 0.8rem;
+  }
+
+  .schema-kind {
+    color: var(--sl-color-gray-2);
+    font-size: 0.85rem;
+    text-align: right;
+  }
+
+  .schema-badge {
+    border-radius: 999px;
+    display: inline-block;
+    font-size: 0.72rem;
+    margin-left: 0.5rem;
+    padding: 0.1rem 0.45rem;
+    vertical-align: middle;
+  }
+
+  .schema-badge-warning {
+    background: #7c2d12;
+    color: #ffedd5;
+  }
+
+  .schema-field-details {
+    border-top: 1px solid var(--sl-color-gray-5);
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.8rem;
+  }
+
+  .schema-field-details dl {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  .schema-field-details dl div {
+    min-inline-size: 0;
+  }
+
+  .schema-field-details dt {
+    color: var(--sl-color-gray-2);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .schema-field-details dd {
+    margin: 0.2rem 0 0;
+    overflow-wrap: anywhere;
+  }
+
+  .schema-field-details p {
+    margin: 0;
+  }
+
+  .schema-children {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0 0.8rem 0.8rem;
+  }
+
+  .schema-children-nested {
+    padding: 0;
+  }
+
+  .schema-empty {
+    color: var(--sl-color-gray-2);
+    font-weight: 700;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  @media (max-width: 42rem) {
+    .schema-toolbar,
+    .schema-field-details dl {
+      grid-template-columns: 1fr;
+    }
+
+    .schema-actions {
+      justify-content: stretch;
+    }
+
+    .schema-actions button {
+      flex: 1 1 10rem;
+    }
+
+    .schema-group > summary,
+    .schema-field > summary {
+      align-items: start;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .schema-kind {
+      text-align: left;
+    }
+  }
+</style>
