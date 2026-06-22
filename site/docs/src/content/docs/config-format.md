@@ -19,7 +19,7 @@ For searchable field-by-field details, open the [Configuration Schema](./config-
   "os": "macos",
   "shell": "zsh",
   "packageManagers": ["homebrew"],
-  "versionManagers": [{ "name": "vfox" }, { "name": "mise" }],
+  "versionManagers": [{ "name": "vfox" }],
   "languages": [
     { "name": "node", "version": "22.0.0", "manager": "vfox" }
   ],
@@ -47,9 +47,11 @@ For searchable field-by-field details, open the [Configuration Schema](./config-
     "direnv": true
   },
   "secretsBackend": "1password",
-  "browser": { "name": "arc", "isDefault": true },
+  "browser": { "selected": ["arc"], "default": "arc" },
   "editors": { "primary": "vscode", "additional": ["cursor"] },
-  "aiTools": [{ "name": "claude-code" }]
+  "aiTools": [
+    { "name": "claude-code", "label": "Claude Code", "variant": "cli-tool" }
+  ]
 }
 ```
 
@@ -87,7 +89,7 @@ For searchable field-by-field details, open the [Configuration Schema](./config-
 
 | Field | Type | Values |
 |-------|------|--------|
-| `name` | `string` | `"vfox"`, `"nvm"`, `"pyenv"`, `"sdkman"`, `"mise"` |
+| `name` | `string` | `"vfox"`, `"nvm"`, `"pyenv"`, `"sdkman"` |
 
 ---
 

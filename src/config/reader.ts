@@ -75,18 +75,26 @@ export interface ConfigLoadResult {
   metadata: ConfigLoadMetadata;
 }
 
+export interface LoadConfigOptions {
+  rewrite?: boolean;
+  onMigrated?: (result: MigrationResult) => void;
+}
+
 export async function loadConfig(
   pathOrUrl: string,
-  onMigrated?: (result: MigrationResult) => void,
+  options: LoadConfigOptions | ((result: MigrationResult) => void) = {},
 ): Promise<TildeConfig> {
-  const result = await loadConfigWithMetadata(pathOrUrl, onMigrated);
+  const result = await loadConfigWithMetadata(pathOrUrl, options);
   return result.config;
 }
 
 export async function loadConfigWithMetadata(
   pathOrUrl: string,
-  onMigrated?: (result: MigrationResult) => void,
+  options: LoadConfigOptions | ((result: MigrationResult) => void) = {},
 ): Promise<ConfigLoadResult> {
+  const loadOptions: LoadConfigOptions = typeof options === 'function'
+    ? { onMigrated: options }
+    : options;
   let content: string;
 
   if (pathOrUrl.startsWith('https://') || pathOrUrl.startsWith('http://')) {
@@ -142,13 +150,16 @@ export async function loadConfigWithMetadata(
     console.warn(`[tilde] Warning: unknown config field(s) will be removed on rewrite: ${unknownFields.join(', ')}`);
   }
 
-  if (!migrationResult.isFutureVersion && !pathOrUrl.startsWith('http') && (migrationResult.didMigrate || unknownFields.length > 0)) {
+  if (
+    loadOptions.rewrite === true &&
+    !migrationResult.isFutureVersion &&
+    !pathOrUrl.startsWith('http') &&
+    migrationResult.didMigrate
+  ) {
     const expandedPath = expandTilde(pathOrUrl);
     const migratedContent = JSON.stringify(result.data, null, 2) + '\n';
     await atomicWriteConfig(expandedPath, migratedContent);
-    if (migrationResult.didMigrate) {
-      onMigrated?.(migrationResult);
-    }
+    loadOptions.onMigrated?.(migrationResult);
   }
 
   return {

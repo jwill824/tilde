@@ -10,7 +10,6 @@ import { TildeConfigSchema, type TildeConfig } from '../config/schema.js';
 import { runMigrations, CURRENT_SCHEMA_VERSION } from '../config/migrations/runner.js';
 import { isSchemaVersionGreater } from '../config/schema-version.js';
 import { loadConfigWithMetadata } from '../config/reader.js';
-import { atomicWriteConfig } from '../config/writer.js';
 import { installAll } from '../installer/index.js';
 import { writeAll } from '../dotfiles/writer.js';
 import { pluginRegistry } from '../plugins/registry.js';
@@ -117,14 +116,6 @@ export function ConfigFirstMode({ configPath, configPathSource, inventory, inven
               return;
             }
             const migrationResult = runMigrations(raw, CURRENT_SCHEMA_VERSION);
-            if (migrationResult.didMigrate) {
-              const migrated = JSON.stringify({ ...migrationResult.config, schemaVersion: CURRENT_SCHEMA_VERSION }, null, 2) + '\n';
-              try {
-                await atomicWriteConfig(expanded, migrated);
-              } catch {
-                // Non-fatal: continue even if migration write fails
-              }
-            }
             setPhase(validateAndTransition(migrationResult.config as Record<string, unknown>));
           } catch (fallbackErr) {
             setPhase({ type: 'error', message: (fallbackErr as Error).message });

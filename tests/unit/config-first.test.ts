@@ -14,6 +14,10 @@ vi.mock('../../src/dotfiles/writer.js', () => ({
   writeAll: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('../../src/config/writer.js', () => ({
+  atomicWriteConfig: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('../../src/plugins/registry.js', () => ({
   pluginRegistry: {},
 }));
@@ -225,6 +229,40 @@ describe('ConfigFirstMode', () => {
 
     const frame = lastFrame() ?? '';
     expect(frame).toContain('Contexts not specified');
+  });
+
+  it('does not persist migrated recovery configs before missing fields are accepted', async () => {
+    const oldConfigMissingContexts = JSON.stringify({
+      $schema: 'https://thingstead.io/tilde/config-schema/v1.json',
+      version: '1',
+      schemaVersion: '1.0',
+      os: 'macos',
+      shell: 'zsh',
+      packageManagers: ['homebrew'],
+      versionManagers: [],
+      languages: [],
+      workspaceRoot: '~/Developer',
+      dotfilesRepo: '~/Developer/personal/dotfiles',
+      tools: [],
+      configurations: { git: true, vscode: false, aliases: false, osDefaults: false, direnv: true },
+      secretsBackend: '1password',
+    });
+    vi.doMock('node:fs/promises', async () => {
+      const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
+      return { ...actual, readFile: vi.fn().mockResolvedValue(oldConfigMissingContexts) };
+    });
+
+    const { atomicWriteConfig } = await import('../../src/config/writer.js');
+    const { ConfigFirstMode } = await import('../../src/modes/config-first.js');
+    const onComplete = vi.fn();
+    const { lastFrame } = render(
+      React.createElement(ConfigFirstMode, { configPath: '/fake/path.json', onComplete })
+    );
+
+    await new Promise((r) => setTimeout(r, 200));
+
+    expect(lastFrame() ?? '').toContain('Contexts not specified');
+    expect(atomicWriteConfig).not.toHaveBeenCalled();
   });
 
   it('config with invalid field type → error message shown with field path', async () => {

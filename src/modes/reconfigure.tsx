@@ -132,7 +132,7 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
       }
 
       try {
-        const result = await loadConfigWithMetadata(configPath);
+        const result = await loadConfigWithMetadata(configPath, { rewrite: true });
         if (!result.metadata.canMutate || result.metadata.isFutureVersion) {
           setPhase({
             type: 'error',

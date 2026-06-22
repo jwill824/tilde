@@ -155,7 +155,7 @@ describe('UpdateCommand future-schema guard', () => {
     await waitForEffects();
 
     const frame = lastFrame() ?? '';
-    expect(readerMocks.loadConfigWithMetadata).toHaveBeenCalledWith('/fake/future/tilde.config.json');
+    expect(readerMocks.loadConfigWithMetadata).toHaveBeenCalledWith('/fake/future/tilde.config.json', { rewrite: true });
     expect(frame).toContain('Update Error');
     expect(frame).toContain('newer than this version of tilde supports');
     expect(frame).toContain('Upgrade tilde');

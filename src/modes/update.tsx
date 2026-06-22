@@ -97,7 +97,7 @@ export function UpdateCommand({ resource, configPath }: UpdateCommandProps) {
 
     // Load config
     setPhase({ type: 'loading' });
-    loadConfigWithMetadata(configPath)
+    loadConfigWithMetadata(configPath, { rewrite: true })
       .then(result => {
         if (!result.metadata.canMutate || result.metadata.isFutureVersion) {
           setPhase({

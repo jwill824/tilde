@@ -4,9 +4,9 @@
  * These tests verify the schemaVersion contract:
  * - writeConfig() always stamps schemaVersion: CURRENT_SCHEMA_VERSION
  * - loadConfig() rejects files without authoritative schemaVersion
- * - loadConfig() migrates supported v1.0 configs automatically
+ * - loadConfig() reads supported v1.0 configs through migration without mutating by default
  * - loadConfig() accepts files with current schemaVersion
- * - loadConfig() warns about unknown supported-schema fields and strips them on rewrite
+ * - loadConfig() warns about unknown supported-schema fields and preserves them on read-only load
  * - v1.5 schema fields (browser, aiTools, editors, languageBindings) round-trip correctly
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -163,7 +163,7 @@ describe('loadConfig() — schemaVersion contract', () => {
     expect(String(loaded.schemaVersion)).toBe('1.7');
   });
 
-  it('supported configs with unknown fields warn and rewrite without those fields', async () => {
+  it('supported configs with unknown fields warn and preserve those fields on read-only load', async () => {
     const configPath = join(tmpDir, 'unknown-fields.json');
     const configWithUnknown = {
       ...MINIMAL_CONFIG,
@@ -193,11 +193,27 @@ describe('loadConfig() — schemaVersion contract', () => {
     expect(warnings).not.toContain('do-not-print-this-value');
     expect(warnings).not.toContain('do-not-print-context-value');
 
+    const preserved = JSON.parse(await readFile(configPath, 'utf-8')) as Record<string, unknown>;
+    expect(preserved['unexpectedTopLevel']).toBe('do-not-print-this-value');
+    const contexts = preserved['contexts'] as Array<Record<string, unknown>>;
+    expect(contexts[0]!['extraContextField']).toBe('do-not-print-context-value');
+  });
+
+  it('explicit rewrite migrates supported old configs without preserving unknown fields', async () => {
+    const configPath = join(tmpDir, 'rewrite-old-config.json');
+    const v1Config = {
+      ...MINIMAL_CONFIG,
+      schemaVersion: '1.0',
+      unexpectedTopLevel: 'drop-me',
+    };
+    await writeFile(configPath, JSON.stringify(v1Config, null, 2), 'utf-8');
+
+    const loaded = await loadConfig(configPath, { rewrite: true });
+    expect(loaded.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+
     const rewritten = JSON.parse(await readFile(configPath, 'utf-8')) as Record<string, unknown>;
     expect(rewritten['schemaVersion']).toBe(CURRENT_SCHEMA_VERSION);
     expect(rewritten['unexpectedTopLevel']).toBeUndefined();
-    const contexts = rewritten['contexts'] as Array<Record<string, unknown>>;
-    expect(contexts[0]!['extraContextField']).toBeUndefined();
   });
 });
 

@@ -414,7 +414,7 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     await new Promise(resolve => setTimeout(resolve, 200));
 
     const frame = lastFrame() ?? '';
-    expect(mockLoadConfigWithMetadata).toHaveBeenCalledWith(CONFIG_PATH);
+    expect(mockLoadConfigWithMetadata).toHaveBeenCalledWith(CONFIG_PATH, { rewrite: true });
     expect(frame).toContain('newer than this version of tilde supports');
     expect(frame).toContain('Upgrade tilde');
     expect(WizardMock).not.toHaveBeenCalled();
