@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
-import { loadConfig } from '../config/reader.js';
+import { loadConfigWithMetadata } from '../config/reader.js';
 import { atomicWriteConfig } from '../config/writer.js';
 import { CURRENT_SCHEMA_VERSION } from '../config/migrations/runner.js';
+import { isSchemaVersionGreater } from '../config/schema-version.js';
 import { Wizard } from './wizard.js';
 import { formatNoConfigError } from '../utils/config-discovery.js';
 import { DeveloperContextSchema, TildeConfigSchema, type TildeConfig } from '../config/schema.js';
@@ -32,6 +33,18 @@ function stringArray(value: unknown): string[] | undefined {
   return Array.isArray(value) && value.every(item => typeof item === 'string')
     ? value
     : undefined;
+}
+
+function formatFutureSchemaMutationError(schemaVersion: unknown): string {
+  return `This config uses schemaVersion ${String(schemaVersion)}, which is newer than this version of tilde supports.\nUpgrade tilde before applying or rewriting this config.`;
+}
+
+function isFutureSchemaVersion(value: unknown): boolean {
+  try {
+    return typeof value === 'string' && isSchemaVersionGreater(value, CURRENT_SCHEMA_VERSION);
+  } catch {
+    return false;
+  }
 }
 
 function recoverValidConfigFields(raw: Record<string, unknown>): Partial<TildeConfig> {
@@ -119,8 +132,15 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
       }
 
       try {
-        const config = await loadConfig(configPath);
-        setPhase({ type: 'wizard', initialConfig: config });
+        const result = await loadConfigWithMetadata(configPath, { rewrite: true });
+        if (!result.metadata.canMutate || result.metadata.isFutureVersion) {
+          setPhase({
+            type: 'error',
+            message: formatFutureSchemaMutationError(result.metadata.migration.migratedFrom),
+          });
+          return;
+        }
+        setPhase({ type: 'wizard', initialConfig: result.config });
       } catch (err) {
         const error = err as Error & { code?: string };
 
@@ -141,6 +161,13 @@ export function ReconfigureMode({ configPath, environment: _environment, onCompl
             const { readFile } = await import('node:fs/promises');
             const content = await readFile(configPath, 'utf-8');
             const raw = JSON.parse(content) as Record<string, unknown>;
+            if (isFutureSchemaVersion(raw.schemaVersion)) {
+              setPhase({
+                type: 'error',
+                message: formatFutureSchemaMutationError(raw.schemaVersion),
+              });
+              return;
+            }
             const partial = TildeConfigSchema.safeParse(raw);
             const initialConfig: Partial<TildeConfig> = partial.success ? partial.data : recoverValidConfigFields(raw);
             const issues = partial.success

@@ -1,9 +1,11 @@
 # tilde Configuration Format
 
 > JSON Schema: `https://thingstead.io/tilde/config-schema/v1.json`  
-> Schema version: `1.5`
+> Schema version: `1.7`
 
 `tilde.config.json` is the declarative configuration file for tilde. It describes your entire developer environment so that `tilde` can reproduce it on any machine.
+
+For searchable field-by-field details, see the docs site's Configuration Schema page.
 
 ---
 
@@ -14,11 +16,11 @@ The following complete example shows every field with inline explanations. (Stan
 ```json
 {
   "$schema": "https://thingstead.io/tilde/config-schema/v1.json", // enables editor autocomplete and validation
-  "schemaVersion": "1.5",      // schema version — "1.5" adds browser, editors, aiTools, languageBindings
-  "version": "1",              // tilde configuration format revision — always "1"
+  "schemaVersion": "1.7",      // authoritative config schema version; use major.minor, without a patch version
+  "version": "1",              // deprecated compatibility metadata; schemaVersion is authoritative
   "os": "macos",               // target OS — only macOS is currently supported
   "shell": "zsh",              // your primary shell: "zsh", "bash", or "fish"
-  "packageManager": "homebrew", // package manager — only Homebrew is currently supported
+  "packageManagers": ["homebrew"], // package managers tilde may use for requested tools
   "workspaceRoot": "~/Developer", // root directory where all your projects live
   "dotfilesRepo": "~/Developer/personal/dotfiles", // path to your dotfiles repository
   "secretsBackend": "1password", // where should tilde store and retrieve your secrets? — "1password", "keychain", or "env-only"
@@ -57,7 +59,7 @@ The following complete example shows every field with inline explanations. (Stan
       "envVars": [],                          // environment variables to load when you're working in this context (use your secrets backend references — not raw tokens)
       "vscodeProfile": "personal",            // which VS Code profile should be active in this context? (optional)
       "isDefault": true,                      // is this the context tilde should use when you're not inside any named workspace path? (optional)
-      "languageBindings": [                   // NEW v1.5: runtime version bindings for this context
+      "languageBindings": [                   // runtime version bindings for this context
         { "runtime": "nodejs", "version": "22.0.0" }
       ]
     },
@@ -87,11 +89,11 @@ The following complete example shows every field with inline explanations. (Stan
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `$schema` | string | no | JSON Schema URL for editor tooling (autocomplete, inline validation) |
-| `schemaVersion` | string | **yes** | Schema version — current value is `"1.5"`. tilde uses this for automatic migrations from v1. |
-| `version` | `"1"` | **yes** | tilde configuration format revision — always `"1"` |
+| `schemaVersion` | major.minor string | **yes** | Authoritative config schema version — current value is `"1.7"`. Patch versions and numeric values are not supported. |
+| `version` | `"1"` | no | Deprecated compatibility metadata. Do not use it to determine schema compatibility. |
 | `os` | `"macos"` | **yes** | Target OS — only macOS is currently supported |
 | `shell` | one of `"zsh"`, `"bash"`, `"fish"` | **yes** | Your primary shell |
-| `packageManager` | `"homebrew"` | **yes** | Package manager — only Homebrew is currently supported |
+| `packageManagers` | list of strings | no | Package managers tilde may use for requested tools |
 | `versionManagers` | list of VersionManager | **yes** | Version managers to install |
 | `languages` | list of Language | **yes** | Language runtimes to install |
 | `workspaceRoot` | string | **yes** | Root directory for all your projects (e.g. `~/Developer`) |
@@ -101,9 +103,9 @@ The following complete example shows every field with inline explanations. (Stan
 | `configurations` | ConfigurationDomains | **yes** | Feature flags for which dotfiles and integrations tilde manages |
 | `accounts` | list of Account | no | Service account references |
 | `secretsBackend` | one of `"1password"`, `"keychain"`, `"env-only"` | **yes** | Where should tilde store and retrieve your secrets? |
-| `browser` | BrowserConfig | no | **NEW v1.5** — browser selection and default configuration |
-| `editors` | EditorsConfig | no | **NEW v1.5** — editor configuration (primary + additional editors) |
-| `aiTools` | list of AIToolConfig | no | **NEW v1.5** — AI coding tools to install and configure |
+| `browser` | BrowserConfig | no | Browser selection and default configuration |
+| `editors` | EditorsConfig | no | Editor configuration (primary + additional editors) |
+| `aiTools` | list of AIToolConfig | no | AI coding tools to install and configure |
 
 ---
 
@@ -165,7 +167,7 @@ A context maps a filesystem path to a git identity and optional tooling configur
 | `envVars` | list of EnvVarReference | no | Environment variables to load when you're working in this context (use your secrets backend references — not raw tokens) |
 | `vscodeProfile` | string | no | Which VS Code profile should be active in this context? |
 | `isDefault` | boolean | no | Is this the context tilde should use when you're not inside any named workspace path? |
-| `languageBindings` | list of LanguageBinding | no | **NEW v1.5** — runtime version bindings for this context. Written as version files (`.nvmrc`, `.vfox.json`, `.tool-versions`) on first tilde run. |
+| `languageBindings` | list of LanguageBinding | no | Runtime version bindings for this context. Written as version files (`.nvmrc`, `.vfox.json`, `.tool-versions`) on first tilde run. |
 
 > **Validation**: Context labels must be unique across all contexts.
 
@@ -269,23 +271,23 @@ Every `tilde.config.json` written by tilde includes a `schemaVersion` string fie
 
 ```json
 {
-  "schemaVersion": "1.5",
+  "schemaVersion": "1.7",
   ...
 }
 ```
 
 ### What `schemaVersion` means
 
-The `schemaVersion` field records the version of the config file format. tilde reads this field at startup to decide whether the config needs to be updated before use.
+The `schemaVersion` field records the authoritative version of the config file format. tilde reads this field at startup to decide whether the config needs to be updated before use. Values must be strings in `major.minor` format, such as `"1.7"` or a future `"2.0"`.
 
 | Value | Meaning |
 |-------|---------|
-| `"1.5"` | Current version — adds browser, editors, aiTools, languageBindings |
-| `1` | Legacy integer — auto-migrated to `"1.5"` on first load |
+| `"1.7"` | Current supported config schema |
+| `"2.0"` | Reserved shape for a future breaking schema change |
 
-### v1 → v1.5 migration
+### Supported migrations
 
-Configs with `schemaVersion: 1` (integer) are automatically migrated to `"1.5"` on first load. The migration adds default empty values for the new optional fields and rewrites the config atomically.
+Configs with older supported `major.minor` schema versions are automatically migrated to `"1.7"` on first load. The current migration rewrites the legacy singular package-manager field into `packageManagers` and stamps the current schema version atomically.
 
 ### How the migration runner works
 
@@ -325,7 +327,7 @@ export const migrateV1toV2 = (config: unknown): unknown => {
   // }
   // Example: add a new field with a default value
   // c['newFeature'] ??= false;
-  c['schemaVersion'] = 2;
+  c['schemaVersion'] = '2.0';
   return c;
 };
 ```

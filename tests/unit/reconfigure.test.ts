@@ -51,6 +51,58 @@ const CONFIG_PATH = '/fake/tilde.config.json';
 // Helpers
 // ---------------------------------------------------------------------------
 
+function makeSupportedLoadResult(config: Record<string, unknown>) {
+  return {
+    config,
+    metadata: {
+      migration: {
+        config,
+        migratedFrom: String(config.schemaVersion ?? '1.5'),
+        migratedTo: '1.5',
+        didMigrate: false,
+        isFutureVersion: false,
+      },
+      unknownFields: [],
+      isFutureVersion: false,
+      canMutate: true,
+    },
+  };
+}
+
+function makeFutureLoadResult() {
+  const config = { ...VALID_CONFIG, schemaVersion: '1.8' };
+  return {
+    config,
+    metadata: {
+      migration: {
+        config,
+        migratedFrom: '1.8',
+        migratedTo: '1.7',
+        didMigrate: false,
+        isFutureVersion: true,
+      },
+      unknownFields: [],
+      isFutureVersion: true,
+      canMutate: false,
+    },
+  };
+}
+
+function mockConfigReader(
+  mockLoadConfig: ReturnType<typeof vi.fn>,
+  mockLoadConfigWithMetadata?: ReturnType<typeof vi.fn>,
+) {
+  const loadConfigWithMetadata = mockLoadConfigWithMetadata ?? vi.fn(async (...args: unknown[]) => {
+    const config = await mockLoadConfig(...args);
+    return makeSupportedLoadResult(config as Record<string, unknown>);
+  });
+  vi.doMock('../../src/config/reader.js', () => ({
+    loadConfig: mockLoadConfig,
+    loadConfigWithMetadata,
+  }));
+  return loadConfigWithMetadata;
+}
+
 function makeWizardMock(onMounted?: (props: { initialConfig: Record<string, unknown>; onComplete: (cfg: Record<string, unknown>) => void }) => void) {
   return vi.fn((props: {
     initialConfig: Record<string, unknown>;
@@ -83,7 +135,7 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     const WizardMock = makeWizardMock(() => undefined);
 
     vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
-    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    mockConfigReader(mockLoadConfig);
     vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
     vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
 
@@ -110,7 +162,7 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     const mockLoadConfig = vi.fn().mockResolvedValue(VALID_CONFIG);
 
     vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
-    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    mockConfigReader(mockLoadConfig);
     vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
     vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: makeWizardMock() }));
 
@@ -143,7 +195,7 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     const WizardMock = makeWizardMock(() => undefined);
 
     vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
-    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    mockConfigReader(mockLoadConfig);
     vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
     vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
 
@@ -171,7 +223,7 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     const WizardMock = makeWizardMock(() => undefined);
 
     vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
-    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    mockConfigReader(mockLoadConfig);
     vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
     vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
     vi.doMock('../../src/utils/config-discovery.js', () => ({
@@ -217,7 +269,7 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     const WizardMock = makeWizardMock(() => undefined);
 
     vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
-    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    mockConfigReader(mockLoadConfig);
     vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
     vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
     vi.doMock('node:fs/promises', async () => {
@@ -264,7 +316,7 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     const WizardMock = makeWizardMock();
 
     vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
-    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    mockConfigReader(mockLoadConfig);
     vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
     vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
     vi.doMock('node:fs/promises', async () => {
@@ -300,7 +352,7 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     const WizardMock = makeWizardMock(() => undefined);
 
     vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
-    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    mockConfigReader(mockLoadConfig);
     vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
     vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
     vi.doMock('node:fs/promises', async () => {
@@ -339,6 +391,36 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     expect(mockAtomicWriteConfig).not.toHaveBeenCalled();
   });
 
+  it('blocks future-schema configs before recovery or save and tells the user to upgrade', async () => {
+    const mockAtomicWriteConfig = vi.fn().mockResolvedValue(undefined);
+    const mockLoadConfig = vi.fn().mockResolvedValue(VALID_CONFIG);
+    const mockLoadConfigWithMetadata = vi.fn().mockResolvedValue(makeFutureLoadResult());
+    const WizardMock = makeWizardMock();
+
+    vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
+    mockConfigReader(mockLoadConfig, mockLoadConfigWithMetadata);
+    vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.7' }));
+    vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
+
+    const { ReconfigureMode } = await import('../../src/modes/reconfigure.js');
+    const { lastFrame } = render(
+      React.createElement(ReconfigureMode, {
+        configPath: CONFIG_PATH,
+        environment: {} as never,
+        onComplete: vi.fn(),
+      })
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    const frame = lastFrame() ?? '';
+    expect(mockLoadConfigWithMetadata).toHaveBeenCalledWith(CONFIG_PATH, { rewrite: true });
+    expect(frame).toContain('newer than this version of tilde supports');
+    expect(frame).toContain('Upgrade tilde');
+    expect(WizardMock).not.toHaveBeenCalled();
+    expect(mockAtomicWriteConfig).not.toHaveBeenCalled();
+  });
+
   it('validates wizard output before saving reconfigured config', async () => {
     const mockAtomicWriteConfig = vi.fn().mockResolvedValue(undefined);
     const mockLoadConfig = vi.fn().mockResolvedValue(VALID_CONFIG);
@@ -355,7 +437,7 @@ describe('ReconfigureMode (--reconfigure flag)', () => {
     });
 
     vi.doMock('../../src/config/writer.js', () => ({ atomicWriteConfig: mockAtomicWriteConfig }));
-    vi.doMock('../../src/config/reader.js', () => ({ loadConfig: mockLoadConfig }));
+    mockConfigReader(mockLoadConfig);
     vi.doMock('../../src/config/migrations/runner.js', () => ({ CURRENT_SCHEMA_VERSION: '1.5' }));
     vi.doMock('../../src/modes/wizard.js', () => ({ Wizard: WizardMock }));
 

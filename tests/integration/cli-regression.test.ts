@@ -3,6 +3,7 @@ import { execa } from 'execa';
 import { chmod, mkdir, mkdtemp, readFile, realpath, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { tildeConfigSchemaMetadata } from '../../src/config/schema-metadata.js';
 
 const BIN = resolve(import.meta.dirname, '../..', 'dist/bin/tilde.js');
 
@@ -130,6 +131,39 @@ describe('CLI config discovery and override behavior', () => {
     expect(result.stderr).toContain('Run the wizard to create one: tilde');
     expect(result.stderr).toContain('~/.config/tilde/tilde.config.json');
     expect(result.stderr).toContain(example);
+  });
+
+  it('prints config schema without resolving a user config path', async () => {
+    const { dir, home, env } = await makeTempProject();
+    const result = await runCli(['config', 'schema'], {
+      cwd: dir,
+      env: {
+        ...env,
+        HOME: home,
+      },
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe('');
+    expect(result.stdout).toContain('tilde.config.json schema');
+    expect(result.stdout).toContain('schemaVersion');
+    expect(result.stdout).toContain('required');
+    expect(result.stdout).toContain('version');
+    expect(result.stdout).toContain('deprecated');
+    expect(result.stdout).not.toContain('Searched:');
+    expect(result.stdout).not.toContain('Run the wizard to create one');
+  });
+
+  it('prints machine-readable config schema metadata as JSON', async () => {
+    const { dir, env } = await makeTempProject();
+    const result = await runCli(['config', 'schema', '--json'], { cwd: dir, env });
+    const parsed = JSON.parse(result.stdout);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe('');
+    expect(parsed).toEqual(tildeConfigSchemaMetadata);
+    expect(parsed.schemaVersion).toBe(tildeConfigSchemaMetadata.schemaVersion);
+    expect(parsed.fields).toEqual(expect.any(Array));
   });
 
   it('auto-discovers config validate when no path is passed', async () => {

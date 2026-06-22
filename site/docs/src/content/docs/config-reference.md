@@ -31,14 +31,14 @@ it directly — tilde validates the schema on startup.
 
 **Type**: `string`  
 **Required**: Yes  
-**Valid values**: `"1.6"` (current)  
-**Default**: `"1.6"`  
-**Description**: Internal schema version. tilde uses this for automatic migrations from `1` (integer, previous format) to the current string-based version.  
+**Valid values**: `"1.7"` (current)  
+**Default**: None  
+**Description**: Authoritative config schema version. tilde uses this for automatic migrations from supported older `major.minor` schema versions to the current string-based version. Patch versions and numeric values are rejected.  
 **Since**: `0.1.0`
 
 ```json
 {
-  "schemaVersion": "1.6"
+  "schemaVersion": "1.7"
 }
 ```
 
@@ -80,19 +80,17 @@ hooks) to the appropriate profile file for the selected shell.
 
 ---
 
-### packageManager
+### packageManagers
 
-**Type**: `string`  
-**Required**: Yes  
-**Valid values**: `"homebrew"`  
-**Default**: `"homebrew"`  
-**Description**: The package manager used to install CLI tools. Only Homebrew is
-supported on macOS. Future versions may support MacPorts or Nix.  
+**Type**: `array` of strings  
+**Required**: No  
+**Default**: `["homebrew"]`  
+**Description**: Package managers tilde may use for requested tools. Homebrew is the macOS-first default.  
 **Since**: `0.1.0`
 
 ```json
 {
-  "packageManager": "homebrew"
+  "packageManagers": ["homebrew"]
 }
 ```
 
@@ -110,7 +108,7 @@ Each item:
 
 | Field | Type | Valid values |
 |-------|------|-------------|
-| `name` | string | `"vfox"` \| `"nvm"` \| `"fnm"` \| `"pyenv"` \| `"rbenv"` \| `"python-venv"` \| `"sdkman"` \| `"mise"` |
+| `name` | string | `"vfox"` \| `"nvm"` \| `"pyenv"` \| `"sdkman"` |
 
 **Since**: `0.1.0`
 
@@ -416,13 +414,12 @@ and `accounts[].secretRef`.
 ```json
 {
   "$schema": "https://thingstead.io/tilde/config-schema/v1.json",
-  "schemaVersion": "1.6",
+  "schemaVersion": "1.7",
   "os": "macos",
   "shell": "zsh",
   "packageManagers": ["homebrew"],
   "versionManagers": [
-    { "name": "vfox" },
-    { "name": "fnm" }
+    { "name": "vfox" }
   ],
   "languages": [
     { "name": "nodejs", "version": "20", "manager": "vfox" },
@@ -439,7 +436,7 @@ and `accounts[].secretRef`.
       "authMethod": "ssh",
       "isDefault": true,
       "languageBindings": [
-        { "runtime": "nodejs", "version": "22.0.0", "manager": "fnm" }
+        { "runtime": "nodejs", "version": "22.0.0" }
       ]
     }
   ],

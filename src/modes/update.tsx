@@ -14,7 +14,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Text, useApp } from 'ink';
 import Spinner from 'ink-spinner';
-import { loadConfig } from '../config/reader.js';
+import { loadConfigWithMetadata } from '../config/reader.js';
 import { atomicWriteConfig } from '../config/writer.js';
 import { ShellStep } from '../steps/shell.js';
 import { AppConfigStep } from '../steps/app-config.js';
@@ -63,6 +63,10 @@ export function formatInvalidResourceError(resource: string): string {
   ].join('\n');
 }
 
+function formatFutureSchemaMutationError(schemaVersion: unknown): string {
+  return `This config uses schemaVersion ${String(schemaVersion)}, which is newer than this version of tilde supports.\nUpgrade tilde before applying or rewriting this config.`;
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -93,8 +97,18 @@ export function UpdateCommand({ resource, configPath }: UpdateCommandProps) {
 
     // Load config
     setPhase({ type: 'loading' });
-    loadConfig(configPath)
-      .then(config => setPhase({ type: 'updating', config }))
+    loadConfigWithMetadata(configPath, { rewrite: true })
+      .then(result => {
+        if (!result.metadata.canMutate || result.metadata.isFutureVersion) {
+          setPhase({
+            type: 'error',
+            exitCode: 3,
+            message: formatFutureSchemaMutationError(result.metadata.migration.migratedFrom),
+          });
+          return;
+        }
+        setPhase({ type: 'updating', config: result.config });
+      })
       .catch(err => {
         const msg = (err as Error).message;
         setPhase({ type: 'error', exitCode: 3, message: `Config error: ${msg}` });

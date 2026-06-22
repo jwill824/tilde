@@ -9,6 +9,7 @@ export { PluginError } from './plugins/api.js';
 import { assertMacOS } from './utils/os.js';
 import { App } from './app.js';
 import { loadConfig } from './config/reader.js';
+import { formatConfigSchemaJson, formatConfigSchemaTree } from './config/schema-viewer.js';
 import { pluginRegistry } from './plugins/registry.js';
 import { run } from './utils/exec.js';
 import {
@@ -38,6 +39,19 @@ export function readPackageVersion(): string {
 }
 
 const VERSION = readPackageVersion();
+let cursorRestoreRegistered = false;
+
+function setupCursorRestore() {
+  if (cursorRestoreRegistered) {
+    return;
+  }
+
+  cursorRestoreRegistered = true;
+  process.stdout.write('\x1b[?25h');
+  process.on('exit', () => process.stdout.write('\x1b[?25h'));
+  process.on('SIGINT', () => { process.stdout.write('\x1b[?25h'); process.exit(130); });
+  process.on('SIGTERM', () => { process.stdout.write('\x1b[?25h'); process.exit(143); });
+}
 
 interface ConfigPathInputs {
   flagConfigPath?: string;
@@ -134,6 +148,7 @@ function parseCliArgs() {
         'no-resume': { type: 'boolean' },
         'dry-run': { type: 'boolean' },
         verbose: { type: 'boolean' },
+        json: { type: 'boolean' },
         help: { type: 'boolean', short: 'h' },
         version: { type: 'boolean', short: 'v' },
       },
@@ -155,7 +170,8 @@ Usage: tilde [install] [options]
        tilde update <resource> [--config <path>]
        tilde context <list|current|switch> [label]
        tilde plugin <list|add|remove> [name]
-       tilde config <validate|show|edit> [path]
+       tilde config <validate|show|edit|schema> [path]
+       tilde config schema [--json]
 
 Resources for tilde update:
   shell, editor, applications, browser, ai-tools, contexts, languages
@@ -168,6 +184,7 @@ Options:
   --no-resume           Ignore checkpoint, start fresh
   --dry-run             Print planned actions without executing
   --verbose             Show full command output
+  --json                Print machine-readable JSON for supported commands
   --version, -v         Show version
   --help, -h            Show this help
 
@@ -195,6 +212,7 @@ Environment variables:
     noResume: Boolean(args['no-resume']),
     dryRun: Boolean(args['dry-run']),
     verbose: Boolean(args.verbose),
+    json: Boolean(args.json),
     positionals,
   };
 }
@@ -297,9 +315,16 @@ function formatPluginSource(source: 'first-party' | 'community' | 'local'): stri
 async function handleConfigSubcommand(
   sub: string,
   pathArg: string | undefined,
-  configInputs: ConfigPathInputs
+  configInputs: ConfigPathInputs,
+  options: { json?: boolean } = {},
 ) {
   const context = configCommandContext(sub);
+
+  if (sub === 'schema') {
+    process.stdout.write(options.json ? formatConfigSchemaJson() : formatConfigSchemaTree());
+    process.exit(0);
+  }
+
   const resolved = await resolveRequiredConfigPath({
     ...configInputs,
     positionalConfigPath: pathArg,
@@ -331,13 +356,6 @@ async function handleConfigSubcommand(
 }
 
 export async function main() {
-  // Ensure terminal cursor is always restored on exit, regardless of exit path.
-  // Ink hides the cursor during rendering but doesn't always restore it on forced exits.
-  process.stdout.write('\x1b[?25h');
-  process.on('exit', () => process.stdout.write('\x1b[?25h'));
-  process.on('SIGINT', () => { process.stdout.write('\x1b[?25h'); process.exit(130); });
-  process.on('SIGTERM', () => { process.stdout.write('\x1b[?25h'); process.exit(143); });
-
   // Disable colors if requested
   if (process.env.TILDE_NO_COLOR) {
     process.env.FORCE_COLOR = '0';
@@ -352,6 +370,7 @@ export async function main() {
     resume,
     noResume,
     dryRun,
+    json,
     positionals,
   } = parseCliArgs();
   const configInputs = { flagConfigPath, envConfigPath };
@@ -370,7 +389,7 @@ export async function main() {
   }
 
   if (subcommand === 'config') {
-    await handleConfigSubcommand(sub ?? 'show', arg, configInputs);
+    await handleConfigSubcommand(sub ?? 'show', arg, configInputs, { json });
     return;
   }
 
@@ -383,6 +402,7 @@ export async function main() {
       await loadResolvedConfig(resolved, context, 3);
       const resource = sub;
       const { UpdateCommand } = await import('./modes/update.js');
+      setupCursorRestore();
       render(React.createElement(UpdateCommand, {
         resource: resource ?? '',
         configPath: resolved.path,
@@ -393,6 +413,7 @@ export async function main() {
     // subcommand === 'install': handled by config-first mode below
     // fall through with resolvedForCmd
     const { App: AppForInstall } = await import('./app.js');
+    setupCursorRestore();
     render(React.createElement(AppForInstall, {
       mode: 'config-first',
       configPath: resolved.path,
@@ -450,6 +471,7 @@ export async function main() {
     }
   }
 
+  setupCursorRestore();
   render(
     React.createElement(App, {
       mode,

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { parseSchemaVersion } from './schema-version.js';
 
 const SECRET_PATTERN = /^(ghp_|sk-|AKIA|xox[bp]-)/;
 
@@ -76,12 +77,23 @@ const AIToolConfigSchema = z.object({
   variant: z.string().min(1), // e.g., "desktop-app" | "cli-tool" | "editor-extension"
 });
 
+const SchemaVersionStringSchema = z.unknown()
+  .superRefine((value, ctx) => {
+    try {
+      parseSchemaVersion(value);
+    } catch (err) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: (err as Error).message,
+      });
+    }
+  })
+  .pipe(z.string());
+
 const TildeConfigSchema = z.object({
   $schema: z.string().default('https://thingstead.io/tilde/config-schema/v1.json'),
   version: z.literal('1').default('1'),
-  schemaVersion: z.union([z.string(), z.number()])
-    .transform(v => String(v))
-    .default('1.6'),
+  schemaVersion: SchemaVersionStringSchema,
   os: z.literal('macos').default('macos'),
   shell: z.enum(['zsh', 'bash', 'fish']),
   packageManagers: z.array(z.string()).min(1).default(['homebrew']),

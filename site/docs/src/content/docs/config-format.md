@@ -4,20 +4,22 @@ description: Complete field-by-field reference for tilde.config.json — schema,
 ---
 
 > JSON Schema: `https://thingstead.io/tilde/config-schema/v1.json`  
-> Schema version: `1.5`
+> Schema version: `1.7`
 
 `tilde.config.json` is the declarative configuration file for tilde. It describes your entire developer environment so that `tilde` can reproduce it on any machine.
+
+For searchable field-by-field details, open the [Configuration Schema](./config-schema/) page.
 
 ## Minimal Example
 
 ```json
 {
   "$schema": "https://thingstead.io/tilde/config-schema/v1.json",
-  "schemaVersion": "1.5",
+  "schemaVersion": "1.7",
   "os": "macos",
   "shell": "zsh",
-  "packageManager": "homebrew",
-  "versionManagers": [{ "name": "vfox" }, { "name": "mise" }],
+  "packageManagers": ["homebrew"],
+  "versionManagers": [{ "name": "vfox" }],
   "languages": [
     { "name": "node", "version": "22.0.0", "manager": "vfox" }
   ],
@@ -45,9 +47,11 @@ description: Complete field-by-field reference for tilde.config.json — schema,
     "direnv": true
   },
   "secretsBackend": "1password",
-  "browser": { "name": "arc", "isDefault": true },
+  "browser": { "selected": ["arc"], "default": "arc" },
   "editors": { "primary": "vscode", "additional": ["cursor"] },
-  "aiTools": [{ "name": "claude-code" }]
+  "aiTools": [
+    { "name": "claude-code", "label": "Claude Code", "variant": "cli-tool" }
+  ]
 }
 ```
 
@@ -58,10 +62,10 @@ description: Complete field-by-field reference for tilde.config.json — schema,
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `$schema` | `string` | no | JSON Schema URL for editor tooling |
-| `schemaVersion` | `"1.5"` | **yes** | Schema version used for automatic migrations |
+| `schemaVersion` | `major.minor string` | **yes** | Authoritative config schema version. Current value is `"1.7"`; patch versions and numeric values are not supported. |
 | `os` | `"macos"` | **yes** | Target OS — only `macos` supported |
 | `shell` | `"zsh" \| "bash" \| "fish"` | **yes** | Primary shell |
-| `packageManager` | `"homebrew"` | **yes** | Package manager — only `homebrew` supported |
+| `packageManagers` | `string[]` | no | Package managers tilde may use for requested tools |
 | `versionManagers` | `VersionManager[]` | **yes** | List of version managers to install |
 | `languages` | `Language[]` | **yes** | Language runtimes to install |
 | `workspaceRoot` | `string` | **yes** | Root directory for all projects (e.g. `~/Developer`) |
@@ -71,9 +75,9 @@ description: Complete field-by-field reference for tilde.config.json — schema,
 | `configurations` | `ConfigurationDomains` | **yes** | Feature flags for which dotfiles to manage |
 | `accounts` | `Account[]` | no | Service account references |
 | `secretsBackend` | `"1password" \| "keychain" \| "env-only"` | **yes** | Where to store/retrieve secrets |
-| `browser` | `BrowserConfig` | no | NEW v1.5 — browser selection |
-| `editors` | `EditorsConfig` | no | NEW v1.5 — editor configuration |
-| `aiTools` | `AIToolConfig[]` | no | NEW v1.5 — AI coding tools |
+| `browser` | `BrowserConfig` | no | Browser selection |
+| `editors` | `EditorsConfig` | no | Editor configuration |
+| `aiTools` | `AIToolConfig[]` | no | AI coding tools |
 
 ---
 
@@ -85,7 +89,7 @@ description: Complete field-by-field reference for tilde.config.json — schema,
 
 | Field | Type | Values |
 |-------|------|--------|
-| `name` | `string` | `"vfox"`, `"nvm"`, `"pyenv"`, `"sdkman"`, `"mise"` |
+| `name` | `string` | `"vfox"`, `"nvm"`, `"pyenv"`, `"sdkman"` |
 
 ---
 
@@ -135,7 +139,7 @@ A context maps a filesystem path to a git identity and optional tooling configur
 | `envVars` | `EnvVarReference[]` | no | Environment variables to load in this context |
 | `vscodeProfile` | `string` | no | VS Code profile name for this context |
 | `isDefault` | `boolean` | no | Mark as the default context |
-| `languageBindings` | `LanguageBinding[]` | no | NEW v1.5 — runtime version bindings for this context |
+| `languageBindings` | `LanguageBinding[]` | no | Runtime version bindings for this context |
 
 > **Validation**: Context labels must be unique across all contexts.
 
@@ -251,13 +255,13 @@ Symlinks are created from `~/.gitconfig` → `{dotfilesRepo}/git/.gitconfig`, et
 ## BrowserConfig
 
 ```json
-{ "name": "arc", "isDefault": true }
+{ "selected": ["arc"], "default": "arc" }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `name` | `string` | Browser identifier (e.g. `"chrome"`, `"firefox"`, `"arc"`, `"brave"`) |
-| `isDefault` | `boolean` | Set as the macOS default browser |
+| `selected` | `string[]` | Browser identifiers to install (e.g. `"chrome"`, `"firefox"`, `"arc"`, `"brave"`) |
+| `default` | `string \| null` | Browser identifier to set as the macOS default |
 
 ---
 
@@ -277,12 +281,14 @@ Symlinks are created from `~/.gitconfig` → `{dotfilesRepo}/git/.gitconfig`, et
 ## AIToolConfig
 
 ```json
-{ "name": "claude-code" }
+{ "name": "claude-code", "label": "Claude Code", "variant": "cli-tool" }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | `string` | Tool identifier: `"claude-code"`, `"claude-desktop"`, `"cursor"`, `"windsurf"`, `"github-copilot-cli"` |
+| `label` | `string` | Display name shown in summaries and docs |
+| `variant` | `string` | Tool category such as `"cli-tool"`, `"desktop-app"`, or `"editor-extension"` |
 
 ---
 
@@ -292,21 +298,23 @@ Every `tilde.config.json` written by tilde includes a `schemaVersion` string fie
 
 ```json
 {
-  "schemaVersion": "1.5",
+  "schemaVersion": "1.7",
   ...
 }
 ```
 
 ### What the version means
 
+`schemaVersion` is the authoritative config format version. It must use a `major.minor` string such as `"1.7"` or a future `"2.0"`; patch versions belong to package releases, not config schema files.
+
 | Value | Meaning |
 |-------|---------|
-| `1` | Baseline schema (integer, legacy format — auto-migrated) |
-| `"1.5"` | Current version — adds `browser`, `editors`, `aiTools`, `languageBindings` |
+| `"1.7"` | Current supported config schema |
+| `"2.0"` | Reserved shape for a future breaking schema change |
 
 ### Migration notifications
 
-When tilde loads a config with an older `schemaVersion`, it automatically runs all applicable migration steps, rewrites the config atomically, and prints a notification. No manual action is required.
+When tilde loads a config with an older supported `schemaVersion`, it automatically runs all applicable migration steps, rewrites the config atomically, and prints a notification. No manual action is required.
 
 ### Future-version warning
 
@@ -334,4 +342,3 @@ tilde --reconfigure
 - **No config found**: tilde exits with a message directing you to run `tilde` (without `--reconfigure`) to create your initial configuration
 - **Invalid config**: tilde displays each invalid field by name before opening the wizard; those fields use their wizard defaults. All other fields remain pre-populated from the stored config.
 - **Early exit** (Escape or Cancel): the original config file is **not modified**. tilde exits with code `5` to indicate user cancellation.
-
