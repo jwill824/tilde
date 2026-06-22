@@ -20,7 +20,7 @@ v1.0 shipped the machine inventory and provenance foundation: shared tool metada
 ## Phases
 
 - [x] **Phase 6: Stabilization and Config Selection Polish** - Close known correctness issues before widening the surface area. GitHub: #52, #60, #74. (completed 2026-06-21)
-- [ ] **Phase 7: Config and Schema Versioning Foundation** - Standardize tilde config schema evolution and shared schema inspection so new searchable resources can be managed safely. GitHub: #54, #83.
+- [x] **Phase 7: Config and Schema Versioning Foundation** - Standardize tilde config schema evolution and shared schema inspection so new searchable resources can be managed safely. GitHub: #54, #83. (completed 2026-06-22)
 - [ ] **Phase 8: Search Wrapper API Core** - Create the consistent search abstraction for packages, plugins, extensions, defaults, and dotfile-backed resources. GitHub: #105, #31.
 - [ ] **Phase 9: Registry-backed Ecosystem Search UX** - Wire the wrapper API into concrete Homebrew, macOS defaults, and plugin registry search flows. GitHub: #84, #70, #56.
 
@@ -56,13 +56,13 @@ v1.0 shipped the machine inventory and provenance foundation: shared tool metada
 3. Users or maintainers can inspect the effective schema through a CLI schema-viewer path.
 4. Tests cover migration, validation, and compatibility behavior.
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 
 - [x] 07-01-PLAN.md — Enforce authoritative `schemaVersion` policy and migration compatibility
 - [x] 07-02-PLAN.md — Add shared schema metadata and `tilde config schema`
-- [ ] 07-03-PLAN.md — Publish the docs-site schema explorer from generated metadata
+- [x] 07-03-PLAN.md — Publish the docs-site schema explorer from generated metadata
 - [x] 07-04-PLAN.md — Soft-block mutation paths for unsupported future schemas
 
 ### Phase 8: Search Wrapper API Core
@@ -110,6 +110,6 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 6. Stabilization and Config Selection Polish | 1/1 | Complete | 2026-06-21 |
-| 7. Config and Schema Versioning Foundation | 3/4 | In Progress | - |
+| 7. Config and Schema Versioning Foundation | 4/4 | Complete   | 2026-06-22 |
 | 8. Search Wrapper API Core | 0/0 | Planned | - |
 | 9. Registry-backed Ecosystem Search UX | 0/0 | Planned | - |
