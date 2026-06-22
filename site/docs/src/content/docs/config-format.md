@@ -255,13 +255,13 @@ Symlinks are created from `~/.gitconfig` → `{dotfilesRepo}/git/.gitconfig`, et
 ## BrowserConfig
 
 ```json
-{ "name": "arc", "isDefault": true }
+{ "selected": ["arc"], "default": "arc" }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `name` | `string` | Browser identifier (e.g. `"chrome"`, `"firefox"`, `"arc"`, `"brave"`) |
-| `isDefault` | `boolean` | Set as the macOS default browser |
+| `selected` | `string[]` | Browser identifiers to install (e.g. `"chrome"`, `"firefox"`, `"arc"`, `"brave"`) |
+| `default` | `string \| null` | Browser identifier to set as the macOS default |
 
 ---
 
@@ -281,12 +281,14 @@ Symlinks are created from `~/.gitconfig` → `{dotfilesRepo}/git/.gitconfig`, et
 ## AIToolConfig
 
 ```json
-{ "name": "claude-code" }
+{ "name": "claude-code", "label": "Claude Code", "variant": "cli-tool" }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | `string` | Tool identifier: `"claude-code"`, `"claude-desktop"`, `"cursor"`, `"windsurf"`, `"github-copilot-cli"` |
+| `label` | `string` | Display name shown in summaries and docs |
+| `variant` | `string` | Tool category such as `"cli-tool"`, `"desktop-app"`, or `"editor-extension"` |
 
 ---
 
