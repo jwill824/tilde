@@ -35,13 +35,28 @@
           Public proof of concept for macOS developer environment inventory, provenance, and bootstrap workflows.
         </p>
 
-        <!-- Status -->
-        <div class="bg-gray-900 border border-yellow-700/70 rounded-xl px-6 py-5 text-left space-y-3">
-          <p class="text-sm font-semibold uppercase tracking-widest text-yellow-300">Public PoC</p>
-          <p class="text-sm sm:text-base text-gray-300 leading-relaxed">
-            tilde is live for evaluation and documentation, but it is not published to npm yet.
-            The hosted installer, npx, and npm global install paths are unavailable until a package is released.
-          </p>
+        <!-- Provenance report -->
+        <div class="bg-gray-900 border border-yellow-700/70 rounded-xl px-6 py-5 text-left space-y-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-widest text-yellow-300">tilde provenance report</p>
+            <p class="mt-2 text-sm sm:text-base text-gray-300 leading-relaxed">
+              tilde is live for evaluation and documentation, but it is not published to npm yet.
+            </p>
+          </div>
+          <dl class="grid grid-cols-[8rem_1fr] gap-x-4 gap-y-2 text-sm">
+            <dt class="text-gray-500">stage</dt>
+            <dd class="text-yellow-300">public-poc</dd>
+            <dt class="text-gray-500">origin</dt>
+            <dd class="text-gray-200">GitHub repository</dd>
+            <dt class="text-gray-500">distribution</dt>
+            <dd class="text-gray-200">source only</dd>
+            <dt class="text-gray-500">npm</dt>
+            <dd class="text-gray-200">unpublished</dd>
+            <dt class="text-gray-500">installer</dt>
+            <dd class="text-gray-200">parked until release</dd>
+            <dt class="text-gray-500">docs</dt>
+            <dd class="text-green-300">live</dd>
+          </dl>
         </div>
       </section>
 
