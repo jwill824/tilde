@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <title>tilde — macOS developer environment, one command away</title>
-  <meta name="description" content="tilde configures your entire macOS developer environment from a single config file. One curl command to get started." />
+  <title>tilde — public PoC for macOS developer environment provenance</title>
+  <meta name="description" content="tilde is a public proof of concept for macOS developer environment inventory, provenance, and bootstrap workflows. npm distribution is not available yet." />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* Fallback font stack for monospace wordmark */
@@ -32,59 +32,62 @@
 
         <!-- One-sentence description -->
         <p class="text-lg sm:text-xl text-gray-400 max-w-lg mx-auto leading-relaxed">
-          tilde configures your entire macOS developer environment from a single config file.
+          Public proof of concept for macOS developer environment inventory, provenance, and bootstrap workflows.
         </p>
 
-        <!-- Curl one-liner -->
-        <div class="relative group">
-          <pre class="bg-gray-900 border border-gray-700 rounded-xl px-6 py-4 text-sm sm:text-base text-green-300 overflow-x-auto text-left whitespace-pre"><code>curl -fsSL https://tilde.thingstead.io/install.sh | bash</code></pre>
-          <span class="absolute top-2 right-3 text-xs text-gray-400 group-hover:text-gray-400 transition-colors select-none">
-            copy &amp; run in Terminal
-          </span>
+        <!-- Status -->
+        <div class="bg-gray-900 border border-yellow-700/70 rounded-xl px-6 py-5 text-left space-y-3">
+          <p class="text-sm font-semibold uppercase tracking-widest text-yellow-300">Public PoC</p>
+          <p class="text-sm sm:text-base text-gray-300 leading-relaxed">
+            tilde is live for evaluation and documentation, but it is not published to npm yet.
+            The hosted installer, npx, and npm global install paths are unavailable until a package is released.
+          </p>
         </div>
       </section>
 
-      <!-- Install methods -->
+      <!-- Current paths -->
       <section class="space-y-4">
         <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 text-center">
-          Install methods
+          Current paths
         </h2>
 
         <div class="space-y-3">
 
-          <!-- curl (recommended) -->
+          <!-- docs -->
           <div class="bg-gray-900 border border-gray-700 rounded-lg p-4">
             <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
-              <span class="text-sm font-semibold text-gray-50">curl</span>
+              <span class="text-sm font-semibold text-gray-50">Docs</span>
               <div class="flex gap-2">
-                <span class="text-xs bg-green-900 text-green-300 px-2 py-0.5 rounded-full">recommended</span>
-                <span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">macOS</span>
-                <span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">Linux</span>
+                <span class="text-xs bg-green-900 text-green-300 px-2 py-0.5 rounded-full">available</span>
               </div>
             </div>
-            <pre class="text-sm text-green-300 overflow-x-auto"><code>curl -fsSL https://tilde.thingstead.io/install.sh | bash</code></pre>
+            <a href="https://tilde.thingstead.io/docs/"
+               class="text-sm text-green-300 hover:text-green-200 transition-colors">https://tilde.thingstead.io/docs/</a>
           </div>
 
-          <!-- npx -->
+          <!-- source -->
           <div class="bg-gray-900 border border-gray-700 rounded-lg p-4">
             <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
-              <span class="text-sm font-semibold text-gray-50">npx</span>
+              <span class="text-sm font-semibold text-gray-50">Source</span>
               <div class="flex gap-2">
-                <span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">All platforms</span>
+                <span class="text-xs bg-green-900 text-green-300 px-2 py-0.5 rounded-full">available</span>
               </div>
             </div>
-            <pre class="text-sm text-green-300 overflow-x-auto"><code>npx @jwill824/tilde</code></pre>
+            <a href="https://github.com/jwill824/tilde"
+               class="text-sm text-green-300 hover:text-green-200 transition-colors">https://github.com/jwill824/tilde</a>
           </div>
 
-          <!-- npm global install -->
+          <!-- npm status -->
           <div class="bg-gray-900 border border-gray-700 rounded-lg p-4">
             <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
-              <span class="text-sm font-semibold text-gray-50">npm global install</span>
+              <span class="text-sm font-semibold text-gray-50">npm distribution</span>
               <div class="flex gap-2">
-                <span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">All platforms</span>
+                <span class="text-xs bg-yellow-900 text-yellow-300 px-2 py-0.5 rounded-full">planned</span>
               </div>
             </div>
-            <pre class="text-sm text-green-300 overflow-x-auto"><code>npm install -g @jwill824/tilde</code></pre>
+            <p class="text-sm text-gray-300">
+              <code>npm install -g @jwill824/tilde</code> and <code>npx @jwill824/tilde</code> are not available yet.
+            </p>
           </div>
 
         </div>

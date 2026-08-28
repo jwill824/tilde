@@ -9,7 +9,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'tilde',
-			description: 'tilde configures your macOS developer environment from a single config file',
+			description: 'tilde is a public proof of concept for macOS developer environment inventory and provenance',
 			favicon: '/favicon.svg',
 			logo: {
 				src: './src/assets/tilde-logo.svg',
