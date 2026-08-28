@@ -1,24 +1,35 @@
 ---
 title: Getting Started
-description: Run tilde for the first time and configure your macOS developer environment.
+description: Evaluate the tilde public proof of concept from source.
 ---
 
-This guide walks you through your first tilde run after installation.
+This guide describes how to evaluate the current tilde proof of concept from source.
+tilde is not published to npm yet, so `npm install -g @jwill824/tilde`, `npx
+@jwill824/tilde`, and the hosted curl installer are not available as end-user
+installation paths.
 
 ## Prerequisites
 
 - **macOS** (Apple Silicon recommended; Intel supported)
-- **Node.js 20+** — installed automatically if you used the [curl installer](/installation/)
+- **Node.js 20+**
+- **Git**
 - An internet connection (tilde downloads tools on first run)
 
-## Launch tilde
+## Run from source
 
-If you installed via curl, tilde launches automatically at the end of the install
-script. To run it again at any time:
+Clone the repository, install dependencies, build the CLI, and inspect the available
+commands:
 
 ```bash
-tilde
+git clone https://github.com/jwill824/tilde.git
+cd tilde
+npm install
+npm run build
+node dist/bin/tilde.js --help
 ```
+
+Running from source is intended for project evaluation and development while the
+npm package and hosted installer are prepared.
 
 ## Navigating the wizard
 
@@ -176,7 +187,9 @@ Your configuration is saved to `~/.tilde/tilde.config.json` (canonical copy) and
 
 ## Re-running tilde
 
-After completing the initial setup, run `tilde` at any time to manage your configuration. If a config file is found, tilde shows the Configuration Summary and a menu with four options:
+After completing the initial setup from source, run `node dist/bin/tilde.js` from
+the project checkout to manage your configuration. If a config file is found,
+tilde shows the Configuration Summary and a menu with four options:
 
 | Option | What it does |
 |--------|-------------|
@@ -189,22 +202,25 @@ The config file path is shown at the bottom of the summary so you always know wh
 
 ## Updating your config
 
-The easiest way to update your configuration is to run `tilde` and select **Edit configuration** from the menu. This opens the full wizard pre-populated with your current settings — navigate to the step you want to change and save.
+The easiest way to update your configuration is to run `node dist/bin/tilde.js`
+from the project checkout and select **Edit configuration** from the menu. This
+opens the full wizard pre-populated with your current settings — navigate to the
+step you want to change and save.
 
-For targeted one-step updates, use `tilde update <resource>`:
+For targeted one-step updates, use `node dist/bin/tilde.js update <resource>`:
 
 ```bash
 # Change your shell
-tilde update shell
+node dist/bin/tilde.js update shell
 
 # Add or remove browsers
-tilde update browser
+node dist/bin/tilde.js update browser
 
 # Add AI coding tools
-tilde update ai-tools
+node dist/bin/tilde.js update ai-tools
 
 # Edit workspace contexts or language bindings
-tilde update contexts
+node dist/bin/tilde.js update contexts
 ```
 
 ### Valid resources
@@ -214,7 +230,7 @@ tilde update contexts
 ### Specifying a config path
 
 ```bash
-tilde update shell --config ~/dotfiles/tilde.config.json
+node dist/bin/tilde.js update shell --config ~/dotfiles/tilde.config.json
 ```
 
 ## Troubleshooting
@@ -228,26 +244,21 @@ the Node.js path. Run:
 source ~/.zshrc   # or ~/.bashrc / ~/.config/fish/config.fish
 ```
 
-Then try `tilde` again. If you used the curl installer, it adds Node.js to your
-PATH automatically.
+Then try the source command again.
 
-### Permission errors on npm global install
+### Permission errors during dependency install
 
-If you see `EACCES` errors, your npm global prefix may be owned by root. Fix with:
+If you see `EACCES` errors while installing dependencies, your npm cache or project
+directory may have files owned by another user. Check ownership before rerunning
+`npm install`.
 
-```bash
-mkdir -p ~/.npm-global
-npm config set prefix '~/.npm-global'
-export PATH="$HOME/.npm-global/bin:$PATH"
-```
-
-Add the `export PATH` line to your shell profile (`~/.zshrc` or `~/.bashrc`).
+Global npm installation guidance will be added after tilde is published.
 
 ### Wizard exits unexpectedly
 
 If the wizard exits without completing:
 
 1. Check the error message — it will indicate which step failed.
-2. Run `tilde --debug` for verbose output.
-3. Re-run `tilde` — it is idempotent and will resume from where it can.
+2. Run `node dist/bin/tilde.js --debug` for verbose output.
+3. Re-run `node dist/bin/tilde.js` — it is idempotent and will resume from where it can.
 4. [Open an issue](https://github.com/jwill824/tilde/issues) with the debug output.

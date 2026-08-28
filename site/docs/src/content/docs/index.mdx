@@ -1,20 +1,37 @@
 ---
 title: Welcome to tilde
-description: tilde configures your macOS developer environment from a single config file.
+description: tilde is a public proof of concept for macOS developer environment inventory, provenance, and bootstrap workflows.
 template: splash
 hero:
-  tagline: Your entire macOS developer environment, configured from a single file — one command to get started.
+  tagline: Public proof of concept for understanding and managing macOS developer environments.
   actions:
     - text: Getting Started
       link: /tilde/docs/getting-started/
       icon: right-arrow
-    - text: Installation
+    - text: Project Status
       link: /tilde/docs/installation/
       icon: document
       variant: minimal
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## tilde provenance report
+
+tilde is currently a public proof of concept. It has been live while the inventory
+and provenance model is being developed, but it is not published to npm yet.
+
+| Signal | Current value |
+|--------|---------------|
+| Stage | Public PoC |
+| Origin | GitHub repository |
+| Distribution | Source only |
+| npm package | Unpublished |
+| Hosted installer | Parked until release |
+| Docs | Live |
+
+Package-manager installation with `npm install -g @jwill824/tilde`, `npx`, or the
+hosted curl installer is not available until the first package release.
 
 ## Why tilde?
 
@@ -31,8 +48,8 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
     Install only what you need. tilde is built around a plugin-style tool list —
     add languages, tools, and accounts as your setup evolves.
   </Card>
-  <Card title="One command away" icon="rocket">
-    No prerequisites needed. A single `curl` command installs Homebrew, Node.js, and
-    tilde, then launches the interactive setup wizard.
+  <Card title="Provenance-aware" icon="magnifier">
+    tilde is being designed to explain whether tools are managed by tilde, manually
+    installed, bundled with macOS, or present as dependencies before changing a machine.
   </Card>
 </CardGrid>
